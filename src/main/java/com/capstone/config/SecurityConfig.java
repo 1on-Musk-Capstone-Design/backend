@@ -14,14 +14,8 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
             .authorizeHttpRequests(authz -> authz
-                .requestMatchers("/health", "/actuator/**", "/h2-console/**").permitAll()
+                .requestMatchers("/health", "/actuator/**").permitAll()
                 .anyRequest().authenticated()
-            )
-            .csrf(csrf -> csrf
-                .ignoringRequestMatchers("/h2-console/**")
-            )
-            .headers(headers -> headers
-                .frameOptions().sameOrigin()
             );
         
         return http.build();
