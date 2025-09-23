@@ -35,27 +35,37 @@
 
 ### 백엔드 개발자
 
-### 👨‍💻 김수빈
+<table>
+<tr>
+<td align="center">
 <img src="https://github.com/qlsl1198.png" width="100" height="100" alt="김수빈">
-
-**GitHub:** [@qlsl1198](https://github.com/qlsl1198)  
-**역할:** 풀스택 개발자
-
----
-
-### 👨‍💻 정양효
+<br>
+<strong>김수빈</strong>
+<br>
+<a href="https://github.com/qlsl1198">@qlsl1198</a>
+<br>
+풀스택 개발자
+</td>
+<td align="center">
 <img src="https://github.com/jyhyo02.png" width="100" height="100" alt="정양효">
-
-**GitHub:** [@jyhyo02](https://github.com/jyhyo02)  
-**역할:** 백엔드 개발
-
----
-
-### 👨‍💻 이현준
+<br>
+<strong>정양효</strong>
+<br>
+<a href="https://github.com/jyhyo02">@jyhyo02</a>
+<br>
+백엔드 개발
+</td>
+<td align="center">
 <img src="https://github.com/Hyun-jun-Lee0811.png" width="100" height="100" alt="이현준">
-
-**GitHub:** [@Hyun-jun-Lee0811](https://github.com/Hyun-jun-Lee0811)  
-**역할:** 백엔드 개발
+<br>
+<strong>이현준</strong>
+<br>
+<a href="https://github.com/Hyun-jun-Lee0811">@Hyun-jun-Lee0811</a>
+<br>
+백엔드 개발
+</td>
+</tr>
+</table>
 
 ## 🛠 기술 스택
 
