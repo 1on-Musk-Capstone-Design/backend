@@ -35,22 +35,11 @@
 
 ### 백엔드 개발자
 
-- **김수빈 (Kim Subin)** 
-  - GitHub: [@qlsl1198](https://github.com/qlsl1198)
-  - 포트폴리오: [popol-seven.vercel.app](https://popol-seven.vercel.app/)
-  - LinkedIn: [김수빈](https://www.linkedin.com/in/%EC%88%98%EB%B9%88-%EA%B9%80-a55a44372)
-  - Instagram: [@s_.binnie](https://www.instagram.com/s_.binnie/)
-  - 경력: 계명대학교 컴퓨터공학과, 풀스택 개발자 지망생
-
-- **정양효 (Jeong Yang Hyo)**
-  - GitHub: [@jyhyo02](https://github.com/jyhyo02)
-  - 경력: 백엔드 개발 전문
-
-- **이현준 (Hyunjun Lee)**
-  - GitHub: [@Hyun-jun-Lee0811](https://github.com/Hyun-jun-Lee0811)
-  - 블로그: [hyunjuns.tistory.com](https://hyunjuns.tistory.com)
-  - Instagram: [@juns0811](https://www.instagram.com/juns0811/)
-  - 경력: 백엔드 개발 및 기술 블로깅
+| 이름 | GitHub | 포트폴리오 | LinkedIn | Instagram | 역할 |
+|------|--------|------------|----------|-----------|------|
+| **김수빈** | [@qlsl1198](https://github.com/qlsl1198) | [포트폴리오](https://popol-seven.vercel.app/) | [프로필](https://www.linkedin.com/in/%EC%88%98%EB%B9%88-%EA%B9%80-a55a44372) | [@s_.binnie](https://www.instagram.com/s_.binnie/) | 풀스택 개발자 |
+| **정양효** | [@jyhyo02](https://github.com/jyhyo02) | - | - | - | 백엔드 개발 |
+| **이현준** | [@Hyun-jun-Lee0811](https://github.com/Hyun-jun-Lee0811) | [블로그](https://hyunjuns.tistory.com) | - | [@juns0811](https://www.instagram.com/juns0811/) | 백엔드 개발 |
 
 ## 🛠 기술 스택
 
