@@ -35,11 +35,11 @@
 
 ### 백엔드 개발자
 
-| 이름 | GitHub | 역할 |
-|------|--------|------|
-| **김수빈** | [@qlsl1198](https://github.com/qlsl1198) | 풀스택 개발자 |
-| **정양효** | [@jyhyo02](https://github.com/jyhyo02) | 백엔드 개발 |
-| **이현준** | [@Hyun-jun-Lee0811](https://github.com/Hyun-jun-Lee0811) | 백엔드 개발 |
+| 프로필 | 이름 | GitHub | 역할 |
+|--------|------|--------|------|
+| <img src="https://github.com/qlsl1198.png" width="50" height="50" alt="김수빈"> | [**김수빈**](https://github.com/qlsl1198) | [@qlsl1198](https://github.com/qlsl1198) | 풀스택 개발자 |
+| <img src="https://github.com/jyhyo02.png" width="50" height="50" alt="정양효"> | [**정양효**](https://github.com/jyhyo02) | [@jyhyo02](https://github.com/jyhyo02) | 백엔드 개발 |
+| <img src="https://github.com/Hyun-jun-Lee0811.png" width="50" height="50" alt="이현준"> | [**이현준**](https://github.com/Hyun-jun-Lee0811) | [@Hyun-jun-Lee0811](https://github.com/Hyun-jun-Lee0811) | 백엔드 개발 |
 
 ## 🛠 기술 스택
 
