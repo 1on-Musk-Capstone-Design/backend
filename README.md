@@ -42,21 +42,33 @@
 <br>
 <a href="https://github.com/qlsl1198"><strong>김수빈</strong></a>
 <br>
-풀스택 개발자
+<small>팀장 · 풀스택 개발자</small>
+<br>
+<small>Spring Boot · React · PostgreSQL</small>
+<br>
+<small>계명대학교 컴퓨터공학과</small>
 </td>
 <td align="center">
 <img src="https://github.com/jyhyo02.png" width="100" height="100" alt="정양효">
 <br>
 <a href="https://github.com/jyhyo02"><strong>정양효</strong></a>
 <br>
-백엔드 개발
+<small>백엔드 개발자</small>
+<br>
+<small>Spring Boot · Java · MySQL</small>
+<br>
+<small>실시간 통신 전문</small>
 </td>
 <td align="center">
 <img src="https://github.com/Hyun-jun-Lee0811.png" width="100" height="100" alt="이현준">
 <br>
 <a href="https://github.com/Hyun-jun-Lee0811"><strong>이현준</strong></a>
 <br>
-백엔드 개발
+<small>백엔드 개발자</small>
+<br>
+<small>Spring Boot · Java · AWS</small>
+<br>
+<small>기술 블로거</small>
 </td>
 </tr>
 </table>
