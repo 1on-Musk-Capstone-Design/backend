@@ -40,7 +40,7 @@
 <td align="center">
 <img src="https://github.com/qlsl1198.png" width="100" height="100" alt="김수빈">
 <br>
-<strong>김수빈</strong>
+<a href="https://github.com/qlsl1198"><strong>김수빈</strong></a>
 <br>
 <a href="https://github.com/qlsl1198">@qlsl1198</a>
 <br>
@@ -49,7 +49,7 @@
 <td align="center">
 <img src="https://github.com/jyhyo02.png" width="100" height="100" alt="정양효">
 <br>
-<strong>정양효</strong>
+<a href="https://github.com/jyhyo02"><strong>정양효</strong></a>
 <br>
 <a href="https://github.com/jyhyo02">@jyhyo02</a>
 <br>
@@ -58,7 +58,7 @@
 <td align="center">
 <img src="https://github.com/Hyun-jun-Lee0811.png" width="100" height="100" alt="이현준">
 <br>
-<strong>이현준</strong>
+<a href="https://github.com/Hyun-jun-Lee0811"><strong>이현준</strong></a>
 <br>
 <a href="https://github.com/Hyun-jun-Lee0811">@Hyun-jun-Lee0811</a>
 <br>
