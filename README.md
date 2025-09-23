@@ -1,0 +1,204 @@
+# Capstone Project - 실시간 협업 브레인스토밍 플랫폼
+
+## 📋 프로젝트 개요
+
+실시간 협업 브레인스토밍을 위한 웹 애플리케이션입니다. 팀원들이 동시에 아이디어를 공유하고, AI가 자동으로 아이디어를 클러스터링하여 체계적인 브레인스토밍을 지원합니다.
+
+## 🚀 주요 기능
+
+### 1. 채팅 기능
+- 세션 내 실시간 텍스트 채팅
+- 사용자/시간 기반 기록 관리
+- 팀별, 세션별 채널 구분
+
+### 2. 무한 컨버스 (Figma 스타일)
+- 아이디어 박스를 자유롭게 생성/위치 조정
+- 단순 텍스트 입력 중심의 직관적 인터페이스
+- 팀원들이 동시에 편집 가능
+
+### 3. 음성 채팅
+- 세션 내 음성 대화 지원
+- 참여자 입퇴장 기록
+- 세션별 보이스 채널 관리
+
+### 4. AI 클러스터링
+- 아이디어 박스들을 자동으로 분류
+- 비슷한 주제끼리 그룹핑
+- 클러스터 라벨링 기능
+
+### 5. 세션 관리
+- 프로젝트/팀 단위로 세션 생성
+- 세션별 컨버스, 채팅, 음성, 아이디어 관리
+- 진행 상황 저장 및 재접속 가능
+
+## 👥 팀 소개
+
+### 백엔드 개발자
+
+- **김수빈 (Kim Subin)** 
+  - GitHub: [@qlsl1198](https://github.com/qlsl1198)
+  - 포트폴리오: [popol-seven.vercel.app](https://popol-seven.vercel.app/)
+  - LinkedIn: [김수빈](https://www.linkedin.com/in/%EC%88%98%EB%B9%88-%EA%B9%80-a55a44372)
+  - Instagram: [@s_.binnie](https://www.instagram.com/s_.binnie/)
+  - 경력: 계명대학교 컴퓨터공학과, 풀스택 개발자 지망생
+
+- **정양효 (Jeong Yang Hyo)**
+  - GitHub: [@jyhyo02](https://github.com/jyhyo02)
+  - 경력: 백엔드 개발 전문
+
+- **이현준 (Hyunjun Lee)**
+  - GitHub: [@Hyun-jun-Lee0811](https://github.com/Hyun-jun-Lee0811)
+  - 블로그: [hyunjuns.tistory.com](https://hyunjuns.tistory.com)
+  - Instagram: [@juns0811](https://www.instagram.com/juns0811/)
+  - 경력: 백엔드 개발 및 기술 블로깅
+
+## 🛠 기술 스택
+
+### Backend
+- **Java 21**
+- **Spring Boot 3.2.0**
+- **PostgreSQL** - 데이터베이스
+- **Socket.IO** - 실시간 통신
+- **OpenAI API** - AI 클러스터링
+- **Spring Security** - 보안
+- **Spring Data JPA** - ORM
+
+### Frontend
+- **React** (CSR)
+- **Socket.IO Client** - 실시간 통신
+
+## 📦 설치 및 실행
+
+### 사전 요구사항
+- Java 21
+- Maven 3.6+
+- PostgreSQL 12+
+
+### 1. 데이터베이스 설정
+
+```bash
+# PostgreSQL에 데이터베이스 생성
+createdb capstone_db
+
+# 또는 psql에서
+psql -U postgres
+CREATE DATABASE capstone_db;
+```
+
+### 2. 환경변수 설정 (선택사항)
+
+```bash
+# OpenAI API 키 설정
+export OPENAI_API_KEY=your-openai-api-key-here
+```
+
+### 3. 애플리케이션 실행
+
+```bash
+# 의존성 설치
+mvn clean install
+
+# 애플리케이션 실행
+mvn spring-boot:run
+```
+
+### 4. 접속 정보
+
+- **REST API**: `http://localhost:8080/api`
+- **Socket.IO**: `http://localhost:9092`
+- **헬스체크**: `http://localhost:8080/api/health`
+
+## 🔧 설정 파일
+
+### application.yml 주요 설정
+
+```yaml
+# 데이터베이스 설정
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/capstone_db
+    username: postgres
+    password: postgres
+
+# Socket.IO 설정
+socketio:
+  host: localhost
+  port: 9092
+  cors:
+    origins: "http://localhost:3000,http://127.0.0.1:3000"
+
+# OpenAI API 설정
+openai:
+  api-key: ${OPENAI_API_KEY:your-openai-api-key-here}
+  model: text-embedding-ada-002
+```
+
+## 📡 Socket.IO 이벤트
+
+### 클라이언트 → 서버
+- `join_session`: 세션 참여
+- `leave_session`: 세션 나가기
+- `chat_message`: 채팅 메시지 전송
+- `idea_update`: 아이디어 박스 업데이트
+- `voice_join`: 음성 채팅 참여
+- `voice_leave`: 음성 채팅 나가기
+
+### 서버 → 클라이언트
+- `connected`: 연결 확인
+- `joined_session`: 세션 참여 완료
+- `left_session`: 세션 나가기 완료
+- `new_message`: 새 채팅 메시지
+- `idea_updated`: 아이디어 박스 업데이트
+- `user_joined`: 사용자 참여 알림
+- `user_left`: 사용자 나가기 알림
+
+## 🏗 프로젝트 구조
+
+```
+src/main/java/com/capstone/
+├── CapstoneApplication.java          # 메인 애플리케이션
+├── config/                           # 설정 클래스들
+│   ├── SecurityConfig.java          # 보안 설정
+│   └── SocketIOConfig.java          # Socket.IO 설정
+├── controller/                       # REST API 컨트롤러
+│   └── HealthController.java        # 헬스체크 API
+└── service/                         # 비즈니스 로직
+    └── SocketIOService.java         # Socket.IO 이벤트 처리
+```
+
+## 🚧 개발 상태
+
+### ✅ 완료된 기능
+- [x] Socket.IO 서버 설정 및 이벤트 핸들러
+- [x] CORS 설정 및 보안 구성
+- [x] 기본 애플리케이션 설정
+- [x] PostgreSQL 연결 설정
+- [x] 헬스체크 API
+
+### 🔄 진행 예정
+- [ ] 사용자 인증/인가 시스템
+- [ ] 세션 관리 API
+- [ ] 채팅 메시지 저장/조회
+- [ ] 아이디어 박스 CRUD API
+- [ ] AI 클러스터링 서비스
+- [ ] 음성 채팅 통합
+
+## 🤝 기여 방법
+
+1. 이 저장소를 포크합니다
+2. 새로운 기능 브랜치를 생성합니다 (`git checkout -b feature/amazing-feature`)
+3. 변경사항을 커밋합니다 (`git commit -m 'Add some amazing feature'`)
+4. 브랜치에 푸시합니다 (`git push origin feature/amazing-feature`)
+5. Pull Request를 생성합니다
+
+## 📄 라이선스
+
+이 프로젝트는 MIT 라이선스 하에 배포됩니다. 자세한 내용은 `LICENSE` 파일을 참조하세요.
+
+## 📞 문의
+
+프로젝트에 대한 문의사항이 있으시면 이슈를 생성해 주세요.
+
+---
+
+**Happy Brainstorming! 🧠💡**

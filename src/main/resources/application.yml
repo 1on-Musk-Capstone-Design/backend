@@ -27,6 +27,19 @@ spring:
       name: admin
       password: admin
 
+# Socket.IO 설정
+socketio:
+  host: localhost
+  port: 9092
+  cors:
+    origins: "http://localhost:3000,http://127.0.0.1:3000"
+
+# OpenAI API 설정 (AI 클러스터링용)
+openai:
+  api-key: ${OPENAI_API_KEY:your-openai-api-key-here}
+  model: text-embedding-ada-002
+  max-tokens: 1000
+
 management:
   endpoints:
     web:
@@ -39,6 +52,7 @@ management:
 logging:
   level:
     com.capstone: DEBUG
-    org.springframework.security: DEBUG
+    org.springframework.security: INFO
+    com.corundumstudio.socketio: DEBUG
   pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
