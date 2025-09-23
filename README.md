@@ -42,7 +42,7 @@
 <br>
 <a href="https://github.com/qlsl1198"><strong>김수빈</strong></a>
 <br>
-<small>풀스택 개발자</small>
+<small>백엔드 개발자</small>
 </td>
 <td align="center">
 <img src="https://github.com/jyhyo02.png" width="100" height="100" alt="정양효">
