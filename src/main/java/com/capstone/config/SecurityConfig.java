@@ -23,6 +23,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(authz -> authz
                 .requestMatchers("/health", "/actuator/**", "/socket.io/**").permitAll()
                 .requestMatchers("/api/sessions/**", "/api/users/**", "/api/chat/**", "/api/ideas/**").permitAll()
+                .requestMatchers("/api/v1/workspaces/**").permitAll()
                 .anyRequest().authenticated()
             );
         
