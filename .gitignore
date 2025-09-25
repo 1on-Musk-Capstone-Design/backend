@@ -40,3 +40,9 @@ build/
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+### Environment Variables ###
+.env
+.env.local
+.env.development
+.env.production
