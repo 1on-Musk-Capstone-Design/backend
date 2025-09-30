@@ -18,6 +18,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(com.capstone.domain.workspace.WorkspaceController.class)
+@org.springframework.context.annotation.Import(com.capstone.config.TestSecurityConfig.class)
 class WorkspaceControllerTest {
 
     @Autowired

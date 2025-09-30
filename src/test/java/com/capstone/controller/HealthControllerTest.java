@@ -12,6 +12,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(com.capstone.global.controller.HealthController.class)
+@org.springframework.context.annotation.Import(com.capstone.config.TestSecurityConfig.class)
 class HealthControllerTest {
 
     @Autowired
