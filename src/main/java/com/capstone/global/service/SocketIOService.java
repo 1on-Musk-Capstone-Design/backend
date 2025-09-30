@@ -1,4 +1,4 @@
-package com.capstone.service;
+package com.capstone.global.service;
 
 import com.corundumstudio.socketio.SocketIOServer;
 import com.corundumstudio.socketio.listener.ConnectListener;

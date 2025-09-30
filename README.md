@@ -166,13 +166,22 @@ openai:
 ```
 src/main/java/com/capstone/
 ├── CapstoneApplication.java          # 메인 애플리케이션
-├── config/                           # 설정 클래스들
-│   ├── SecurityConfig.java          # 보안 설정
-│   └── SocketIOConfig.java          # Socket.IO 설정
-├── controller/                       # REST API 컨트롤러
-│   └── HealthController.java        # 헬스체크 API
-└── service/                         # 비즈니스 로직
-    └── SocketIOService.java         # Socket.IO 이벤트 처리
+├── domain/                           # 도메인별 기능
+│   └── workspace/                    # 워크스페이스 도메인
+│       ├── Workspace.java           # 워크스페이스 엔티티
+│       ├── WorkspaceController.java # 워크스페이스 API
+│       ├── WorkspaceDtos.java       # 워크스페이스 DTO
+│       ├── WorkspaceRepository.java # 워크스페이스 리포지토리
+│       └── WorkspaceService.java    # 워크스페이스 서비스
+└── global/                          # 공통 컴포넌트
+    ├── config/                       # 설정 클래스들
+    │   ├── SecurityConfig.java      # 보안 설정
+    │   └── SocketIOConfig.java      # Socket.IO 설정
+    ├── controller/                   # 공통 컨트롤러
+    │   ├── HealthController.java    # 헬스체크 API
+    │   └── OpenAIController.java    # OpenAI API
+    └── service/                     # 공통 서비스
+        └── SocketIOService.java     # Socket.IO 이벤트 처리
 ```
 
 ## 🚧 개발 상태

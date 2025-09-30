@@ -1,4 +1,4 @@
-package com.capstone.controller;
+package com.capstone.global.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -28,7 +28,7 @@ public class HealthController {
         
         // Socket.IO 서버 상태 확인
         Map<String, Object> socketStatus = new HashMap<>();
-        socketStatus.put("running", socketIOServer.isRunning());
+        socketStatus.put("running", socketIOServer != null);
         socketStatus.put("port", socketIOServer.getConfiguration().getPort());
         socketStatus.put("connectedClients", socketIOServer.getAllClients().size());
         response.put("socketIO", socketStatus);
