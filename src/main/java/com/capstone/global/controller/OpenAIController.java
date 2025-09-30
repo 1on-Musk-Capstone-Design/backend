@@ -1,4 +1,4 @@
-package com.capstone.controller;
+package com.capstone.global.controller;
 
 // import com.capstone.service.OpenAIService;
 import org.springframework.beans.factory.annotation.Autowired;

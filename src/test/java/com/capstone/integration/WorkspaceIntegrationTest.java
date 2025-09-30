@@ -1,7 +1,7 @@
 package com.capstone.integration;
 
-import com.capstone.entity.Workspace;
-import com.capstone.repository.WorkspaceRepository;
+import com.capstone.domain.workspace.Workspace;
+import com.capstone.domain.workspace.WorkspaceRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;

@@ -1,4 +1,4 @@
-package com.capstone.entity;
+package com.capstone.domain.workspace;
 
 import jakarta.persistence.*;
 import java.time.Instant;

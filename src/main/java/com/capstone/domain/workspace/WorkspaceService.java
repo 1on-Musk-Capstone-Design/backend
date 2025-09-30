@@ -1,7 +1,7 @@
-package com.capstone.service;
+package com.capstone.domain.workspace;
 
-import com.capstone.entity.Workspace;
-import com.capstone.repository.WorkspaceRepository;
+import com.capstone.domain.workspace.Workspace;
+import com.capstone.domain.workspace.WorkspaceRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

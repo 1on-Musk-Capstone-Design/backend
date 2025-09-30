@@ -1,7 +1,8 @@
 package com.capstone.service;
 
-import com.capstone.entity.Workspace;
-import com.capstone.repository.WorkspaceRepository;
+import com.capstone.domain.workspace.Workspace;
+import com.capstone.domain.workspace.WorkspaceRepository;
+import com.capstone.domain.workspace.WorkspaceService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;

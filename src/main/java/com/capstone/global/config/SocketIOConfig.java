@@ -1,4 +1,4 @@
-package com.capstone.config;
+package com.capstone.global.config;
 
 import com.corundumstudio.socketio.SocketIOServer;
 import org.springframework.beans.factory.annotation.Value;

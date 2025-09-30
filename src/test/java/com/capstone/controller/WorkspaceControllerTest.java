@@ -1,8 +1,8 @@
 package com.capstone.controller;
 
-import com.capstone.dto.WorkspaceDtos;
-import com.capstone.entity.Workspace;
-import com.capstone.service.WorkspaceService;
+import com.capstone.domain.workspace.WorkspaceDtos;
+import com.capstone.domain.workspace.Workspace;
+import com.capstone.domain.workspace.WorkspaceService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -17,7 +17,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(WorkspaceController.class)
+@WebMvcTest(com.capstone.domain.workspace.WorkspaceController.class)
 class WorkspaceControllerTest {
 
     @Autowired

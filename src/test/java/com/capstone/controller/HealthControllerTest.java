@@ -11,7 +11,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(HealthController.class)
+@WebMvcTest(com.capstone.global.controller.HealthController.class)
 class HealthControllerTest {
 
     @Autowired

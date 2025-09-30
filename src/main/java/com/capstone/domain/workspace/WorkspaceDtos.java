@@ -1,4 +1,4 @@
-package com.capstone.dto;
+package com.capstone.domain.workspace;
 
 import java.time.Instant;
 
