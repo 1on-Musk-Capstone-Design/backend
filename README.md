@@ -103,6 +103,7 @@ export OPENAI_API_KEY=your-openai-api-key-here
 
 ### 3. 애플리케이션 실행
 
+#### Maven
 ```bash
 # 의존성 설치
 mvn clean install
@@ -111,11 +112,29 @@ mvn clean install
 mvn spring-boot:run
 ```
 
+#### Gradle (Wrapper 사용 권장)
+```bash
+# 빌드
+./gradlew build
+
+# 테스트
+./gradlew test
+
+# 애플리케이션 실행
+./gradlew bootRun
+
+# (포트가 점유 중일 경우) 8080/9092 포트 정리 후 실행
+lsof -ti:8080 | xargs -r kill -9; lsof -ti:9092 | xargs -r kill -9; ./gradlew bootRun
+```
+
 ### 4. 접속 정보
 
 - **REST API**: `http://localhost:8080/api`
 - **Socket.IO**: `http://localhost:9092`
 - **헬스체크**: `http://localhost:8080/api/health`
+
+### 5. Postman 컬렉션
+- 루트의 `postman_collection.json`을 Postman에 임포트하여 API를 바로 테스트할 수 있습니다.
 
 ## 🔧 설정 파일
 
