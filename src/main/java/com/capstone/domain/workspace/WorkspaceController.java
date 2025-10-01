@@ -6,6 +6,9 @@ import com.capstone.domain.workspace.WorkspaceService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 @RestController
 @RequestMapping("/api/v1/workspaces")
 @CrossOrigin(origins = {"http://localhost:3000", "http://127.0.0.1:3000"})
@@ -15,6 +18,22 @@ public class WorkspaceController {
 
     public WorkspaceController(WorkspaceService workspaceService) {
         this.workspaceService = workspaceService;
+    }
+
+    @GetMapping
+    public ResponseEntity<List<WorkspaceDtos.ListItem>> getAllWorkspaces() {
+        List<Workspace> workspaces = workspaceService.getAllWorkspaces();
+        
+        List<WorkspaceDtos.ListItem> response = workspaces.stream()
+                .map(workspace -> {
+                    WorkspaceDtos.ListItem item = new WorkspaceDtos.ListItem();
+                    item.setWorkspaceId(workspace.getId());
+                    item.setName(workspace.getName());
+                    return item;
+                })
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping

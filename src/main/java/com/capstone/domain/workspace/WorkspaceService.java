@@ -5,6 +5,8 @@ import com.capstone.domain.workspace.WorkspaceRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 public class WorkspaceService {
     private final WorkspaceRepository workspaceRepository;
@@ -18,5 +20,10 @@ public class WorkspaceService {
         Workspace workspace = new Workspace();
         workspace.setName(name);
         return workspaceRepository.save(workspace);
+    }
+
+    @Transactional(readOnly = true)
+    public List<Workspace> getAllWorkspaces() {
+        return workspaceRepository.findAll();
     }
 }

@@ -11,9 +11,12 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.Instant;
+import java.util.Arrays;
+import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -74,5 +77,46 @@ class WorkspaceControllerTest {
                         .content(requestBody)
                         .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf()))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void getAllWorkspaces_shouldReturnWorkspaceList() throws Exception {
+        // Given
+        Workspace workspace1 = new Workspace();
+        workspace1.setId(1L);
+        workspace1.setName("팀 프로젝트");
+        workspace1.setCreatedAt(Instant.now());
+
+        Workspace workspace2 = new Workspace();
+        workspace2.setId(2L);
+        workspace2.setName("개인 프로젝트");
+        workspace2.setCreatedAt(Instant.now());
+
+        List<Workspace> mockWorkspaces = Arrays.asList(workspace1, workspace2);
+        when(workspaceService.getAllWorkspaces()).thenReturn(mockWorkspaces);
+
+        // When & Then
+        mockMvc.perform(get("/api/v1/workspaces")
+                        .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].workspaceId").value(1))
+                .andExpect(jsonPath("$[0].name").value("팀 프로젝트"))
+                .andExpect(jsonPath("$[1].workspaceId").value(2))
+                .andExpect(jsonPath("$[1].name").value("개인 프로젝트"));
+    }
+
+    @Test
+    void getAllWorkspaces_withEmptyList_shouldReturnEmptyArray() throws Exception {
+        // Given
+        when(workspaceService.getAllWorkspaces()).thenReturn(Arrays.asList());
+
+        // When & Then
+        mockMvc.perform(get("/api/v1/workspaces")
+                        .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$.length()").value(0));
     }
 }

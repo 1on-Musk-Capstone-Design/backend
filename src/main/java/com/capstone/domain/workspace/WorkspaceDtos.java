@@ -44,4 +44,25 @@ public class WorkspaceDtos {
             this.createdAt = createdAt;
         }
     }
+
+    public static class ListItem {
+        private Long workspaceId;
+        private String name;
+
+        public Long getWorkspaceId() {
+            return workspaceId;
+        }
+
+        public void setWorkspaceId(Long workspaceId) {
+            this.workspaceId = workspaceId;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+    }
 }

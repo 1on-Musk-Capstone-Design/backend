@@ -51,6 +51,67 @@
       ]
     },
     {
+      "name": "Get All Workspaces",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/workspaces",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "v1", "workspaces"]
+        },
+        "description": "모든 워크스페이스 목록 조회"
+      },
+      "response": [
+        {
+          "name": "Success Response",
+          "originalRequest": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/workspaces",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "workspaces"]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "cookie": [],
+          "body": "[\n  {\n    \"workspaceId\": 1,\n    \"name\": \"팀 프로젝트\"\n  },\n  {\n    \"workspaceId\": 2,\n    \"name\": \"개인 프로젝트\"\n  }\n]"
+        },
+        {
+          "name": "Empty List Response",
+          "originalRequest": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/workspaces",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "workspaces"]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "cookie": [],
+          "body": "[]"
+        }
+      ]
+    },
+    {
       "name": "Create Workspace",
       "request": {
         "method": "POST",
