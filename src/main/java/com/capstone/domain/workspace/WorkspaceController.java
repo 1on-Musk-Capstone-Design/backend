@@ -1,8 +1,5 @@
 package com.capstone.domain.workspace;
 
-import com.capstone.domain.workspace.WorkspaceDtos;
-import com.capstone.domain.workspace.Workspace;
-import com.capstone.domain.workspace.WorkspaceService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
