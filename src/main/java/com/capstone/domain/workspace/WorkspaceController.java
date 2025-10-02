@@ -24,7 +24,7 @@ public class WorkspaceController {
         List<WorkspaceDtos.ListItem> response = workspaces.stream()
                 .map(workspace -> {
                     WorkspaceDtos.ListItem item = new WorkspaceDtos.ListItem();
-                    item.setWorkspaceId(workspace.getId());
+                    item.setWorkspaceId(workspace.getWorkspaceId());
                     item.setName(workspace.getName());
                     return item;
                 })
@@ -39,7 +39,7 @@ public class WorkspaceController {
             Workspace workspace = workspaceService.getWorkspaceById(id);
             
             WorkspaceDtos.ListItem response = new WorkspaceDtos.ListItem();
-            response.setWorkspaceId(workspace.getId());
+            response.setWorkspaceId(workspace.getWorkspaceId());
             response.setName(workspace.getName());
             
             return ResponseEntity.ok(response);
@@ -58,7 +58,7 @@ public class WorkspaceController {
             Workspace updated = workspaceService.updateWorkspaceName(id, request.getName().trim());
             
             WorkspaceDtos.ListItem response = new WorkspaceDtos.ListItem();
-            response.setWorkspaceId(updated.getId());
+            response.setWorkspaceId(updated.getWorkspaceId());
             response.setName(updated.getName());
             
             return ResponseEntity.ok(response);
@@ -76,7 +76,7 @@ public class WorkspaceController {
         Workspace saved = workspaceService.createWorkspace(request.getName().trim());
 
         WorkspaceDtos.Response resp = new WorkspaceDtos.Response();
-        resp.setWorkspaceId(saved.getId());
+        resp.setWorkspaceId(saved.getWorkspaceId());
         resp.setName(saved.getName());
         resp.setCreatedAt(saved.getCreatedAt());
 

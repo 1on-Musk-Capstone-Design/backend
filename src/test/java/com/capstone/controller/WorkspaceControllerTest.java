@@ -37,7 +37,7 @@ class WorkspaceControllerTest {
     void createWorkspace_shouldReturnCreatedWorkspace() throws Exception {
         // Given
         Workspace mockWorkspace = new Workspace();
-        mockWorkspace.setId(1L);
+        mockWorkspace.setWorkspaceId(1L);
         mockWorkspace.setName("테스트 워크스페이스");
         mockWorkspace.setCreatedAt(Instant.now());
 
@@ -86,12 +86,12 @@ class WorkspaceControllerTest {
     void getAllWorkspaces_shouldReturnWorkspaceList() throws Exception {
         // Given
         Workspace workspace1 = new Workspace();
-        workspace1.setId(1L);
+        workspace1.setWorkspaceId(1L);
         workspace1.setName("팀 프로젝트");
         workspace1.setCreatedAt(Instant.now());
 
         Workspace workspace2 = new Workspace();
-        workspace2.setId(2L);
+        workspace2.setWorkspaceId(2L);
         workspace2.setName("개인 프로젝트");
         workspace2.setCreatedAt(Instant.now());
 
@@ -127,7 +127,7 @@ class WorkspaceControllerTest {
     void getWorkspaceById_shouldReturnWorkspace() throws Exception {
         // Given
         Workspace mockWorkspace = new Workspace();
-        mockWorkspace.setId(1L);
+        mockWorkspace.setWorkspaceId(1L);
         mockWorkspace.setName("팀 프로젝트");
         mockWorkspace.setCreatedAt(Instant.now());
 
@@ -157,7 +157,7 @@ class WorkspaceControllerTest {
     void updateWorkspace_shouldReturnUpdatedWorkspace() throws Exception {
         // Given
         Workspace mockWorkspace = new Workspace();
-        mockWorkspace.setId(1L);
+        mockWorkspace.setWorkspaceId(1L);
         mockWorkspace.setName("새로운 이름");
         mockWorkspace.setCreatedAt(Instant.now());
 
