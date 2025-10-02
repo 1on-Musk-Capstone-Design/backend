@@ -14,7 +14,10 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -210,6 +213,30 @@ class WorkspaceControllerTest {
         mockMvc.perform(put("/api/v1/workspaces/999")
                         .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
                         .content(requestBody)
+                        .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf()))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void deleteWorkspace_shouldReturnSuccessMessage() throws Exception {
+        // Given
+        doNothing().when(workspaceService).deleteWorkspace(1L);
+
+        // When & Then
+        mockMvc.perform(delete("/api/v1/workspaces/1")
+                        .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("워크스페이스가 삭제되었습니다."));
+    }
+
+    @Test
+    void deleteWorkspace_withNonExistentId_shouldReturnNotFound() throws Exception {
+        // Given
+        doThrow(new RuntimeException("워크스페이스를 찾을 수 없습니다. ID: 999"))
+                .when(workspaceService).deleteWorkspace(999L);
+
+        // When & Then
+        mockMvc.perform(delete("/api/v1/workspaces/999")
                         .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf()))
                 .andExpect(status().isNotFound());
     }

@@ -37,4 +37,10 @@ public class WorkspaceService {
         workspace.setName(name);
         return workspaceRepository.save(workspace);
     }
+
+    @Transactional
+    public void deleteWorkspace(Long id) {
+        Workspace workspace = getWorkspaceById(id);
+        workspaceRepository.delete(workspace);
+    }
 }

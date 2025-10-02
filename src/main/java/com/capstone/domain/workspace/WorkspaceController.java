@@ -82,4 +82,18 @@ public class WorkspaceController {
 
         return ResponseEntity.ok(resp);
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<WorkspaceDtos.DeleteResponse> deleteWorkspace(@PathVariable Long id) {
+        try {
+            workspaceService.deleteWorkspace(id);
+            
+            WorkspaceDtos.DeleteResponse response = new WorkspaceDtos.DeleteResponse();
+            response.setMessage("워크스페이스가 삭제되었습니다.");
+            
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
 }
