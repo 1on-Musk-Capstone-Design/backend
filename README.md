@@ -140,6 +140,7 @@ lsof -ti:8080 | xargs -r kill -9; lsof -ti:9092 | xargs -r kill -9; ./gradlew bo
   - 워크스페이스 목록 조회 (`GET /api/v1/workspaces`)
   - 워크스페이스 생성 (`POST /api/v1/workspaces`)
   - 워크스페이스 상세 조회 (`GET /api/v1/workspaces/{id}`)
+  - 워크스페이스 이름 변경 (`PUT /api/v1/workspaces/{id}`)
 
 ## 🔧 설정 파일
 
@@ -220,6 +221,7 @@ src/main/java/com/capstone/
   - [x] 워크스페이스 생성 API
   - [x] 워크스페이스 목록 조회 API
   - [x] 워크스페이스 상세 조회 API
+  - [x] 워크스페이스 이름 변경 API
 - [x] Postman 컬렉션 (API 테스트용)
 
 ### 🔄 진행 예정
@@ -229,7 +231,7 @@ src/main/java/com/capstone/
 - [ ] 아이디어 박스 CRUD API
 - [ ] AI 클러스터링 서비스
 - [ ] 음성 채팅 통합
-- [ ] 워크스페이스 수정/삭제 API
+- [ ] 워크스페이스 삭제 API
 
 ## 🤝 기여 방법
 
