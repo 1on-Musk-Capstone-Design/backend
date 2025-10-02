@@ -17,6 +17,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(com.capstone.domain.workspace.WorkspaceController.class)
@@ -145,6 +146,70 @@ class WorkspaceControllerTest {
 
         // When & Then
         mockMvc.perform(get("/api/v1/workspaces/999")
+                        .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf()))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void updateWorkspace_shouldReturnUpdatedWorkspace() throws Exception {
+        // Given
+        Workspace mockWorkspace = new Workspace();
+        mockWorkspace.setId(1L);
+        mockWorkspace.setName("새로운 이름");
+        mockWorkspace.setCreatedAt(Instant.now());
+
+        when(workspaceService.updateWorkspaceName(1L, "새로운 이름")).thenReturn(mockWorkspace);
+
+        String requestBody = "{\"name\": \"새로운 이름\"}";
+
+        // When & Then
+        mockMvc.perform(put("/api/v1/workspaces/1")
+                        .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                        .content(requestBody)
+                        .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.workspaceId").value(1))
+                .andExpect(jsonPath("$.name").value("새로운 이름"));
+    }
+
+    @Test
+    void updateWorkspace_withEmptyName_shouldReturnBadRequest() throws Exception {
+        // Given
+        String requestBody = "{\"name\": \"\"}";
+
+        // When & Then
+        mockMvc.perform(put("/api/v1/workspaces/1")
+                        .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                        .content(requestBody)
+                        .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf()))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void updateWorkspace_withNullName_shouldReturnBadRequest() throws Exception {
+        // Given
+        String requestBody = "{\"name\": null}";
+
+        // When & Then
+        mockMvc.perform(put("/api/v1/workspaces/1")
+                        .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                        .content(requestBody)
+                        .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf()))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void updateWorkspace_withNonExistentId_shouldReturnNotFound() throws Exception {
+        // Given
+        when(workspaceService.updateWorkspaceName(999L, "새로운 이름"))
+                .thenThrow(new RuntimeException("워크스페이스를 찾을 수 없습니다. ID: 999"));
+
+        String requestBody = "{\"name\": \"새로운 이름\"}";
+
+        // When & Then
+        mockMvc.perform(put("/api/v1/workspaces/999")
+                        .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                        .content(requestBody)
                         .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf()))
                 .andExpect(status().isNotFound());
     }

@@ -48,6 +48,25 @@ public class WorkspaceController {
         }
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<WorkspaceDtos.ListItem> updateWorkspace(@PathVariable Long id, @RequestBody WorkspaceDtos.UpdateRequest request) {
+        if (request.getName() == null || request.getName().trim().isEmpty()) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        try {
+            Workspace updated = workspaceService.updateWorkspaceName(id, request.getName().trim());
+            
+            WorkspaceDtos.ListItem response = new WorkspaceDtos.ListItem();
+            response.setWorkspaceId(updated.getId());
+            response.setName(updated.getName());
+            
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
     @PostMapping
     public ResponseEntity<WorkspaceDtos.Response> create(@RequestBody WorkspaceDtos.CreateRequest request) {
         if (request.getName() == null || request.getName().trim().isEmpty()) {
