@@ -24,4 +24,10 @@ public class WorkspaceService {
     public List<Workspace> getAllWorkspaces() {
         return workspaceRepository.findAll();
     }
+
+    @Transactional(readOnly = true)
+    public Workspace getWorkspaceById(Long id) {
+        return workspaceRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("워크스페이스를 찾을 수 없습니다. ID: " + id));
+    }
 }

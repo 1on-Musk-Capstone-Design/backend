@@ -33,6 +33,21 @@ public class WorkspaceController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<WorkspaceDtos.ListItem> getWorkspaceById(@PathVariable Long id) {
+        try {
+            Workspace workspace = workspaceService.getWorkspaceById(id);
+            
+            WorkspaceDtos.ListItem response = new WorkspaceDtos.ListItem();
+            response.setWorkspaceId(workspace.getId());
+            response.setName(workspace.getName());
+            
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
     @PostMapping
     public ResponseEntity<WorkspaceDtos.Response> create(@RequestBody WorkspaceDtos.CreateRequest request) {
         if (request.getName() == null || request.getName().trim().isEmpty()) {

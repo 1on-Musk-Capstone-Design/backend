@@ -118,4 +118,34 @@ class WorkspaceControllerTest {
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$.length()").value(0));
     }
+
+    @Test
+    void getWorkspaceById_shouldReturnWorkspace() throws Exception {
+        // Given
+        Workspace mockWorkspace = new Workspace();
+        mockWorkspace.setId(1L);
+        mockWorkspace.setName("팀 프로젝트");
+        mockWorkspace.setCreatedAt(Instant.now());
+
+        when(workspaceService.getWorkspaceById(1L)).thenReturn(mockWorkspace);
+
+        // When & Then
+        mockMvc.perform(get("/api/v1/workspaces/1")
+                        .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.workspaceId").value(1))
+                .andExpect(jsonPath("$.name").value("팀 프로젝트"));
+    }
+
+    @Test
+    void getWorkspaceById_withNonExistentId_shouldReturnNotFound() throws Exception {
+        // Given
+        when(workspaceService.getWorkspaceById(999L))
+                .thenThrow(new RuntimeException("워크스페이스를 찾을 수 없습니다. ID: 999"));
+
+        // When & Then
+        mockMvc.perform(get("/api/v1/workspaces/999")
+                        .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf()))
+                .andExpect(status().isNotFound());
+    }
 }
