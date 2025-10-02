@@ -1,7 +1,6 @@
 package com.capstone.global.controller;
 
 // import com.capstone.service.OpenAIService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

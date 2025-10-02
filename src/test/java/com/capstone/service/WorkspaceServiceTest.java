@@ -27,7 +27,7 @@ class WorkspaceServiceTest {
         // Given
         String workspaceName = "테스트 워크스페이스";
         Workspace mockWorkspace = new Workspace();
-        mockWorkspace.setId(1L);
+        mockWorkspace.setWorkspaceId(1L);
         mockWorkspace.setName(workspaceName);
 
         when(workspaceRepository.save(any(Workspace.class))).thenReturn(mockWorkspace);
@@ -37,7 +37,7 @@ class WorkspaceServiceTest {
 
         // Then
         assertThat(result).isNotNull();
-        assertThat(result.getId()).isEqualTo(1L);
+        assertThat(result.getWorkspaceId()).isEqualTo(1L);
         assertThat(result.getName()).isEqualTo(workspaceName);
     }
 
@@ -47,7 +47,7 @@ class WorkspaceServiceTest {
         String workspaceName = "  테스트 워크스페이스  ";
         String expectedName = "테스트 워크스페이스";
         Workspace mockWorkspace = new Workspace();
-        mockWorkspace.setId(1L);
+        mockWorkspace.setWorkspaceId(1L);
         mockWorkspace.setName(expectedName);
 
         when(workspaceRepository.save(any(Workspace.class))).thenReturn(mockWorkspace);

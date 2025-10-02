@@ -10,7 +10,7 @@ public class Workspace {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
-    private Long id;
+    private Long workspaceId;
     
     @Column(name = "name", nullable = false, length = 100)
     private String name;
@@ -18,12 +18,12 @@ public class Workspace {
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
 
-    public Long getId() {
-        return id;
+    public Long getWorkspaceId() {
+        return workspaceId;
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    public void setWorkspaceId(Long workspaceId) {
+        this.workspaceId = workspaceId;
     }
 
     public String getName() {
