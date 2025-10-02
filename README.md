@@ -135,6 +135,11 @@ lsof -ti:8080 | xargs -r kill -9; lsof -ti:9092 | xargs -r kill -9; ./gradlew bo
 
 ### 5. Postman 컬렉션
 - 루트의 `postman_collection.json`을 Postman에 임포트하여 API를 바로 테스트할 수 있습니다.
+- 포함된 API:
+  - Health Check (`GET /health`)
+  - 워크스페이스 목록 조회 (`GET /api/v1/workspaces`)
+  - 워크스페이스 생성 (`POST /api/v1/workspaces`)
+  - 워크스페이스 상세 조회 (`GET /api/v1/workspaces/{id}`)
 
 ## 🔧 설정 파일
 
@@ -211,6 +216,11 @@ src/main/java/com/capstone/
 - [x] 기본 애플리케이션 설정
 - [x] PostgreSQL 연결 설정
 - [x] 헬스체크 API
+- [x] 워크스페이스 CRUD API
+  - [x] 워크스페이스 생성 API
+  - [x] 워크스페이스 목록 조회 API
+  - [x] 워크스페이스 상세 조회 API
+- [x] Postman 컬렉션 (API 테스트용)
 
 ### 🔄 진행 예정
 - [ ] 사용자 인증/인가 시스템
@@ -219,6 +229,7 @@ src/main/java/com/capstone/
 - [ ] 아이디어 박스 CRUD API
 - [ ] AI 클러스터링 서비스
 - [ ] 음성 채팅 통합
+- [ ] 워크스페이스 수정/삭제 API
 
 ## 🤝 기여 방법
 
