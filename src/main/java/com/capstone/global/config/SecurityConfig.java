@@ -25,7 +25,7 @@ public class SecurityConfig {
             .requestMatchers("/api/sessions/**", "/api/users/**", "/api/chat/**", "/api/ideas/**")
             .permitAll()
             .requestMatchers("/api/v1/workspaces/**").permitAll()
-            .requestMatchers("/api/v1/auth/google/**").permitAll()
+            .requestMatchers("/api/v1/auth-google/**").permitAll()
             .anyRequest().authenticated()
         );
 
