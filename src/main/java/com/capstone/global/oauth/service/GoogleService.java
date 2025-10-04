@@ -20,7 +20,7 @@ public class GoogleService {
 
   private final UserRepository userRepository;
   private final JwtProvider jwtProvider;
-  private final RestTemplate restTemplate = new RestTemplate();
+  private  final RestTemplate restTemplate;
 
   @Value("${oauth2.google.client-id}")
   private String clientId;
