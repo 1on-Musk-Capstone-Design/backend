@@ -23,8 +23,10 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
+   // Lombok
     compileOnly 'org.projectlombok:lombok'
-    annotationProcessor 'org.projectlombok:lombok:1.18.30'
+    annotationProcessor 'org.projectlombok:lombok:1.18.38'
 
     // CORS/WebFlux (프로젝트에 이미 사용 중)
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
