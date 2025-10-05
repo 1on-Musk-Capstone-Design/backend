@@ -25,7 +25,34 @@ public class ChatMessageService {
         message.setWorkspaceId(workspaceId);
         message.setUserId(userId);
         message.setContent(content);
+        message.setMessageType("text");
         
+        return chatMessageRepository.save(message);
+    }
+
+    /**
+     * 파일/이미지 메시지 저장
+     */
+    @Transactional
+    public ChatMessage saveFileMessage(
+            Long workspaceId,
+            String userId,
+            String content,
+            String messageType,
+            String fileUrl,
+            String fileName,
+            String mimeType,
+            Long fileSize
+    ) {
+        ChatMessage message = new ChatMessage();
+        message.setWorkspaceId(workspaceId);
+        message.setUserId(userId);
+        message.setContent(content);
+        message.setMessageType(messageType);
+        message.setFileUrl(fileUrl);
+        message.setFileName(fileName);
+        message.setMimeType(mimeType);
+        message.setFileSize(fileSize);
         return chatMessageRepository.save(message);
     }
     

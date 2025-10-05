@@ -2,6 +2,7 @@ package com.capstone.domain.chat;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -17,6 +18,49 @@ public class ChatMessageController {
         this.chatMessageService = chatMessageService;
     }
 
+    /**
+     * 파일 업로드 (로컬 스토리지 예시)
+     * POST /api/v1/chat/messages/upload
+     */
+    @PostMapping("/upload")
+    public ResponseEntity<ChatMessageDtos.Response> uploadFile(
+            @RequestParam("workspaceId") Long workspaceId,
+            @RequestParam("userId") String userId,
+            @RequestParam(value = "content", required = false) String content,
+            @RequestParam("file") MultipartFile file
+    ) throws Exception {
+        if (workspaceId == null || userId == null || file == null || file.isEmpty()) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        // 실제 서비스에서는 S3 등 외부 스토리지 사용 권장. 여기서는 간단히 URL만 구성
+        String fileUrl = "/files/" + file.getOriginalFilename();
+
+        ChatMessage saved = chatMessageService.saveFileMessage(
+                workspaceId,
+                userId,
+                content,
+                file.getContentType() != null && file.getContentType().startsWith("image/") ? "image" : "file",
+                fileUrl,
+                file.getOriginalFilename(),
+                file.getContentType(),
+                file.getSize()
+        );
+
+        ChatMessageDtos.Response resp = new ChatMessageDtos.Response();
+        resp.setMessageId(saved.getMessageId());
+        resp.setWorkspaceId(saved.getWorkspaceId());
+        resp.setUserId(saved.getUserId());
+        resp.setContent(saved.getContent());
+        resp.setMessageType(saved.getMessageType());
+        resp.setFileUrl(saved.getFileUrl());
+        resp.setFileName(saved.getFileName());
+        resp.setMimeType(saved.getMimeType());
+        resp.setFileSize(saved.getFileSize());
+        resp.setCreatedAt(saved.getCreatedAt());
+
+        return ResponseEntity.ok(resp);
+    }
     /**
      * 채팅 메시지 전송
      * POST /api/v1/chat/messages
@@ -41,6 +85,11 @@ public class ChatMessageController {
         response.setWorkspaceId(savedMessage.getWorkspaceId());
         response.setUserId(savedMessage.getUserId());
         response.setContent(savedMessage.getContent());
+        response.setMessageType(savedMessage.getMessageType());
+        response.setFileUrl(savedMessage.getFileUrl());
+        response.setFileName(savedMessage.getFileName());
+        response.setMimeType(savedMessage.getMimeType());
+        response.setFileSize(savedMessage.getFileSize());
         response.setCreatedAt(savedMessage.getCreatedAt());
 
         return ResponseEntity.ok(response);

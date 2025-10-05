@@ -45,6 +45,11 @@ public class ChatMessageDtos {
         private Long workspaceId;
         private String userId;
         private String content;
+        private String messageType; // text | image | file
+        private String fileUrl;
+        private String fileName;
+        private String mimeType;
+        private Long fileSize;
         private Instant createdAt;
         
         public Long getMessageId() {
@@ -79,6 +84,45 @@ public class ChatMessageDtos {
             this.content = content;
         }
         
+        public String getMessageType() {
+            return messageType;
+        }
+
+        public void setMessageType(String messageType) {
+            this.messageType = messageType;
+        }
+
+        public String getFileUrl() {
+            return fileUrl;
+        }
+
+        public void setFileUrl(String fileUrl) {
+            this.fileUrl = fileUrl;
+        }
+
+        public String getFileName() {
+            return fileName;
+        }
+
+        public void setFileName(String fileName) {
+            this.fileName = fileName;
+        }
+
+        public String getMimeType() {
+            return mimeType;
+        }
+
+        public void setMimeType(String mimeType) {
+            this.mimeType = mimeType;
+        }
+
+        public Long getFileSize() {
+            return fileSize;
+        }
+
+        public void setFileSize(Long fileSize) {
+            this.fileSize = fileSize;
+        }
         public Instant getCreatedAt() {
             return createdAt;
         }

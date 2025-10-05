@@ -9,7 +9,6 @@ import com.capstone.domain.chat.ChatMessageDtos;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import java.util.HashMap;
@@ -80,6 +79,11 @@ public class SocketIOService {
                         response.setWorkspaceId(savedMessage.getWorkspaceId());
                         response.setUserId(savedMessage.getUserId());
                         response.setContent(savedMessage.getContent());
+                        response.setMessageType(savedMessage.getMessageType());
+                        response.setFileUrl(savedMessage.getFileUrl());
+                        response.setFileName(savedMessage.getFileName());
+                        response.setMimeType(savedMessage.getMimeType());
+                        response.setFileSize(savedMessage.getFileSize());
                         response.setCreatedAt(savedMessage.getCreatedAt());
                         
                         // 해당 워크스페이스의 모든 클라이언트에게 메시지 브로드캐스트
@@ -88,6 +92,53 @@ public class SocketIOService {
                     }
                 } catch (Exception e) {
                     System.err.println("채팅 메시지 처리 중 오류 발생: " + e.getMessage());
+                    e.printStackTrace();
+                }
+            });
+
+            // 파일/이미지 메타 전송 이벤트
+            socketIOServer.addEventListener("file_message", String.class, (client, data, ackSender) -> {
+                try {
+                    String workspaceId = clientSessionMap.get(client.getSessionId());
+                    if (workspaceId != null) {
+                        // data: { userId, content?, messageType, fileUrl, fileName, mimeType, fileSize }
+                        java.util.Map<String, Object> payload = objectMapper.readValue(data, java.util.Map.class);
+                        String userId = (String) payload.get("userId");
+                        String content = payload.get("content") == null ? null : payload.get("content").toString();
+                        String messageType = (String) payload.getOrDefault("messageType", "file");
+                        String fileUrl = (String) payload.get("fileUrl");
+                        String fileName = (String) payload.get("fileName");
+                        String mimeType = (String) payload.get("mimeType");
+                        Long fileSize = payload.get("fileSize") == null ? null : Long.valueOf(payload.get("fileSize").toString());
+
+                        ChatMessage saved = chatMessageService.saveFileMessage(
+                                Long.parseLong(workspaceId),
+                                userId,
+                                content,
+                                messageType,
+                                fileUrl,
+                                fileName,
+                                mimeType,
+                                fileSize
+                        );
+
+                        ChatMessageDtos.Response response = new ChatMessageDtos.Response();
+                        response.setMessageId(saved.getMessageId());
+                        response.setWorkspaceId(saved.getWorkspaceId());
+                        response.setUserId(saved.getUserId());
+                        response.setContent(saved.getContent());
+                        response.setMessageType(saved.getMessageType());
+                        response.setFileUrl(saved.getFileUrl());
+                        response.setFileName(saved.getFileName());
+                        response.setMimeType(saved.getMimeType());
+                        response.setFileSize(saved.getFileSize());
+                        response.setCreatedAt(saved.getCreatedAt());
+
+                        String responseJson = objectMapper.writeValueAsString(response);
+                        socketIOServer.getRoomOperations(workspaceId).sendEvent("new_message", responseJson);
+                    }
+                } catch (Exception e) {
+                    System.err.println("파일 메시지 처리 중 오류 발생: " + e.getMessage());
                     e.printStackTrace();
                 }
             });
