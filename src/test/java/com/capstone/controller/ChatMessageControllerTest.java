@@ -8,7 +8,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.mock.web.MockMultipartFile;
 
 import java.time.Instant;
 import java.util.Arrays;
@@ -57,57 +56,38 @@ class ChatMessageControllerTest {
     }
 
     @Test
-    void uploadFile_shouldReturnFileMessage() throws Exception {
+    void createFileMessage_shouldReturnResponse() throws Exception {
         // Given
-        MockMultipartFile file = new MockMultipartFile(
-                "file", "hello.png", "image/png", new byte[]{1,2,3}
-        );
-
         ChatMessage saved = new ChatMessage();
         saved.setMessageId(10L);
         saved.setWorkspaceId(1L);
         saved.setUserId("user-123");
-        saved.setContent("설명 텍스트");
+        saved.setContent("이미지 설명");
         saved.setMessageType("image");
-        saved.setFileUrl("/files/hello.png");
-        saved.setFileName("hello.png");
+        saved.setFileUrl("https://cdn.example.com/path/img.png");
+        saved.setFileName("img.png");
         saved.setMimeType("image/png");
-        saved.setFileSize(3L);
+        saved.setFileSize(123456L);
         saved.setCreatedAt(Instant.now());
 
         org.mockito.Mockito.when(chatMessageService.saveFileMessage(
-                1L, "user-123", "설명 텍스트",
-                "image", "/files/hello.png", "hello.png", "image/png", 3L
+                1L, "user-123", "이미지 설명", "image",
+                "https://cdn.example.com/path/img.png", "img.png", "image/png", 123456L
         )).thenReturn(saved);
 
+        String body = "{\n  \"workspaceId\": 1,\n  \"userId\": \"user-123\",\n  \"content\": \"이미지 설명\",\n  \"messageType\": \"image\",\n  \"fileUrl\": \"https://cdn.example.com/path/img.png\",\n  \"fileName\": \"img.png\",\n  \"mimeType\": \"image/png\",\n  \"fileSize\": 123456\n}";
+
         // When & Then
-        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart("/api/v1/chat/messages/upload")
-                        .file(file)
-                        .param("workspaceId", "1")
-                        .param("userId", "user-123")
-                        .param("content", "설명 텍스트")
+        mockMvc.perform(post("/api/v1/chat/messages/file")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body)
                         .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.messageId").value(10))
                 .andExpect(jsonPath("$.messageType").value("image"))
-                .andExpect(jsonPath("$.fileName").value("hello.png"))
+                .andExpect(jsonPath("$.fileName").value("img.png"))
                 .andExpect(jsonPath("$.mimeType").value("image/png"))
-                .andExpect(jsonPath("$.fileSize").value(3));
-    }
-
-    @Test
-    void uploadFile_withMissingParams_shouldReturnBadRequest() throws Exception {
-        // Given
-        MockMultipartFile file = new MockMultipartFile(
-                "file", "hello.png", "image/png", new byte[]{1,2,3}
-        );
-
-        // When & Then
-        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart("/api/v1/chat/messages/upload")
-                        .file(file)
-                        .param("userId", "user-123") // workspaceId 누락
-                        .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf()))
-                .andExpect(status().isBadRequest());
+                .andExpect(jsonPath("$.fileSize").value(123456));
     }
 
     @Test

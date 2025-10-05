@@ -131,6 +131,37 @@ public class ChatMessageDtos {
             this.createdAt = createdAt;
         }
     }
+
+    /**
+     * 파일/이미지 메시지 JSON 요청 DTO
+     */
+    public static class FileMessageRequest {
+        private Long workspaceId;
+        private String userId;
+        private String content; // optional
+        private String messageType; // image | file
+        private String fileUrl;
+        private String fileName;
+        private String mimeType;
+        private Long fileSize;
+
+        public Long getWorkspaceId() { return workspaceId; }
+        public void setWorkspaceId(Long workspaceId) { this.workspaceId = workspaceId; }
+        public String getUserId() { return userId; }
+        public void setUserId(String userId) { this.userId = userId; }
+        public String getContent() { return content; }
+        public void setContent(String content) { this.content = content; }
+        public String getMessageType() { return messageType; }
+        public void setMessageType(String messageType) { this.messageType = messageType; }
+        public String getFileUrl() { return fileUrl; }
+        public void setFileUrl(String fileUrl) { this.fileUrl = fileUrl; }
+        public String getFileName() { return fileName; }
+        public void setFileName(String fileName) { this.fileName = fileName; }
+        public String getMimeType() { return mimeType; }
+        public void setMimeType(String mimeType) { this.mimeType = mimeType; }
+        public Long getFileSize() { return fileSize; }
+        public void setFileSize(Long fileSize) { this.fileSize = fileSize; }
+    }
     
     /**
      * 채팅 메시지 목록 조회 응답 DTO

@@ -2,7 +2,6 @@ package com.capstone.domain.chat;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -19,32 +18,29 @@ public class ChatMessageController {
     }
 
     /**
-     * 파일 업로드 (로컬 스토리지 예시)
-     * POST /api/v1/chat/messages/upload
+     * 파일/이미지 메시지(JSON 메타) 생성
+     * POST /api/v1/chat/messages/file
      */
-    @PostMapping("/upload")
-    public ResponseEntity<ChatMessageDtos.Response> uploadFile(
-            @RequestParam("workspaceId") Long workspaceId,
-            @RequestParam("userId") String userId,
-            @RequestParam(value = "content", required = false) String content,
-            @RequestParam("file") MultipartFile file
-    ) throws Exception {
-        if (workspaceId == null || userId == null || file == null || file.isEmpty()) {
+    @PostMapping("/file")
+    public ResponseEntity<ChatMessageDtos.Response> createFileMessage(@RequestBody ChatMessageDtos.FileMessageRequest request) {
+        if (request.getWorkspaceId() == null || request.getUserId() == null || request.getFileUrl() == null) {
             return ResponseEntity.badRequest().build();
         }
 
-        // 실제 서비스에서는 S3 등 외부 스토리지 사용 권장. 여기서는 간단히 URL만 구성
-        String fileUrl = "/files/" + file.getOriginalFilename();
+        String messageType = request.getMessageType();
+        if (messageType == null || (!"image".equals(messageType) && !"file".equals(messageType))) {
+            messageType = request.getMimeType() != null && request.getMimeType().startsWith("image/") ? "image" : "file";
+        }
 
         ChatMessage saved = chatMessageService.saveFileMessage(
-                workspaceId,
-                userId,
-                content,
-                file.getContentType() != null && file.getContentType().startsWith("image/") ? "image" : "file",
-                fileUrl,
-                file.getOriginalFilename(),
-                file.getContentType(),
-                file.getSize()
+                request.getWorkspaceId(),
+                request.getUserId(),
+                request.getContent(),
+                messageType,
+                request.getFileUrl(),
+                request.getFileName(),
+                request.getMimeType(),
+                request.getFileSize()
         );
 
         ChatMessageDtos.Response resp = new ChatMessageDtos.Response();
@@ -61,6 +57,7 @@ public class ChatMessageController {
 
         return ResponseEntity.ok(resp);
     }
+    // multipart 업로드 방식은 제거 (JSON 메타 방식만 유지)
     /**
      * 채팅 메시지 전송
      * POST /api/v1/chat/messages

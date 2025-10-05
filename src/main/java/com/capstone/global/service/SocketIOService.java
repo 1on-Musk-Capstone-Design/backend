@@ -102,7 +102,10 @@ public class SocketIOService {
                     String workspaceId = clientSessionMap.get(client.getSessionId());
                     if (workspaceId != null) {
                         // data: { userId, content?, messageType, fileUrl, fileName, mimeType, fileSize }
-                        java.util.Map<String, Object> payload = objectMapper.readValue(data, java.util.Map.class);
+                        java.util.Map<String, Object> payload = objectMapper.readValue(
+                                data,
+                                new com.fasterxml.jackson.core.type.TypeReference<java.util.Map<String, Object>>() {}
+                        );
                         String userId = (String) payload.get("userId");
                         String content = payload.get("content") == null ? null : payload.get("content").toString();
                         String messageType = (String) payload.getOrDefault("messageType", "file");

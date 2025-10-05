@@ -717,46 +717,38 @@
       ]
     },
     {
-      "name": "Upload Chat File",
+      "name": "Create File Message (JSON)",
       "request": {
         "method": "POST",
         "header": [
-          {
-            "key": "Content-Type",
-            "value": "multipart/form-data"
-          }
+          { "key": "Content-Type", "value": "application/json" }
         ],
         "body": {
-          "mode": "formdata",
-          "formdata": [
-            { "key": "workspaceId", "value": "1", "type": "text" },
-            { "key": "userId", "value": "user-123", "type": "text" },
-            { "key": "content", "value": "설명 텍스트(옵션)", "type": "text" },
-            { "key": "file", "type": "file", "src": "/path/to/image.png" }
-          ]
+          "mode": "raw",
+          "raw": "{\n  \"workspaceId\": 1,\n  \"userId\": \"user-123\",\n  \"content\": \"이미지 설명\",\n  \"messageType\": \"image\",\n  \"fileUrl\": \"https://cdn.example.com/path/img.png\",\n  \"fileName\": \"img.png\",\n  \"mimeType\": \"image/png\",\n  \"fileSize\": 123456\n}"
         },
         "url": {
-          "raw": "{{baseUrl}}/api/v1/chat/messages/upload",
+          "raw": "{{baseUrl}}/api/v1/chat/messages/file",
           "host": ["{{baseUrl}}"],
-          "path": ["api", "v1", "chat", "messages", "upload"]
+          "path": ["api", "v1", "chat", "messages", "file"]
         },
-        "description": "채팅 파일 업로드 (메타는 소켓으로도 전송 가능)"
+        "description": "파일/이미지 메타(JSON)로 메시지 생성"
       },
       "response": [
         {
           "name": "Success Response",
           "originalRequest": {
             "method": "POST",
-            "header": [ { "key": "Content-Type", "value": "multipart/form-data" } ],
-            "body": { "mode": "formdata" },
-            "url": { "raw": "{{baseUrl}}/api/v1/chat/messages/upload", "host": ["{{baseUrl}}"], "path": ["api","v1","chat","messages","upload"] }
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": { "mode": "raw" },
+            "url": { "raw": "{{baseUrl}}/api/v1/chat/messages/file", "host": ["{{baseUrl}}"], "path": ["api","v1","chat","messages","file"] }
           },
           "status": "OK",
           "code": 200,
           "_postman_previewlanguage": "json",
           "header": [ { "key": "Content-Type", "value": "application/json" } ],
           "cookie": [],
-          "body": "{\n  \"messageId\": 10,\n  \"workspaceId\": 1,\n  \"userId\": \"user-123\",\n  \"content\": \"설명 텍스트(옵션)\",\n  \"messageType\": \"image\",\n  \"fileUrl\": \"/files/image.png\",\n  \"fileName\": \"image.png\",\n  \"mimeType\": \"image/png\",\n  \"fileSize\": 123456,\n  \"createdAt\": \"2024-01-15T10:30:00Z\"\n}"
+          "body": "{\n  \"messageId\": 10,\n  \"workspaceId\": 1,\n  \"userId\": \"user-123\",\n  \"content\": \"이미지 설명\",\n  \"messageType\": \"image\",\n  \"fileUrl\": \"https://cdn.example.com/path/img.png\",\n  \"fileName\": \"img.png\",\n  \"mimeType\": \"image/png\",\n  \"fileSize\": 123456,\n  \"createdAt\": \"2024-01-15T10:30:00Z\"\n}"
         }
       ]
     }
