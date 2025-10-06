@@ -34,7 +34,7 @@ class WorkspaceIntegrationTest {
         entityManager.flush();
 
         // Then
-        assertThat(savedWorkspace.getId()).isNotNull();
+        assertThat(savedWorkspace.getWorkspaceId()).isNotNull();
         assertThat(savedWorkspace.getName()).isEqualTo("통합 테스트 워크스페이스");
         assertThat(savedWorkspace.getCreatedAt()).isNotNull();
     }
@@ -49,7 +49,7 @@ class WorkspaceIntegrationTest {
         Workspace savedWorkspace = entityManager.persistAndFlush(workspace);
 
         // When
-        Workspace foundWorkspace = workspaceRepository.findById(savedWorkspace.getId()).orElse(null);
+        Workspace foundWorkspace = workspaceRepository.findById(savedWorkspace.getWorkspaceId()).orElse(null);
 
         // Then
         assertThat(foundWorkspace).isNotNull();

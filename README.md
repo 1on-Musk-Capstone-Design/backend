@@ -103,6 +103,7 @@ export OPENAI_API_KEY=your-openai-api-key-here
 
 ### 3. 애플리케이션 실행
 
+#### Maven
 ```bash
 # 의존성 설치
 mvn clean install
@@ -111,11 +112,36 @@ mvn clean install
 mvn spring-boot:run
 ```
 
+#### Gradle (Wrapper 사용 권장)
+```bash
+# 빌드
+./gradlew build
+
+# 테스트
+./gradlew test
+
+# 애플리케이션 실행
+./gradlew bootRun
+
+# (포트가 점유 중일 경우) 8080/9092 포트 정리 후 실행
+lsof -ti:8080 | xargs -r kill -9; lsof -ti:9092 | xargs -r kill -9; ./gradlew bootRun
+```
+
 ### 4. 접속 정보
 
 - **REST API**: `http://localhost:8080/api`
 - **Socket.IO**: `http://localhost:9092`
 - **헬스체크**: `http://localhost:8080/api/health`
+
+### 5. Postman 컬렉션
+- 루트의 `postman_collection.json`을 Postman에 임포트하여 API를 바로 테스트할 수 있습니다.
+- 포함된 API:
+  - Health Check (`GET /health`)
+  - 워크스페이스 목록 조회 (`GET /api/v1/workspaces`)
+  - 워크스페이스 생성 (`POST /api/v1/workspaces`)
+  - 워크스페이스 상세 조회 (`GET /api/v1/workspaces/{id}`)
+  - 워크스페이스 이름 변경 (`PUT /api/v1/workspaces/{id}`)
+  - 워크스페이스 삭제 (`DELETE /api/v1/workspaces/{id}`)
 
 ## 🔧 설정 파일
 
@@ -192,6 +218,13 @@ src/main/java/com/capstone/
 - [x] 기본 애플리케이션 설정
 - [x] PostgreSQL 연결 설정
 - [x] 헬스체크 API
+- [x] 워크스페이스 CRUD API
+  - [x] 워크스페이스 생성 API
+  - [x] 워크스페이스 목록 조회 API
+  - [x] 워크스페이스 상세 조회 API
+  - [x] 워크스페이스 이름 변경 API
+  - [x] 워크스페이스 삭제 API
+- [x] Postman 컬렉션 (API 테스트용)
 
 ### 🔄 진행 예정
 - [ ] 사용자 인증/인가 시스템
@@ -200,6 +233,7 @@ src/main/java/com/capstone/
 - [ ] 아이디어 박스 CRUD API
 - [ ] AI 클러스터링 서비스
 - [ ] 음성 채팅 통합
+- [ ] 세션 관리 API 추가 기능
 
 ## 🤝 기여 방법
 

@@ -1,9 +1,9 @@
 package com.capstone.domain.workspace;
 
-import com.capstone.domain.workspace.Workspace;
-import com.capstone.domain.workspace.WorkspaceRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 public class WorkspaceService {
@@ -18,5 +18,29 @@ public class WorkspaceService {
         Workspace workspace = new Workspace();
         workspace.setName(name);
         return workspaceRepository.save(workspace);
+    }
+
+    @Transactional(readOnly = true)
+    public List<Workspace> getAllWorkspaces() {
+        return workspaceRepository.findAll();
+    }
+
+    @Transactional(readOnly = true)
+    public Workspace getWorkspaceById(Long id) {
+        return workspaceRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("워크스페이스를 찾을 수 없습니다. ID: " + id));
+    }
+
+    @Transactional
+    public Workspace updateWorkspaceName(Long id, String name) {
+        Workspace workspace = getWorkspaceById(id);
+        workspace.setName(name);
+        return workspaceRepository.save(workspace);
+    }
+
+    @Transactional
+    public void deleteWorkspace(Long id) {
+        Workspace workspace = getWorkspaceById(id);
+        workspaceRepository.delete(workspace);
     }
 }

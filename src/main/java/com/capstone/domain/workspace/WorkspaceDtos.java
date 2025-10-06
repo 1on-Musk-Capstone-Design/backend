@@ -44,4 +44,49 @@ public class WorkspaceDtos {
             this.createdAt = createdAt;
         }
     }
+
+    public static class ListItem {
+        private Long workspaceId;
+        private String name;
+
+        public Long getWorkspaceId() {
+            return workspaceId;
+        }
+
+        public void setWorkspaceId(Long workspaceId) {
+            this.workspaceId = workspaceId;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+    }
+
+    public static class UpdateRequest {
+        private String name;
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+    }
+
+    public static class DeleteResponse {
+        private String message;
+
+        public String getMessage() {
+            return message;
+        }
+
+        public void setMessage(String message) {
+            this.message = message;
+        }
+    }
 }
