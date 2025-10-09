@@ -1,5 +1,6 @@
 package com.capstone.global.oauth;
 
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
@@ -40,5 +41,15 @@ public class JwtProvider {
         .expiration(new Date(System.currentTimeMillis() + REFRESH_TOKEN_EXPIRE_TIME))
         .signWith(secretKey)
         .compact();
+  }
+
+  public Long getUserIdFromAccessToken(String token) {
+    Claims claims = Jwts.parser()
+        .setSigningKey(secretKey)
+        .build()
+        .parseClaimsJws(token)
+        .getBody();
+
+    return claims.get("user_id", Long.class);
   }
 }

@@ -67,6 +67,15 @@ public class GoogleService {
         .build();
   }
 
+  public Long getUserIdFromToken(String token) {
+    String accessToken = token.replace("Bearer ", "").trim();
+    Long userId = jwtProvider.getUserIdFromAccessToken(accessToken);
+
+    return userRepository.findById(userId)
+        .orElseThrow(() -> new RuntimeException("토큰 사용자 정보를 찾을 수 없습니다."))
+        .getId();
+  }
+
   private String getAccessToken(String code) {
     MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
     params.add("code", code);
@@ -92,4 +101,6 @@ public class GoogleService {
 
     return restTemplate.exchange(resourceUri, HttpMethod.GET, entity, JsonNode.class).getBody();
   }
+
+
 }

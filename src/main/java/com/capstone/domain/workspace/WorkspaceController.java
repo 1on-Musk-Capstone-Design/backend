@@ -1,5 +1,8 @@
 package com.capstone.domain.workspace;
 
+import com.capstone.global.oauth.service.GoogleService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -7,15 +10,13 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/api/v1/workspaces")
 @CrossOrigin(origins = {"http://localhost:3000", "http://127.0.0.1:3000"})
 public class WorkspaceController {
 
     private final WorkspaceService workspaceService;
-
-    public WorkspaceController(WorkspaceService workspaceService) {
-        this.workspaceService = workspaceService;
-    }
+    private final GoogleService googleService;
 
     @GetMapping
     public ResponseEntity<List<WorkspaceDtos.ListItem>> getAllWorkspaces() {
@@ -68,12 +69,16 @@ public class WorkspaceController {
     }
 
     @PostMapping
-    public ResponseEntity<WorkspaceDtos.Response> create(@RequestBody WorkspaceDtos.CreateRequest request) {
+    public ResponseEntity<WorkspaceDtos.Response> create(
+        @RequestHeader(HttpHeaders.AUTHORIZATION) String token,
+        @RequestBody WorkspaceDtos.CreateRequest request) {
+
         if (request.getName() == null || request.getName().trim().isEmpty()) {
             return ResponseEntity.badRequest().build();
         }
 
-        Workspace saved = workspaceService.createWorkspace(request.getName().trim());
+        Long userId = googleService.getUserIdFromToken(token);
+        Workspace saved = workspaceService.createWorkspace(request.getName().trim(), userId);
 
         WorkspaceDtos.Response resp = new WorkspaceDtos.Response();
         resp.setWorkspaceId(saved.getWorkspaceId());
