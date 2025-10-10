@@ -4,6 +4,7 @@ import com.capstone.domain.user.entity.User;
 import com.capstone.domain.workspace.Workspace;
 import com.capstone.domain.workspaceUser.entity.WorkspaceUser;
 import java.util.List;
+import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -13,4 +14,7 @@ public interface WorkspaceUserRepository extends JpaRepository<WorkspaceUser, Lo
   boolean existsByWorkspaceAndUser(Workspace workspace, User user);
 
   List<WorkspaceUser> findByWorkspace(Workspace workspace);
+
+  Optional<WorkspaceUser> findByWorkspace_WorkspaceIdAndUser_Id(Long workspaceId, Long userId);
+
 }

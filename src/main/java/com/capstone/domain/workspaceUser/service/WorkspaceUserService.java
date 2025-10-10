@@ -6,7 +6,6 @@ import com.capstone.domain.workspace.Workspace;
 import com.capstone.domain.workspace.WorkspaceRepository;
 import com.capstone.domain.workspaceUser.entity.WorkspaceUser;
 import com.capstone.domain.workspaceUser.repository.WorkspaceUserRepository;
-import com.capstone.global.oauth.service.GoogleService;
 import com.capstone.global.type.Role;
 import jakarta.transaction.Transactional;
 import java.util.List;
@@ -48,5 +47,22 @@ public class WorkspaceUserService {
         .orElseThrow(() -> new RuntimeException("워크스페이스를 찾을 수 없습니다."));
 
     return workspaceUserRepository.findByWorkspace(workspace);
+  }
+
+  @Transactional
+  public void removeUser(Long workspaceId, Long userId, Long requesterId) {
+    WorkspaceUser requester = workspaceUserRepository.findByWorkspace_WorkspaceIdAndUser_Id(
+            workspaceId, requesterId)
+        .orElseThrow(() -> new RuntimeException("요청자가 워크스페이스에 없습니다."));
+
+    if (requester.getRole() != Role.OWNER) {
+      throw new RuntimeException("삭제 권한이 없습니다.");
+    }
+
+    WorkspaceUser deleteUserId = workspaceUserRepository.findByWorkspace_WorkspaceIdAndUser_Id(
+            workspaceId, userId)
+        .orElseThrow(() -> new RuntimeException("해당 유저를 찾을 수 없습니다."));
+
+    workspaceUserRepository.delete(deleteUserId);
   }
 }
