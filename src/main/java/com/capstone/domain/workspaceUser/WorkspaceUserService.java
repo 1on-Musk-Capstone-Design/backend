@@ -40,11 +40,20 @@ public class WorkspaceUserService {
   }
 
   @Transactional
-  public List<WorkspaceUser> getWorkspaceUsers(Long workspaceId) {
+  public List<WorkspaceUserResponse> getWorkspaceUsers(Long workspaceId) {
     Workspace workspace = workspaceRepository.findById(workspaceId)
         .orElseThrow(() -> new RuntimeException("워크스페이스를 찾을 수 없습니다."));
 
-    return workspaceUserRepository.findByWorkspace(workspace);
+    return workspaceUserRepository.findByWorkspace(workspace).stream()
+        .map(user -> WorkspaceUserResponse.builder()
+            .id(user.getUser().getId())
+            .email(user.getUser().getEmail())
+            .name(user.getUser().getName())
+            .profileImage(user.getUser().getProfileImage())
+            .role(user.getRole())
+            .joinedAt(user.getJoinedAt())
+            .build())
+        .toList();
   }
 
   @Transactional

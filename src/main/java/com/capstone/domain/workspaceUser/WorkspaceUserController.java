@@ -1,6 +1,6 @@
 package com.capstone.domain.workspaceUser;
 
-import com.capstone.global.oauth.service.GoogleService;
+import com.capstone.global.oauth.JwtProvider;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
@@ -19,23 +19,24 @@ import org.springframework.web.bind.annotation.RestController;
 public class WorkspaceUserController {
 
   private final WorkspaceUserService workspaceUserService;
-  private final GoogleService googleService;
+  private final JwtProvider jwtProvider; // GoogleService 대신 JwtProvider 사용
 
   @PostMapping("/join")
   public ResponseEntity<String> joinWorkspace(
       @PathVariable Long workspaceId,
       @RequestHeader(HttpHeaders.AUTHORIZATION) String token
   ) {
+    String jwt = token.replace("Bearer ", "").trim();
+    Long userId = jwtProvider.getUserIdFromAccessToken(jwt);
 
-    Long userId = googleService.getUserIdFromToken(token);
     workspaceUserService.joinWorkspace(workspaceId, userId);
-
     return ResponseEntity.ok("워크스페이스 참여 성공");
   }
 
   @GetMapping("/users")
-  public ResponseEntity<List<WorkspaceUser>> getWorkspaceUsers(@PathVariable Long workspaceId) {
-    List<WorkspaceUser> users = workspaceUserService.getWorkspaceUsers(workspaceId);
+  public ResponseEntity<List<WorkspaceUserResponse>> getWorkspaceUsers(
+      @PathVariable Long workspaceId) {
+    List<WorkspaceUserResponse> users = workspaceUserService.getWorkspaceUsers(workspaceId);
     return ResponseEntity.ok(users);
   }
 
@@ -45,9 +46,10 @@ public class WorkspaceUserController {
       @PathVariable Long userId,
       @RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
 
-    Long requesterId = googleService.getUserIdFromToken(token);
-    workspaceUserService.removeUser(workspaceId, userId, requesterId);
+    String jwt = token.replace("Bearer ", "").trim();
+    Long requesterId = jwtProvider.getUserIdFromAccessToken(jwt);
 
+    workspaceUserService.removeUser(workspaceId, userId, requesterId);
     return ResponseEntity.ok("유저 삭제 완료");
   }
 }
