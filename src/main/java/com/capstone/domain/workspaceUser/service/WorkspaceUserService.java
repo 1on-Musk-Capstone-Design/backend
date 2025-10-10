@@ -9,6 +9,7 @@ import com.capstone.domain.workspaceUser.repository.WorkspaceUserRepository;
 import com.capstone.global.oauth.service.GoogleService;
 import com.capstone.global.type.Role;
 import jakarta.transaction.Transactional;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -18,7 +19,6 @@ public class WorkspaceUserService {
 
   private final WorkspaceUserRepository workspaceUserRepository;
   private final WorkspaceRepository workspaceRepository;
-  private final GoogleService googleService;
   private final UserRepository userRepository;
 
   @Transactional
@@ -40,5 +40,13 @@ public class WorkspaceUserService {
         .build();
 
     workspaceUserRepository.save(workspaceUser);
+  }
+
+  @Transactional
+  public List<WorkspaceUser> getWorkspaceUsers(Long workspaceId) {
+    Workspace workspace = workspaceRepository.findById(workspaceId)
+        .orElseThrow(() -> new RuntimeException("워크스페이스를 찾을 수 없습니다."));
+
+    return workspaceUserRepository.findByWorkspace(workspace);
   }
 }
