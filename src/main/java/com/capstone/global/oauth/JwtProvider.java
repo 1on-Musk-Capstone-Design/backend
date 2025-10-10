@@ -2,34 +2,33 @@ package com.capstone.global.oauth;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
 import java.nio.charset.StandardCharsets;
-import java.util.Date;
 import javax.crypto.SecretKey;
-import javax.crypto.spec.SecretKeySpec;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.util.Date;
+
 @Component
+@RequiredArgsConstructor
 public class JwtProvider {
 
-  private final SecretKey secretKey;
+  @Value("${spring.jwt.secret}")
+  private String secretKey;
+
   private static final long ACCESS_TOKEN_EXPIRE_TIME = 1000L * 60 * 60;
   private static final long REFRESH_TOKEN_EXPIRE_TIME = 1000L * 60 * 60 * 24 * 7;
-
-  public JwtProvider(@Value("${spring.jwt.secret}") String secret) {
-    this.secretKey = new SecretKeySpec(
-        secret.getBytes(StandardCharsets.UTF_8),
-        Jwts.SIG.HS256.key().build().getAlgorithm()
-    );
-  }
 
   public String createAccessToken(Long userId, String email) {
     return Jwts.builder()
         .subject(email)
         .claim("user_id", userId)
-        .issuedAt(new Date())
-        .expiration(new Date(System.currentTimeMillis() + ACCESS_TOKEN_EXPIRE_TIME))
-        .signWith(secretKey)
+        .setIssuedAt(new Date())
+        .setExpiration(new Date(System.currentTimeMillis() + ACCESS_TOKEN_EXPIRE_TIME))
+        .signWith(getSigningKey(), SignatureAlgorithm.HS256)
         .compact();
   }
 
@@ -37,19 +36,23 @@ public class JwtProvider {
     return Jwts.builder()
         .subject(email)
         .claim("user_id", userId)
-        .issuedAt(new Date())
-        .expiration(new Date(System.currentTimeMillis() + REFRESH_TOKEN_EXPIRE_TIME))
-        .signWith(secretKey)
+        .setIssuedAt(new Date())
+        .setExpiration(new Date(System.currentTimeMillis() + REFRESH_TOKEN_EXPIRE_TIME))
+        .signWith(getSigningKey(), SignatureAlgorithm.HS256)
         .compact();
   }
 
   public Long getUserIdFromAccessToken(String token) {
     Claims claims = Jwts.parser()
-        .setSigningKey(secretKey)
+        .setSigningKey(getSigningKey())
         .build()
-        .parseClaimsJws(token)
-        .getBody();
+        .parseSignedClaims(token)
+        .getPayload();
 
     return claims.get("user_id", Long.class);
+  }
+
+  private SecretKey getSigningKey() {
+    return Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
   }
 }
