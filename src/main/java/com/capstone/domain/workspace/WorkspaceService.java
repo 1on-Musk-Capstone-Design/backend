@@ -2,8 +2,8 @@ package com.capstone.domain.workspace;
 
 import com.capstone.domain.user.entity.User;
 import com.capstone.domain.user.repository.UserRepository;
-import com.capstone.domain.workspaceUser.entity.WorkspaceUser;
-import com.capstone.domain.workspaceUser.repository.WorkspaceUserRepository;
+import com.capstone.domain.workspaceUser.WorkspaceUser;
+import com.capstone.domain.workspaceUser.WorkspaceUserRepository;
 import com.capstone.global.type.Role;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

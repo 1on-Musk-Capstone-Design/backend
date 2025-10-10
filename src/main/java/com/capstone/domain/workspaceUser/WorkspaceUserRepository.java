@@ -1,8 +1,7 @@
-package com.capstone.domain.workspaceUser.repository;
+package com.capstone.domain.workspaceUser;
 
 import com.capstone.domain.user.entity.User;
 import com.capstone.domain.workspace.Workspace;
-import com.capstone.domain.workspaceUser.entity.WorkspaceUser;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;

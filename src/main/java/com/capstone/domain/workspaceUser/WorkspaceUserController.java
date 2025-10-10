@@ -1,7 +1,5 @@
-package com.capstone.domain.workspaceUser.controller;
+package com.capstone.domain.workspaceUser;
 
-import com.capstone.domain.workspaceUser.entity.WorkspaceUser;
-import com.capstone.domain.workspaceUser.service.WorkspaceUserService;
 import com.capstone.global.oauth.service.GoogleService;
 import java.util.List;
 import lombok.RequiredArgsConstructor;

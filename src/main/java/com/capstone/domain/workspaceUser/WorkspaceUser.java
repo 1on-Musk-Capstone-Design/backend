@@ -1,4 +1,4 @@
-package com.capstone.domain.workspaceUser.entity;
+package com.capstone.domain.workspaceUser;
 
 import com.capstone.domain.user.entity.User;
 import com.capstone.domain.workspace.Workspace;

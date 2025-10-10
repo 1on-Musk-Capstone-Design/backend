@@ -1,11 +1,9 @@
-package com.capstone.domain.workspaceUser.service;
+package com.capstone.domain.workspaceUser;
 
 import com.capstone.domain.user.entity.User;
 import com.capstone.domain.user.repository.UserRepository;
 import com.capstone.domain.workspace.Workspace;
 import com.capstone.domain.workspace.WorkspaceRepository;
-import com.capstone.domain.workspaceUser.entity.WorkspaceUser;
-import com.capstone.domain.workspaceUser.repository.WorkspaceUserRepository;
 import com.capstone.global.type.Role;
 import jakarta.transaction.Transactional;
 import java.util.List;
