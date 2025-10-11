@@ -77,7 +77,7 @@ class WorkspaceServiceTest {
 
   @Test
   @DisplayName("워크스페이스 이름 수정 시 OWNER면 정상적으로 수정")
-  void updateWorkspaceName_whenOwner() {
+  void updateWorkspaceName() {
     // Given
     Long userId = 1L;
     User user = User.builder()
@@ -109,7 +109,7 @@ class WorkspaceServiceTest {
 
   @Test
   @DisplayName("워크스페이스 삭제 시 OWNER가 아니면 예외가 발생")
-  void deleteWorkspace_whenNotOwner() {
+  void deleteWorkspace() {
     // Given
     Long userId = 1L;
     User user = User.builder()

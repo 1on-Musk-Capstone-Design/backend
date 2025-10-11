@@ -88,7 +88,7 @@ class WorkspaceUserServiceTest {
     WorkspaceUser requesterWorkspaceUser = WorkspaceUser.builder()
         .workspace(workspace)
         .user(requester)
-        .role(Role.MEMBER) // OWNER 아님
+        .role(Role.MEMBER)
         .build();
 
     when(workspaceRepository.findById(1L)).thenReturn(Optional.of(workspace));
