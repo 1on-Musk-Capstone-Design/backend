@@ -12,10 +12,10 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class GoogleController {
 
+  private final GoogleService googleService;
+
   @Value("${oauth2.google.login-uri}")
   private String loginUri;
-
-  private final GoogleService googleService;
 
   @PostMapping
   public ResponseEntity<TokenDto> loginOrJoin(@RequestParam String code) {
