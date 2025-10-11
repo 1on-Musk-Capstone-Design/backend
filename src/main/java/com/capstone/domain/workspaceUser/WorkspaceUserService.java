@@ -58,18 +58,26 @@ public class WorkspaceUserService {
 
   @Transactional
   public void removeUser(Long workspaceId, Long userId, Long requesterId) {
-    WorkspaceUser requester = workspaceUserRepository.findByWorkspace_WorkspaceIdAndUser_Id(
-            workspaceId, requesterId)
+    Workspace workspace = workspaceRepository.findById(workspaceId)
+        .orElseThrow(() -> new RuntimeException("워크스페이스를 찾을 수 없습니다."));
+
+    User requester = userRepository.findById(requesterId)
+        .orElseThrow(() -> new RuntimeException("요청자를 찾을 수 없습니다."));
+    User target = userRepository.findById(userId)
+        .orElseThrow(() -> new RuntimeException("삭제할 유저를 찾을 수 없습니다."));
+
+    WorkspaceUser requesterWorkspaceUser = workspaceUserRepository
+        .findByWorkspaceAndUser(workspace, requester)
         .orElseThrow(() -> new RuntimeException("요청자가 워크스페이스에 없습니다."));
 
-    if (requester.getRole() != Role.OWNER) {
+    if (requesterWorkspaceUser.getRole() != Role.OWNER) {
       throw new RuntimeException("삭제 권한이 없습니다.");
     }
 
-    WorkspaceUser deleteUserId = workspaceUserRepository.findByWorkspace_WorkspaceIdAndUser_Id(
-            workspaceId, userId)
-        .orElseThrow(() -> new RuntimeException("해당 유저를 찾을 수 없습니다."));
+    WorkspaceUser targetWorkspaceUser = workspaceUserRepository
+        .findByWorkspaceAndUser(workspace, target)
+        .orElseThrow(() -> new RuntimeException("삭제할 유저가 워크스페이스에 없습니다."));
 
-    workspaceUserRepository.delete(deleteUserId);
+    workspaceUserRepository.delete(targetWorkspaceUser);
   }
 }

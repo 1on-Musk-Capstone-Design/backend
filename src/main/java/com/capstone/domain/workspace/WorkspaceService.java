@@ -50,15 +50,42 @@ public class WorkspaceService {
     }
 
     @Transactional
-    public Workspace updateWorkspaceName(Long id, String name) {
-        Workspace workspace = getWorkspaceById(id);
+    public WorkspaceDtos.ListItem updateWorkspaceName(Long workspaceId, String name, Long userId) {
+        Workspace workspace = workspaceRepository.findById(workspaceId)
+            .orElseThrow(() -> new RuntimeException("워크스페이스를 찾을 수 없습니다."));
+
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+
+        WorkspaceUser workspaceUser = workspaceUserRepository.findByWorkspaceAndUser(workspace, user)
+            .orElseThrow(() -> new RuntimeException("워크스페이스 멤버가 아닙니다."));
+
+        if (workspaceUser.getRole() != Role.OWNER) {
+            throw new SecurityException("워크스페이스 이름은 OWNER만 수정할 수 있습니다.");
+        }
+
         workspace.setName(name);
-        return workspaceRepository.save(workspace);
+        Workspace updated = workspaceRepository.save(workspace);
+
+        WorkspaceDtos.ListItem dto = new WorkspaceDtos.ListItem();
+        dto.setWorkspaceId(updated.getWorkspaceId());
+        dto.setName(updated.getName());
+        return dto;
     }
 
     @Transactional
-    public void deleteWorkspace(Long id) {
-        Workspace workspace = getWorkspaceById(id);
+    public void deleteWorkspace(Long workspaceId, Long userId) {
+        Workspace workspace = getWorkspaceById(workspaceId);
+
+        WorkspaceUser workspaceUser = workspaceUserRepository.findByWorkspaceAndUser(workspace,
+                userRepository.findById(userId)
+                    .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다. ID: " + userId)))
+            .orElseThrow(() -> new RuntimeException("워크스페이스 참여 이력이 없습니다."));
+
+        if (workspaceUser.getRole() != Role.OWNER) {
+            throw new RuntimeException("워크스페이스 삭제 권한이 없습니다.");
+        }
+
         workspaceRepository.delete(workspace);
     }
 }

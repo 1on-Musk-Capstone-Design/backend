@@ -49,24 +49,17 @@ public class WorkspaceController {
     }
   }
 
+
   @PutMapping("/{id}")
-  public ResponseEntity<WorkspaceDtos.ListItem> updateWorkspace(@PathVariable Long id,
+  public ResponseEntity<WorkspaceDtos.ListItem> updateWorkspace(
+      @PathVariable Long id,
+      @RequestHeader(HttpHeaders.AUTHORIZATION) String token,
       @RequestBody WorkspaceDtos.UpdateRequest request) {
-    if (request.getName() == null || request.getName().trim().isEmpty()) {
-      return ResponseEntity.badRequest().build();
-    }
 
-    try {
-      Workspace updated = workspaceService.updateWorkspaceName(id, request.getName().trim());
+    String jwt = token.replace("Bearer ", "").trim();
+    Long userId = jwtProvider.getUserIdFromAccessToken(jwt);
 
-      WorkspaceDtos.ListItem response = new WorkspaceDtos.ListItem();
-      response.setWorkspaceId(updated.getWorkspaceId());
-      response.setName(updated.getName());
-
-      return ResponseEntity.ok(response);
-    } catch (RuntimeException e) {
-      return ResponseEntity.notFound().build();
-    }
+    return ResponseEntity.ok(workspaceService.updateWorkspaceName(id, request.getName().trim(), userId));
   }
 
   @PostMapping
@@ -92,12 +85,15 @@ public class WorkspaceController {
   }
 
   @DeleteMapping("/{id}")
-  public ResponseEntity<WorkspaceDtos.DeleteResponse> deleteWorkspace(@PathVariable Long id) {
-    workspaceService.deleteWorkspace(id);
+  public ResponseEntity<String> deleteWorkspace(
+      @PathVariable Long id,
+      @RequestHeader(HttpHeaders.AUTHORIZATION) String token
+  ) {
+    String jwt = token.replace("Bearer ", "").trim();
+    Long userId = jwtProvider.getUserIdFromAccessToken(jwt);
 
-    WorkspaceDtos.DeleteResponse response = new WorkspaceDtos.DeleteResponse();
-    response.setMessage("워크스페이스가 삭제되었습니다.");
+    workspaceService.deleteWorkspace(id, userId);
 
-    return ResponseEntity.ok(response);
+    return ResponseEntity.ok("워크스페이스가 삭제되었습니다.");
   }
 }
