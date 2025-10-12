@@ -9,6 +9,9 @@ spring:
   jwt:
     secret: ${SPRING_JWT_SECRET:local-dev-secret-please-change}
   
+  jwt:
+    secret: my-super-secret-jwt-key-for-capstone-project-development-2024
+
   datasource:
     url: jdbc:postgresql://localhost:5432/capstone_db
     driver-class-name: org.postgresql.Driver
@@ -25,9 +28,15 @@ spring:
         format_sql: true
 
   security:
-    user:
-      name: admin
-      password: admin
+   user:
+    name: admin
+    password: admin
+   oauth2:
+    client:
+      registration:
+        google:
+          client-id: test-google-client-id
+          client-secret: test-google-client-secret
 
 # Socket.IO 설정
 socketio:
