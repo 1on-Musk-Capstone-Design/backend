@@ -5,7 +5,6 @@ import com.capstone.domain.user.repository.UserRepository;
 import com.capstone.global.oauth.JwtProvider;
 import com.capstone.global.oauth.TokenDto;
 import com.fasterxml.jackson.databind.JsonNode;
-import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
@@ -14,13 +13,15 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.Objects;
+
 @Service
 @RequiredArgsConstructor
 public class GoogleService {
 
   private final UserRepository userRepository;
   private final JwtProvider jwtProvider;
-  private  final RestTemplate restTemplate;
+  private final RestTemplate restTemplate;
 
   @Value("${oauth2.google.client-id}")
   private String clientId;
@@ -39,8 +40,7 @@ public class GoogleService {
 
   public TokenDto loginOrJoin(String code) {
     String accessToken = getAccessToken(code);
-
-    JsonNode userInfo = getUserResource(accessToken);
+    JsonNode userInfo = getUserInfo(accessToken);
 
     String email = userInfo.get("email").asText();
     String name = userInfo.get("name").asText();
@@ -79,13 +79,13 @@ public class GoogleService {
     headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
     HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(params, headers);
-
     JsonNode response = restTemplate.exchange(tokenUri, HttpMethod.POST, entity, JsonNode.class)
         .getBody();
+
     return Objects.requireNonNull(response).get("access_token").asText();
   }
 
-  private JsonNode getUserResource(String accessToken) {
+  private JsonNode getUserInfo(String accessToken) {
     HttpHeaders headers = new HttpHeaders();
     headers.set("Authorization", "Bearer " + accessToken);
     HttpEntity<Void> entity = new HttpEntity<>(headers);

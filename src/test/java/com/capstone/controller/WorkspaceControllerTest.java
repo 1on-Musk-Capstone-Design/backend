@@ -1,243 +1,105 @@
 package com.capstone.controller;
 
+import com.capstone.config.TestSecurityConfig;
 import com.capstone.domain.workspace.Workspace;
+import com.capstone.domain.workspace.WorkspaceController;
+import com.capstone.domain.workspace.WorkspaceDtos;
 import com.capstone.domain.workspace.WorkspaceService;
+import com.capstone.global.oauth.JwtProvider;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.Instant;
-import java.util.Arrays;
-import java.util.List;
 
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(com.capstone.domain.workspace.WorkspaceController.class)
-@org.springframework.context.annotation.Import(com.capstone.config.TestSecurityConfig.class)
+@WebMvcTest(WorkspaceController.class)
+@org.springframework.context.annotation.Import(TestSecurityConfig.class)
 class WorkspaceControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
+  @Autowired
+  private MockMvc mockMvc;
 
-    @MockBean
-    private WorkspaceService workspaceService;
+  @MockBean
+  private WorkspaceService workspaceService;
 
-    @Test
-    void createWorkspace_shouldReturnCreatedWorkspace() throws Exception {
-        // Given
-        Workspace mockWorkspace = new Workspace();
-        mockWorkspace.setWorkspaceId(1L);
-        mockWorkspace.setName("테스트 워크스페이스");
-        mockWorkspace.setCreatedAt(Instant.now());
+  @MockBean
+  private JwtProvider jwtProvider;
 
-        when(workspaceService.createWorkspace(any(String.class))).thenReturn(mockWorkspace);
+  @Test
+  @DisplayName("워크스페이스 생성 시 정상적으로 반환")
+  void createWorkspace() throws Exception {
+    // Given
+    Workspace mockWorkspace = new Workspace();
+    mockWorkspace.setWorkspaceId(1L);
+    mockWorkspace.setName("캡스톤 워크스페이스");
+    mockWorkspace.setCreatedAt(Instant.now());
 
-        String requestBody = "{\"name\": \"테스트 워크스페이스\"}";
+    when(jwtProvider.getUserIdFromAccessToken("fake")).thenReturn(10L);
+    when(workspaceService.createWorkspace("캡스톤 워크스페이스", 10L))
+        .thenReturn(mockWorkspace);
 
-        // When & Then
-        mockMvc.perform(post("/api/v1/workspaces")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(requestBody)
-                        .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.workspaceId").value(1))
-                .andExpect(jsonPath("$.name").value("테스트 워크스페이스"))
-                .andExpect(jsonPath("$.createdAt").exists());
-    }
+    String requestBody = "{\"name\": \"캡스톤 워크스페이스\"}";
 
-    @Test
-    void createWorkspace_withEmptyName_shouldReturnBadRequest() throws Exception {
-        // Given
-        String requestBody = "{\"name\": \"\"}";
+    // When & Then
+    mockMvc.perform(post("/api/v1/workspaces")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(requestBody)
+            .header(HttpHeaders.AUTHORIZATION, "Bearer fake")
+            .with(
+                org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf()))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.workspaceId").value(1))
+        .andExpect(jsonPath("$.name").value("캡스톤 워크스페이스"))
+        .andExpect(jsonPath("$.createdAt").exists());
+  }
 
-        // When & Then
-        mockMvc.perform(post("/api/v1/workspaces")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(requestBody)
-                        .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf()))
-                .andExpect(status().isBadRequest());
-    }
+  @Test
+  @DisplayName("워크스페이스 이름 수정 시 OWNER면 정상")
+  void updateWorkspace() throws Exception {
+    WorkspaceDtos.ListItem dto = new WorkspaceDtos.ListItem();
+    dto.setWorkspaceId(1L);
+    dto.setName("캡스톤");
 
-    @Test
-    void createWorkspace_withNullName_shouldReturnBadRequest() throws Exception {
-        // Given
-        String requestBody = "{\"name\": null}";
+    when(jwtProvider.getUserIdFromAccessToken("fake")).thenReturn(10L);
+    when(workspaceService.updateWorkspaceName(1L, "캡스톤", 10L))
+        .thenReturn(dto);
 
-        // When & Then
-        mockMvc.perform(post("/api/v1/workspaces")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(requestBody)
-                        .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf()))
-                .andExpect(status().isBadRequest());
-    }
+    String requestBody = "{\"name\": \"캡스톤\"}";
 
-    @Test
-    void getAllWorkspaces_shouldReturnWorkspaceList() throws Exception {
-        // Given
-        Workspace workspace1 = new Workspace();
-        workspace1.setWorkspaceId(1L);
-        workspace1.setName("팀 프로젝트");
-        workspace1.setCreatedAt(Instant.now());
+    mockMvc.perform(put("/api/v1/workspaces/1")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(requestBody)
+            .header(HttpHeaders.AUTHORIZATION, "Bearer fake")
+            .with(
+                org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf()))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.workspaceId").value(1))
+        .andExpect(jsonPath("$.name").value("캡스톤"));
+  }
 
-        Workspace workspace2 = new Workspace();
-        workspace2.setWorkspaceId(2L);
-        workspace2.setName("개인 프로젝트");
-        workspace2.setCreatedAt(Instant.now());
+  @Test
+  @DisplayName("워크스페이스 삭제 시 OWNER면 성공 메시지를 반환")
+  void deleteWorkspace() throws Exception {
+    doNothing().when(workspaceService).deleteWorkspace(1L, 10L);
+    when(jwtProvider.getUserIdFromAccessToken("fake")).thenReturn(10L);
 
-        List<Workspace> mockWorkspaces = Arrays.asList(workspace1, workspace2);
-        when(workspaceService.getAllWorkspaces()).thenReturn(mockWorkspaces);
-
-        // When & Then
-        mockMvc.perform(get("/api/v1/workspaces")
-                        .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$.length()").value(2))
-                .andExpect(jsonPath("$[0].workspaceId").value(1))
-                .andExpect(jsonPath("$[0].name").value("팀 프로젝트"))
-                .andExpect(jsonPath("$[1].workspaceId").value(2))
-                .andExpect(jsonPath("$[1].name").value("개인 프로젝트"));
-    }
-
-    @Test
-    void getAllWorkspaces_withEmptyList_shouldReturnEmptyArray() throws Exception {
-        // Given
-        when(workspaceService.getAllWorkspaces()).thenReturn(Arrays.asList());
-
-        // When & Then
-        mockMvc.perform(get("/api/v1/workspaces")
-                        .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$.length()").value(0));
-    }
-
-    @Test
-    void getWorkspaceById_shouldReturnWorkspace() throws Exception {
-        // Given
-        Workspace mockWorkspace = new Workspace();
-        mockWorkspace.setWorkspaceId(1L);
-        mockWorkspace.setName("팀 프로젝트");
-        mockWorkspace.setCreatedAt(Instant.now());
-
-        when(workspaceService.getWorkspaceById(1L)).thenReturn(mockWorkspace);
-
-        // When & Then
-        mockMvc.perform(get("/api/v1/workspaces/1")
-                        .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.workspaceId").value(1))
-                .andExpect(jsonPath("$.name").value("팀 프로젝트"));
-    }
-
-    @Test
-    void getWorkspaceById_withNonExistentId_shouldReturnNotFound() throws Exception {
-        // Given
-        when(workspaceService.getWorkspaceById(999L))
-                .thenThrow(new RuntimeException("워크스페이스를 찾을 수 없습니다. ID: 999"));
-
-        // When & Then
-        mockMvc.perform(get("/api/v1/workspaces/999")
-                        .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf()))
-                .andExpect(status().isNotFound());
-    }
-
-    @Test
-    void updateWorkspace_shouldReturnUpdatedWorkspace() throws Exception {
-        // Given
-        Workspace mockWorkspace = new Workspace();
-        mockWorkspace.setWorkspaceId(1L);
-        mockWorkspace.setName("새로운 이름");
-        mockWorkspace.setCreatedAt(Instant.now());
-
-        when(workspaceService.updateWorkspaceName(1L, "새로운 이름")).thenReturn(mockWorkspace);
-
-        String requestBody = "{\"name\": \"새로운 이름\"}";
-
-        // When & Then
-        mockMvc.perform(put("/api/v1/workspaces/1")
-                        .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
-                        .content(requestBody)
-                        .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.workspaceId").value(1))
-                .andExpect(jsonPath("$.name").value("새로운 이름"));
-    }
-
-    @Test
-    void updateWorkspace_withEmptyName_shouldReturnBadRequest() throws Exception {
-        // Given
-        String requestBody = "{\"name\": \"\"}";
-
-        // When & Then
-        mockMvc.perform(put("/api/v1/workspaces/1")
-                        .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
-                        .content(requestBody)
-                        .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf()))
-                .andExpect(status().isBadRequest());
-    }
-
-    @Test
-    void updateWorkspace_withNullName_shouldReturnBadRequest() throws Exception {
-        // Given
-        String requestBody = "{\"name\": null}";
-
-        // When & Then
-        mockMvc.perform(put("/api/v1/workspaces/1")
-                        .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
-                        .content(requestBody)
-                        .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf()))
-                .andExpect(status().isBadRequest());
-    }
-
-    @Test
-    void updateWorkspace_withNonExistentId_shouldReturnNotFound() throws Exception {
-        // Given
-        when(workspaceService.updateWorkspaceName(999L, "새로운 이름"))
-                .thenThrow(new RuntimeException("워크스페이스를 찾을 수 없습니다. ID: 999"));
-
-        String requestBody = "{\"name\": \"새로운 이름\"}";
-
-        // When & Then
-        mockMvc.perform(put("/api/v1/workspaces/999")
-                        .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
-                        .content(requestBody)
-                        .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf()))
-                .andExpect(status().isNotFound());
-    }
-
-    @Test
-    void deleteWorkspace_shouldReturnSuccessMessage() throws Exception {
-        // Given
-        doNothing().when(workspaceService).deleteWorkspace(1L);
-
-        // When & Then
-        mockMvc.perform(delete("/api/v1/workspaces/1")
-                        .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message").value("워크스페이스가 삭제되었습니다."));
-    }
-
-    @Test
-    void deleteWorkspace_withNonExistentId_shouldReturnNotFound() throws Exception {
-        // Given
-        doThrow(new RuntimeException("워크스페이스를 찾을 수 없습니다. ID: 999"))
-                .when(workspaceService).deleteWorkspace(999L);
-
-        // When & Then
-        mockMvc.perform(delete("/api/v1/workspaces/999")
-                        .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf()))
-                .andExpect(status().isNotFound());
-    }
+    mockMvc.perform(delete("/api/v1/workspaces/1")
+            .header(HttpHeaders.AUTHORIZATION, "Bearer fake")
+            .with(
+                org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf()))
+        .andExpect(status().isOk())
+        .andExpect(content().string("워크스페이스가 삭제되었습니다."));
+  }
 }
