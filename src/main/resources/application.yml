@@ -6,6 +6,8 @@ server:
 spring:
   application:
     name: capstone-project
+  jwt:
+    secret: ${SPRING_JWT_SECRET:local-dev-secret-please-change}
   
   jwt:
     secret: my-super-secret-jwt-key-for-capstone-project-development-2024
@@ -26,9 +28,15 @@ spring:
         format_sql: true
 
   security:
-    user:          
-      name: admin
-      password: admin
+   user:
+    name: admin
+    password: admin
+   oauth2:
+    client:
+      registration:
+        google:
+          client-id: test-google-client-id
+          client-secret: test-google-client-secret
 
 # Socket.IO 설정
 socketio:
@@ -42,6 +50,16 @@ openai:
   api-key: ${OPENAI_API_KEY:your-openai-api-key-here}
   model: text-embedding-ada-002
   max-tokens: 1000
+
+# OAuth2 (Google) 로컬 기본값
+oauth2:
+  google:
+    client-id: ${GOOGLE_CLIENT_ID:dummy}
+    client-secret: ${GOOGLE_CLIENT_SECRET:dummy}
+    redirect-uri: ${GOOGLE_REDIRECT_URI:http://localhost:3000/auth/callback}
+    token-uri: ${GOOGLE_TOKEN_URI:https://oauth2.googleapis.com/token}
+    resource-uri: ${GOOGLE_RESOURCE_URI:https://www.googleapis.com/oauth2/v2/userinfo}
+    login-uri: ${GOOGLE_LOGIN_URI:https://accounts.google.com/o/oauth2/v2/auth}
 
 management:
   endpoints:
