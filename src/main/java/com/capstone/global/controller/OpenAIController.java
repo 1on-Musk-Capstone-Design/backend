@@ -12,7 +12,7 @@ import java.util.Map;
  * AI 클러스터링 및 분석 기능 제공
  */
 // @RestController
-@RequestMapping("/api/openai")
+@RequestMapping("/openai")
 @CrossOrigin(origins = {"http://localhost:3000", "http://127.0.0.1:3000"})
 public class OpenAIController {
     
@@ -21,7 +21,7 @@ public class OpenAIController {
     
     /**
      * 아이디어 클러스터링 API
-     * POST /api/openai/cluster
+     * POST /openai/cluster
      */
     @PostMapping("/cluster")
     public ResponseEntity<?> clusterIdeas(@RequestBody Map<String, List<String>> request) {
@@ -43,7 +43,7 @@ public class OpenAIController {
     
     /**
      * 아이디어 피드백 생성 API
-     * POST /api/openai/feedback
+     * POST /openai/feedback
      */
     @PostMapping("/feedback")
     public ResponseEntity<?> generateFeedback(@RequestBody Map<String, String> request) {
@@ -65,7 +65,7 @@ public class OpenAIController {
     
     /**
      * 세션 요약 생성 API
-     * POST /api/openai/summary
+     * POST /openai/summary
      */
     @PostMapping("/summary")
     public ResponseEntity<?> generateSessionSummary(@RequestBody Map<String, Object> request) {
@@ -94,7 +94,7 @@ public class OpenAIController {
     
     /**
      * 텍스트 임베딩 생성 API
-     * POST /api/openai/embedding
+     * POST /openai/embedding
      */
     @PostMapping("/embedding")
     public ResponseEntity<?> getEmbedding(@RequestBody Map<String, String> request) {
@@ -116,7 +116,7 @@ public class OpenAIController {
     
     /**
      * 여러 텍스트의 임베딩 일괄 생성 API
-     * POST /api/openai/embeddings
+     * POST /openai/embeddings
      */
     @PostMapping("/embeddings")
     public ResponseEntity<?> getEmbeddings(@RequestBody Map<String, List<String>> request) {
@@ -140,7 +140,7 @@ public class OpenAIController {
     
     /**
      * OpenAI API 연결 테스트
-     * GET /api/openai/test
+     * GET /openai/test
      */
     @GetMapping("/test")
     public ResponseEntity<?> testConnection() {

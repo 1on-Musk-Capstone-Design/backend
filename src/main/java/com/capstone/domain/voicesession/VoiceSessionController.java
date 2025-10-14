@@ -7,7 +7,7 @@ import java.net.URI;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/workspaces/{workspaceId}/voice")
+@RequestMapping("/v1/workspaces/{workspaceId}/voice")
 @CrossOrigin(origins = {"http://localhost:3000", "http://127.0.0.1:3000"})
 public class VoiceSessionController {
 
@@ -25,7 +25,7 @@ public class VoiceSessionController {
             throw new IllegalStateException("Session ID must not be null");
         }
         return ResponseEntity
-                .created(URI.create("/api/v1/workspaces/" + workspaceId + "/voice/" + sessionId))
+                .created(URI.create("/v1/workspaces/" + workspaceId + "/voice/" + sessionId))
                 .body(VoiceSessionDto.from(session));
     }
 

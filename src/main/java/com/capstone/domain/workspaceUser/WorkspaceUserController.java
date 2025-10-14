@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1/workspaces/{workspaceId}")
+@RequestMapping("/v1/workspaces/{workspaceId}")
 public class WorkspaceUserController {
 
   private final WorkspaceUserService workspaceUserService;
@@ -24,10 +24,14 @@ public class WorkspaceUserController {
   @PostMapping("/join")
   public ResponseEntity<String> joinWorkspace(
       @PathVariable Long workspaceId,
-      @RequestHeader(HttpHeaders.AUTHORIZATION) String token
+      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String token
   ) {
-    String jwt = token.replace("Bearer ", "").trim();
-    Long userId = jwtProvider.getUserIdFromAccessToken(jwt);
+    // 개발/테스트: Authorization 없으면 더미 userId 사용
+    Long userId = 1L;
+    if (token != null && !token.trim().isEmpty()) {
+      String jwt = token.replace("Bearer ", "").trim();
+      userId = jwtProvider.getUserIdFromAccessToken(jwt);
+    }
 
     workspaceUserService.joinWorkspace(workspaceId, userId);
     return ResponseEntity.ok("워크스페이스 참여 성공");
@@ -44,10 +48,14 @@ public class WorkspaceUserController {
   public ResponseEntity<String> removeUser(
       @PathVariable Long workspaceId,
       @PathVariable Long userId,
-      @RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
+      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String token) {
 
-    String jwt = token.replace("Bearer ", "").trim();
-    Long requesterId = jwtProvider.getUserIdFromAccessToken(jwt);
+    // 개발/테스트: Authorization 없으면 더미 userId 사용
+    Long requesterId = 1L;
+    if (token != null && !token.trim().isEmpty()) {
+      String jwt = token.replace("Bearer ", "").trim();
+      requesterId = jwtProvider.getUserIdFromAccessToken(jwt);
+    }
 
     workspaceUserService.removeUser(workspaceId, userId, requesterId);
     return ResponseEntity.ok("유저 삭제 완료");
