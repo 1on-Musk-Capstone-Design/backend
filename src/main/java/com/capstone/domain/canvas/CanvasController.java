@@ -20,7 +20,8 @@ public class CanvasController {
       @PathVariable Long workspaceId,
       @RequestBody CanvasRequest request
   ) {
-    Long userId = jwtProvider.getUserIdFromAccessToken(token);
+    String jwt = token.replace("Bearer ", "").trim();
+    Long userId = jwtProvider.getUserIdFromAccessToken(jwt);
     return ResponseEntity.ok(canvasService.createCanvas(userId, workspaceId, request));
   }
 
@@ -40,7 +41,8 @@ public class CanvasController {
       @PathVariable Long canvasId,
       @RequestBody CanvasRequest request
   ) {
-    Long userId = jwtProvider.getUserIdFromAccessToken(token);
+    String jwt = token.replace("Bearer ", "").trim();
+    Long userId = jwtProvider.getUserIdFromAccessToken(jwt);
     return ResponseEntity.ok(canvasService.updateCanvas(userId, canvasId, request));
   }
 
@@ -49,7 +51,8 @@ public class CanvasController {
       @RequestHeader("Authorization") String token,
       @PathVariable Long canvasId
   ) {
-    Long userId = jwtProvider.getUserIdFromAccessToken(token);
+    String jwt = token.replace("Bearer ", "").trim();
+    Long userId = jwtProvider.getUserIdFromAccessToken(jwt);
     canvasService.deleteCanvas(userId, canvasId);
     return ResponseEntity.noContent().build();
   }
