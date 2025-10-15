@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -35,7 +36,6 @@ public class CanvasService {
         .workspaceUser(workspaceUser)
         .title(request.getTitle())
         .build();
-
     Canvas newCanvas = canvasRepository.save(canvas);
 
     return CanvasResponse.builder()
@@ -70,6 +70,7 @@ public class CanvasService {
         .build();
   }
 
+  @Transactional
   public CanvasResponse updateCanvas(Long userId, Long canvasId, CanvasRequest request) {
     Canvas canvas = canvasRepository.findById(canvasId)
         .orElseThrow(() -> new IllegalArgumentException("캔버스를 찾을 수 없습니다."));
