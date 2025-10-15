@@ -7,6 +7,5 @@ import lombok.Getter;
 @Builder
 public class CanvasRequest {
 
-  private Long workspaceId;
   private String title;
 }

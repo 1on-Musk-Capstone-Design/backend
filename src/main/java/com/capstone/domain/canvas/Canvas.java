@@ -7,6 +7,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Size;
@@ -15,6 +16,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -31,13 +33,14 @@ public class Canvas {
   private Long id;
 
   @ManyToOne
-  @Column(name = "workspace", nullable = false)
+  @JoinColumn(name = "workspace", nullable = false)
   private Workspace workspace;
 
   @ManyToOne
-  @Column(name = "workspaceUser_id", nullable = false)
+  @JoinColumn(name = "workspace_user_id", nullable = false)
   private WorkspaceUser workspaceUser;
 
+  @Setter
   @Column(name = "title", nullable = false)
   @Size(min = 1, message = "캔버스 제목은 최소 1자 이상이어야 합니다.")
   private String title;

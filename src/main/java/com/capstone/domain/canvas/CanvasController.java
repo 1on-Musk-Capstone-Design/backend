@@ -34,6 +34,16 @@ public class CanvasController {
     return ResponseEntity.ok(canvasService.getCanvas(canvasId));
   }
 
+  @PutMapping("/canvas/{canvasId}")
+  public ResponseEntity<CanvasResponse> updateCanvas(
+      @RequestHeader("Authorization") String token,
+      @PathVariable Long canvasId,
+      @RequestBody CanvasRequest request
+  ) {
+    Long userId = jwtProvider.getUserIdFromAccessToken(token);
+    return ResponseEntity.ok(canvasService.updateCanvas(userId, canvasId, request));
+  }
+
   @DeleteMapping("/canvas/{canvasId}")
   public ResponseEntity<Void> deleteCanvas(
       @RequestHeader("Authorization") String token,

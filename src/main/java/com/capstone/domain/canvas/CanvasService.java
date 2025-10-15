@@ -70,6 +70,25 @@ public class CanvasService {
         .build();
   }
 
+  public CanvasResponse updateCanvas(Long userId, Long canvasId, CanvasRequest request) {
+    Canvas canvas = canvasRepository.findById(canvasId)
+        .orElseThrow(() -> new IllegalArgumentException("캔버스를 찾을 수 없습니다."));
+
+    workspaceUserRepository.findByWorkspaceAndUser(
+        canvas.getWorkspace(),
+        userRepository.findById(userId)
+            .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."))
+    ).orElseThrow(() -> new IllegalArgumentException("워크스페이스 소속 사용자가 아닙니다."));
+
+    canvas.setTitle(request.getTitle());
+    return CanvasResponse.builder()
+        .id(canvas.getId())
+        .title(canvas.getTitle())
+        .createdAt(canvas.getCreatedAt().toString())
+        .updatedAt(canvas.getUpdatedAt().toString())
+        .build();
+  }
+
   public void deleteCanvas(Long userId, Long canvasId) {
     Canvas deleteCanvas = canvasRepository.findById(canvasId)
         .orElseThrow(() -> new IllegalArgumentException("캔버스를 찾을 수 없습니다."));
