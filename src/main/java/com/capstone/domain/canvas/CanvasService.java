@@ -20,8 +20,8 @@ public class CanvasService {
   private final WorkspaceUserRepository workspaceUserRepository;
   private final UserRepository userRepository;
 
-  public CanvasResponse createCanvas(Long userId, CanvasRequest request) {
-    Workspace workspace = workspaceRepository.findById(request.getWorkspaceId())
+  public CanvasResponse createCanvas(Long userId, Long workspaceId, CanvasRequest request) {
+    Workspace workspace = workspaceRepository.findById(workspaceId)
         .orElseThrow(() -> new IllegalArgumentException("워크스페이스를 찾을 수 없습니다."));
 
     User user = userRepository.findById(userId)
@@ -58,8 +58,8 @@ public class CanvasService {
         .collect(Collectors.toList());
   }
 
-  public CanvasResponse getCanvas(Long id) {
-    Canvas updateCanvas = canvasRepository.findById(id)
+  public CanvasResponse getCanvas(Long canvasId) {
+    Canvas updateCanvas = canvasRepository.findById(canvasId)
         .orElseThrow(() -> new IllegalArgumentException("캔버스를 찾을 수 없습니다."));
 
     return CanvasResponse.builder()
