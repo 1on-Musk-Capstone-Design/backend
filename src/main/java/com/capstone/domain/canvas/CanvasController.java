@@ -47,13 +47,13 @@ public class CanvasController {
   }
 
   @DeleteMapping("/canvas/{canvasId}")
-  public ResponseEntity<Void> deleteCanvas(
+  public ResponseEntity<String> deleteCanvas(
       @RequestHeader("Authorization") String token,
       @PathVariable Long canvasId
   ) {
     String jwt = token.replace("Bearer ", "").trim();
     Long userId = jwtProvider.getUserIdFromAccessToken(jwt);
     canvasService.deleteCanvas(userId, canvasId);
-    return ResponseEntity.noContent().build();
+    return ResponseEntity.ok("캔버스가 삭제되었습니다.");
   }
 }
