@@ -21,8 +21,16 @@ public class WorkspaceService {
 
     @Transactional
     public Workspace createWorkspace(String name, Long userId) {
+        // 개발/테스트: User가 없으면 자동으로 생성
         User owner = userRepository.findById(userId)
-            .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다. ID: " + userId));
+            .orElseGet(() -> {
+                User newUser = User.builder()
+                    .email("test@example.com")
+                    .name("테스트 사용자")
+                    .profileImage(null)
+                    .build();
+                return userRepository.save(newUser);
+            });
 
         Workspace workspace = new Workspace();
         workspace.setName(name);
@@ -54,8 +62,16 @@ public class WorkspaceService {
         Workspace workspace = workspaceRepository.findById(workspaceId)
             .orElseThrow(() -> new RuntimeException("워크스페이스를 찾을 수 없습니다."));
 
+        // 개발/테스트: User가 없으면 자동으로 생성
         User user = userRepository.findById(userId)
-            .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+            .orElseGet(() -> {
+                User newUser = User.builder()
+                    .email("test@example.com")
+                    .name("테스트 사용자")
+                    .profileImage(null)
+                    .build();
+                return userRepository.save(newUser);
+            });
 
         WorkspaceUser workspaceUser = workspaceUserRepository.findByWorkspaceAndUser(workspace, user)
             .orElseThrow(() -> new RuntimeException("워크스페이스 멤버가 아닙니다."));
@@ -77,9 +93,18 @@ public class WorkspaceService {
     public void deleteWorkspace(Long workspaceId, Long userId) {
         Workspace workspace = getWorkspaceById(workspaceId);
 
-        WorkspaceUser workspaceUser = workspaceUserRepository.findByWorkspaceAndUser(workspace,
-                userRepository.findById(userId)
-                    .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다. ID: " + userId)))
+        // 개발/테스트: User가 없으면 자동으로 생성
+        User user = userRepository.findById(userId)
+            .orElseGet(() -> {
+                User newUser = User.builder()
+                    .email("test@example.com")
+                    .name("테스트 사용자")
+                    .profileImage(null)
+                    .build();
+                return userRepository.save(newUser);
+            });
+
+        WorkspaceUser workspaceUser = workspaceUserRepository.findByWorkspaceAndUser(workspace, user)
             .orElseThrow(() -> new RuntimeException("워크스페이스 참여 이력이 없습니다."));
 
         if (workspaceUser.getRole() != Role.OWNER) {

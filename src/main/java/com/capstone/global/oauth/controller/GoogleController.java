@@ -8,7 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/v1/auth-google")
+@RequestMapping("/v1/auth-google")
 @RequiredArgsConstructor
 public class GoogleController {
 
