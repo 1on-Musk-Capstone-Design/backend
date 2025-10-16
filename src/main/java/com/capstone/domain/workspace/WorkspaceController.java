@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1/workspaces")
+@RequestMapping("/v1/workspaces")
 @CrossOrigin(origins = {"http://localhost:3000", "http://127.0.0.1:3000"})
 public class WorkspaceController {
 
@@ -53,26 +53,34 @@ public class WorkspaceController {
   @PutMapping("/{id}")
   public ResponseEntity<WorkspaceDtos.ListItem> updateWorkspace(
       @PathVariable Long id,
-      @RequestHeader(HttpHeaders.AUTHORIZATION) String token,
+      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String token,
       @RequestBody WorkspaceDtos.UpdateRequest request) {
 
-    String jwt = token.replace("Bearer ", "").trim();
-    Long userId = jwtProvider.getUserIdFromAccessToken(jwt);
+    // 개발/테스트: Authorization 없으면 더미 userId 사용
+    Long userId = 1L;
+    if (token != null && !token.trim().isEmpty()) {
+      String jwt = token.replace("Bearer ", "").trim();
+      userId = jwtProvider.getUserIdFromAccessToken(jwt);
+    }
 
     return ResponseEntity.ok(workspaceService.updateWorkspaceName(id, request.getName().trim(), userId));
   }
 
   @PostMapping
   public ResponseEntity<WorkspaceDtos.Response> create(
-      @RequestHeader(HttpHeaders.AUTHORIZATION) String token,
+      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String token,
       @RequestBody WorkspaceDtos.CreateRequest request) {
 
     if (request.getName() == null || request.getName().trim().isEmpty()) {
       return ResponseEntity.badRequest().build();
     }
 
-    String jwt = token.replace("Bearer ", "").trim();
-    Long userId = jwtProvider.getUserIdFromAccessToken(jwt);
+    // 개발/테스트: Authorization 없으면 더미 userId 사용
+    Long userId = 1L;
+    if (token != null && !token.trim().isEmpty()) {
+      String jwt = token.replace("Bearer ", "").trim();
+      userId = jwtProvider.getUserIdFromAccessToken(jwt);
+    }
 
     Workspace saved = workspaceService.createWorkspace(request.getName().trim(), userId);
 
@@ -87,10 +95,14 @@ public class WorkspaceController {
   @DeleteMapping("/{id}")
   public ResponseEntity<String> deleteWorkspace(
       @PathVariable Long id,
-      @RequestHeader(HttpHeaders.AUTHORIZATION) String token
+      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String token
   ) {
-    String jwt = token.replace("Bearer ", "").trim();
-    Long userId = jwtProvider.getUserIdFromAccessToken(jwt);
+    // 개발/테스트: Authorization 없으면 더미 userId 사용
+    Long userId = 1L;
+    if (token != null && !token.trim().isEmpty()) {
+      String jwt = token.replace("Bearer ", "").trim();
+      userId = jwtProvider.getUserIdFromAccessToken(jwt);
+    }
 
     workspaceService.deleteWorkspace(id, userId);
 

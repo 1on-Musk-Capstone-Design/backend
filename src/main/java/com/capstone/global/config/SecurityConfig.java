@@ -22,12 +22,33 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .authorizeHttpRequests(authz -> authz
-                .requestMatchers("/health", "/actuator/**", "/socket.io/**").permitAll()
-                .requestMatchers("/api/sessions/**", "/api/users/**", "/api/chat/**", "/api/ideas/**").permitAll()
-                .requestMatchers("/api/v1/workspaces/**", "/api/v1/chat/**", "/api/v1/files/**").permitAll()
-                .requestMatchers("/api/v1/auth-google/**").permitAll()
+
+                // Health check & Actuator
+                .requestMatchers("/health", "/actuator/**").permitAll()
+                
+                // Socket.IO
+                .requestMatchers("/socket.io/**").permitAll()
+                
+                // Google OAuth (인증 필요 없음)
+                .requestMatchers("/v1/auth-google/**").permitAll()
+                
+                // Workspace - 읽기는 허용, 쓰기는 인증 필요 (개발용: 임시로 모두 허용)
+                .requestMatchers(HttpMethod.GET, "/v1/workspaces/**").permitAll()
+                .requestMatchers(HttpMethod.POST, "/v1/workspaces/**").permitAll()  // TODO: 프로덕션에서는 authenticated()로 변경
+                .requestMatchers(HttpMethod.PUT, "/v1/workspaces/**").permitAll()   // TODO: 프로덕션에서는 authenticated()로 변경
+                .requestMatchers(HttpMethod.DELETE, "/v1/workspaces/**").permitAll()  // TODO: 프로덕션에서는 authenticated()로 변경
+
+                // Canvas
                 .requestMatchers(HttpMethod.GET, "/api/v1/{workspaceId}/canvas").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/v1/canvas/{canvasId}").permitAll()
+                
+                // Chat - 모두 허용 (개발용)
+                .requestMatchers("/v1/chat/**").permitAll()  // TODO: 프로덕션에서는 authenticated()로 변경
+                
+                // VoiceSession - 모두 허용 (개발용)
+                .requestMatchers("/v1/workspaces/*/voice/**").permitAll()  // TODO: 프로덕션에서는 authenticated()로 변경
+                
+                // 나머지는 인증 필요
                 .anyRequest().authenticated()
             );
         

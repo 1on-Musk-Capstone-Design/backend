@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/v1/chat/messages")
+@RequestMapping("/v1/chat/messages")
 @CrossOrigin(origins = {"http://localhost:3000", "http://127.0.0.1:3000"})
 public class ChatMessageController {
 
@@ -19,7 +19,7 @@ public class ChatMessageController {
 
     /**
      * 파일/이미지 메시지(JSON 메타) 생성
-     * POST /api/v1/chat/messages/file
+     * POST /v1/chat/messages/file
      */
     @PostMapping("/file")
     public ResponseEntity<ChatMessageDtos.Response> createFileMessage(@RequestBody ChatMessageDtos.FileMessageRequest request) {
@@ -60,7 +60,7 @@ public class ChatMessageController {
     // multipart 업로드 방식은 제거 (JSON 메타 방식만 유지)
     /**
      * 채팅 메시지 전송
-     * POST /api/v1/chat/messages
+     * POST /v1/chat/messages
      */
     @PostMapping
     public ResponseEntity<ChatMessageDtos.Response> sendMessage(@RequestBody ChatMessageDtos.SendRequest request) {
@@ -94,7 +94,7 @@ public class ChatMessageController {
 
     /**
      * 특정 워크스페이스의 채팅 메시지 목록 조회
-     * GET /api/v1/chat/messages/workspace/{workspaceId}
+     * GET /v1/chat/messages/workspace/{workspaceId}
      */
     @GetMapping("/workspace/{workspaceId}")
     public ResponseEntity<List<ChatMessageDtos.Response>> getMessagesByWorkspace(@PathVariable Long workspaceId) {
@@ -117,7 +117,7 @@ public class ChatMessageController {
 
     /**
      * 특정 워크스페이스의 최근 채팅 메시지 조회
-     * GET /api/v1/chat/messages/workspace/{workspaceId}/recent?limit=10
+     * GET /v1/chat/messages/workspace/{workspaceId}/recent?limit=10
      */
     @GetMapping("/workspace/{workspaceId}/recent")
     public ResponseEntity<List<ChatMessageDtos.Response>> getRecentMessages(
@@ -143,7 +143,7 @@ public class ChatMessageController {
 
     /**
      * 특정 사용자의 채팅 메시지 목록 조회
-     * GET /api/v1/chat/messages/user/{userId}
+     * GET /v1/chat/messages/user/{userId}
      */
     @GetMapping("/user/{userId}")
     public ResponseEntity<List<ChatMessageDtos.Response>> getMessagesByUser(@PathVariable String userId) {
@@ -166,7 +166,7 @@ public class ChatMessageController {
 
     /**
      * 특정 워크스페이스의 채팅 메시지 개수 조회
-     * GET /api/v1/chat/messages/workspace/{workspaceId}/count
+     * GET /v1/chat/messages/workspace/{workspaceId}/count
      */
     @GetMapping("/workspace/{workspaceId}/count")
     public ResponseEntity<ChatMessageDtos.CountResponse> getMessageCount(@PathVariable Long workspaceId) {
