@@ -25,7 +25,7 @@ public class SecurityConfig {
                 .requestMatchers("/health", "/actuator/**", "/socket.io/**").permitAll()
                 .requestMatchers("/api/sessions/**", "/api/users/**", "/api/chat/**", "/api/ideas/**").permitAll()
                 .requestMatchers("/api/v1/workspaces/**", "/api/v1/chat/**", "/api/v1/files/**").permitAll()
-                .requestMatchers("/api/v1/auth-google/**","/api/v1/canvas/**").permitAll()
+                .requestMatchers("/api/v1/auth-google/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/v1/{workspaceId}/canvas").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/v1/canvas/{canvasId}").permitAll()
                 .anyRequest().authenticated()
