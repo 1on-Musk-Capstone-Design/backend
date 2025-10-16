@@ -22,6 +22,7 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .authorizeHttpRequests(authz -> authz
+
                 // Health check & Actuator
                 .requestMatchers("/health", "/actuator/**").permitAll()
                 
@@ -36,6 +37,10 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/v1/workspaces/**").permitAll()  // TODO: 프로덕션에서는 authenticated()로 변경
                 .requestMatchers(HttpMethod.PUT, "/v1/workspaces/**").permitAll()   // TODO: 프로덕션에서는 authenticated()로 변경
                 .requestMatchers(HttpMethod.DELETE, "/v1/workspaces/**").permitAll()  // TODO: 프로덕션에서는 authenticated()로 변경
+
+                // Canvas
+                .requestMatchers(HttpMethod.GET, "/api/v1/{workspaceId}/canvas").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/v1/canvas/{canvasId}").permitAll()
                 
                 // Chat - 모두 허용 (개발용)
                 .requestMatchers("/v1/chat/**").permitAll()  // TODO: 프로덕션에서는 authenticated()로 변경
