@@ -32,7 +32,7 @@ class VoiceSessionIntegrationTest {
     private WorkspaceRepository workspaceRepository;
 
     @Test
-    @DisplayName("세션 저장 및 조회 - DB 영속성 확인")
+    @DisplayName("세션 저장 및 조회 테스트")
     void saveVoiceSession_shouldPersistAndRetrieve() {
         // Given 
         Workspace workspace = new Workspace();
@@ -56,7 +56,7 @@ class VoiceSessionIntegrationTest {
     }
 
     @Test
-    @DisplayName("워크스페이스별 세션 조회 - 순서 확인")
+    @DisplayName("워크스페이스별 세션 조회 테스트")
     void findByWorkspaceId_shouldReturnSessionsInOrder() {
         // Given 
         Workspace workspace = new Workspace();
@@ -83,7 +83,7 @@ class VoiceSessionIntegrationTest {
     }
 
     @Test
-    @DisplayName("세션 종료 - endedAt 업데이트 확인")
+    @DisplayName("세션 종료 테스트")
     void endSession_shouldUpdateEndedAt() {
         // Given 
         Workspace workspace = new Workspace();
@@ -110,7 +110,7 @@ class VoiceSessionIntegrationTest {
     }
 
     @Test
-    @DisplayName("다른 워크스페이스의 세션은 조회되지 않음")
+    @DisplayName("특정 워크스페이스 세션 조회")
     void findByWorkspaceId_shouldNotReturnOtherWorkspaceSessions() {
         // Given - 두 개의 워크스페이스와 세션 생성
         Workspace workspace1 = new Workspace();

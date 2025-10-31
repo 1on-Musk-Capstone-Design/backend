@@ -22,7 +22,7 @@ public class VoiceSessionController {
         VoiceSession session = service.startSession(workspaceId);
         Long sessionId = session.getId(); // null 체크 가능
         if (sessionId == null) {
-            throw new IllegalStateException("Session ID must not be null");
+            throw new IllegalStateException("세션 ID가 생성되지 않았습니다.");
         }
         return ResponseEntity
                 .created(URI.create("/v1/workspaces/" + workspaceId + "/voice/" + sessionId))

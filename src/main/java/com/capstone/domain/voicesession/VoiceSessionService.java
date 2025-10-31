@@ -22,7 +22,7 @@ public class VoiceSessionService {
     @Transactional
     public VoiceSession startSession(Long workspaceId) {
         Workspace workspace = workspaceRepository.findById(workspaceId)
-                .orElseThrow(() -> new IllegalArgumentException("Workspace not found with id: " + workspaceId));
+                .orElseThrow(() -> new IllegalArgumentException("해당 워크스페이스를 찾을 수 없습니다: " + workspaceId));
 
         VoiceSession session = new VoiceSession(workspace, LocalDateTime.now());
         return repository.save(session);
@@ -31,7 +31,7 @@ public class VoiceSessionService {
     @Transactional
     public VoiceSession endSession(Long sessionId) {
         VoiceSession session = repository.findById(sessionId)
-                .orElseThrow(() -> new IllegalArgumentException("VoiceSession not found with id: " + sessionId));
+                .orElseThrow(() -> new IllegalArgumentException("해당 음성 세션을 찾을 수 없습니다: " + sessionId));
         session.setEndedAt(LocalDateTime.now());
         return repository.save(session);
     }

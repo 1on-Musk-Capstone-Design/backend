@@ -39,11 +39,11 @@ class VoiceSessionControllerTest {
     private VoiceSessionService voiceSessionService;
 
     @Nested
-    @DisplayName("세션 생성")
+    @DisplayName("세션 생성 테스트")
     class StartSession {
 
         @Test
-        @DisplayName("성공 - 201 + Location + 필드 검증 (endedAt 미포함)")
+        @DisplayName("세션 생성 성공")
         void startSession_created() throws Exception {
             // Given 
             VoiceSession session = new VoiceSession(workspace(WORKSPACE_ID), LocalDateTime.now());
@@ -67,11 +67,11 @@ class VoiceSessionControllerTest {
     }
 
     @Nested
-    @DisplayName("세션 종료")
+    @DisplayName("세션 종료 테스트")
     class EndSession {
 
         @Test
-        @DisplayName("성공 - 200 + endedAt 존재")
+        @DisplayName("세션 종료 성공")
         void endSession_ok() throws Exception {
             // Given
             VoiceSession ended = new VoiceSession(workspace(WORKSPACE_ID), LocalDateTime.now().minusMinutes(5));
@@ -92,19 +92,19 @@ class VoiceSessionControllerTest {
         }
 
         @Test
-        @DisplayName("워크스페이스 불일치 - 400")
+        @DisplayName("세션 종료 실패")
         void endSession_workspaceMismatch_badRequest() throws Exception {
-            // Given - 다른 워크스페이스의 세션 준비
+            // Given 
             VoiceSession other = new VoiceSession(workspace(2L), LocalDateTime.now().minusMinutes(2));
             setId(other, SESSION_ID);
             safeSetEndedAt(other, LocalDateTime.now());
             when(voiceSessionService.endSession(SESSION_ID)).thenReturn(other);
 
-            // When - 잘못된 워크스페이스로 세션 종료 시도
+            // When 
             var result = mockMvc.perform(patch("/api/v1/workspaces/{workspaceId}/voice/{sessionId}", WORKSPACE_ID, SESSION_ID)
                     .with(csrf()));
 
-            // Then - Bad Request 응답 검증
+            // Then 
             result.andDo(print())
                     .andExpect(status().isBadRequest());
         }
