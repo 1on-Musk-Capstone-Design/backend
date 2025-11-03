@@ -1126,6 +1126,91 @@
           "body": "{\n  \"accessToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\n  \"refreshToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\n  \"tokenType\": \"Bearer\",\n  \"expiresIn\": 3600\n}"
         }
       ]
+    },
+    {
+      "name": "Ideas",
+      "item": [
+        {
+          "name": "Create Idea",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"새 아이디어\",\n  \"description\": \"아이디어 상세 설명\",\n  \"tags\": [\"태그1\", \"태그2\"]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/ideas",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "ideas"]
+            }
+          }
+        },
+        {
+          "name": "Get All Ideas",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/ideas",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "ideas"]
+            }
+          }
+        },
+        {
+          "name": "Get Idea By ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/ideas/{{ideaId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "ideas", "{{ideaId}}"]
+            }
+          }
+        },
+        {
+          "name": "Update Idea",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"수정된 아이디어 제목\",\n  \"description\": \"수정된 상세 내용\",\n  \"tags\": [\"수정태그1\"]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/ideas/{{ideaId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "ideas", "{{ideaId}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete Idea",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/ideas/{{ideaId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "ideas", "{{ideaId}}"]
+            }
+          }
+        }
+      ]
     }
   ]
 }
