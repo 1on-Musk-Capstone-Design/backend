@@ -23,7 +23,7 @@ public class IdeaController {
     return ResponseEntity.ok(ideaService.createIdea(userId, request));
   }
 
-  @GetMapping("/workspace/{workspaceId}")
+  @GetMapping("/workspaces/{workspaceId}")
   public ResponseEntity<List<IdeaResponse>> getAllIdeas(@PathVariable Long workspaceId) {
     return ResponseEntity.ok(ideaService.getAllIdeas(workspaceId));
   }
