@@ -38,10 +38,19 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.PUT, "/v1/workspaces/**").permitAll()   // TODO: 프로덕션에서는 authenticated()로 변경
                 .requestMatchers(HttpMethod.DELETE, "/v1/workspaces/**").permitAll()  // TODO: 프로덕션에서는 authenticated()로 변경
 
-                // Canvas
-                .requestMatchers(HttpMethod.GET, "/api/v1/{workspaceId}/canvas").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/v1/canvas/{canvasId}").permitAll()
-                
+                // Canvas (개발용)
+                .requestMatchers(HttpMethod.GET, "/api/v1/*/canvas").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/v1/canvas/**").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/v1/*/canvas").permitAll()
+                .requestMatchers(HttpMethod.PUT, "/api/v1/canvas/**").permitAll()
+                .requestMatchers(HttpMethod.DELETE, "/api/v1/canvas/**").permitAll()
+
+                // Idea (개발용)
+                .requestMatchers(HttpMethod.GET, "/v1/ideas/**").permitAll()
+                .requestMatchers(HttpMethod.POST, "/v1/ideas/**").permitAll()
+                .requestMatchers(HttpMethod.PUT, "/v1/ideas/**").permitAll()
+                .requestMatchers(HttpMethod.DELETE, "/v1/ideas/**").permitAll()
+
                 // Chat - 모두 허용 (개발용)
                 .requestMatchers("/v1/chat/**").permitAll()  // TODO: 프로덕션에서는 authenticated()로 변경
                 

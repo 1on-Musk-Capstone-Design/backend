@@ -154,6 +154,13 @@ lsof -ti:8080 | xargs -r kill -9; lsof -ti:9092 | xargs -r kill -9; ./gradlew bo
 - `GET /api/v1/workspaces/{workspaceId}/users` - 멤버 목록 조회
 - `DELETE /api/v1/workspaces/{workspaceId}/users/{userId}` - 멤버 제거
 
+#### Idea API (5개)
+- `POST /v1/ideas` - 아이디어 생성
+- `GET /v1/ideas/workspaces/{workspaceId}` - 워크스페이스 아이디어 목록 조회
+- `GET /v1/{id}` - 아이디어 상세 조회
+- `PUT /v1/{id}` - 특정 아이디어 조회
+- `DELETE /v1/{id}` - 아이디어 삭제
+
 #### Chat Message API (6개)
 - `POST /api/v1/chat/messages` - 채팅 메시지 전송
 - `POST /api/v1/chat/messages/file` - 파일/이미지 메시지 생성
@@ -264,6 +271,13 @@ src/main/java/com/capstone/
 │   │   ├── ChatMessageController.java
 │   │   ├── ChatMessageService.java
 │   │   └── ChatMessageRepository.java
+│   ├── idea/                         # 아이디어 도메인
+│   │   ├── Idea.java                 # 아이디어 엔티티
+│   │   ├── IdeaController.java       # 아이디어 컨트롤러
+│   │   ├── IdeaRepository.java       # 아이디어 리포지토리
+│   │   ├── IdeaRequest.java          # 아이디어 요청 DTO
+│   │   ├── IdeaResponse.java         # 아이디어 응답 DTO
+│   │   └── IdeaService.java   
 │   ├── user/                         # 사용자 도메인
 │   │   └── entity/
 │   │       └── User.java            # 사용자 엔티티
@@ -326,6 +340,9 @@ src/main/java/com/capstone/
   - [x] 워크스페이스 참여
   - [x] 멤버 목록 조회
   - [x] 멤버 제거 (OWNER 권한)
+
+- [x] **Idea API (5개)**
+  - [x] 워크스페이스 생성/조회/수정/삭제
 
 - [x] **Chat Message API (6개)**
   - [x] 채팅 메시지 전송
