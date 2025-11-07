@@ -1,13 +1,16 @@
-// Vercel 빌드 시 환경변수를 HTML에 주입하는 스크립트
+// Vercel 빌드 스크립트
+// 정적 OpenAPI JSON 파일이 있으면 그대로 사용
 const fs = require('fs');
 const path = require('path');
 
-const apiUrl = process.env.API_URL || 'http://localhost:8080/api';
-const indexPath = path.join(__dirname, 'index.html');
+const openApiPath = path.join(__dirname, 'openapi.json');
 
-let html = fs.readFileSync(indexPath, 'utf8');
-html = html.replace('API_URL_PLACEHOLDER', apiUrl);
-
-fs.writeFileSync(indexPath, html);
-console.log(`API URL injected: ${apiUrl}`);
+if (fs.existsSync(openApiPath)) {
+    console.log('✅ OpenAPI JSON 파일 발견: openapi.json');
+    console.log('정적 문서 모드로 배포됩니다.');
+} else {
+    console.log('⚠️  OpenAPI JSON 파일이 없습니다.');
+    console.log('정적 문서를 사용하려면 openapi.json 파일이 필요합니다.');
+    console.log('generate-openapi.sh 스크립트를 실행하여 생성하세요.');
+}
 

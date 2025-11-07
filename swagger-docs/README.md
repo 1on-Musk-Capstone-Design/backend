@@ -55,12 +55,44 @@ npx http-server -p 3000
 
 브라우저에서 `http://localhost:3000` 접속
 
-## API 서버 설정
+## OpenAPI JSON 생성
 
-API 서버가 실행 중이어야 Swagger UI가 정상적으로 작동합니다.
+백엔드 서버 없이 정적 문서를 사용하려면 OpenAPI JSON 파일을 생성해야 합니다.
 
-- 로컬: `http://localhost:8080/api`
-- 프로덕션: 환경변수 `API_URL`로 설정
+### 방법 1: 자동 생성 스크립트 사용 (권장)
+
+```bash
+cd swagger-docs
+./generate-openapi.sh
+```
+
+이 스크립트는:
+1. 백엔드 서버를 실행
+2. OpenAPI JSON을 다운로드
+3. `openapi.json` 파일로 저장
+4. 서버 종료
+
+### 방법 2: 수동 생성
+
+1. 백엔드 서버 실행:
+```bash
+cd ..
+./gradlew bootRun
+```
+
+2. 다른 터미널에서 OpenAPI JSON 다운로드:
+```bash
+curl http://localhost:8080/api/v3/api-docs > swagger-docs/openapi.json
+```
+
+3. 서버 종료
+
+### 방법 3: 외부 API 서버 사용
+
+URL 파라미터로 외부 API 서버를 지정할 수 있습니다:
+```
+https://your-vercel-url.vercel.app/?apiUrl=https://api.yourdomain.com/api
+```
 
 ## 참고
 
