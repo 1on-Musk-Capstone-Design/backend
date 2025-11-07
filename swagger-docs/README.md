@@ -24,7 +24,24 @@ vercel --prod
 
 ## 환경변수
 
-- `API_URL`: API 서버의 기본 URL (기본값: `http://localhost:8080/api`)
+Vercel 대시보드에서 다음 환경변수를 설정하세요:
+
+- `API_URL`: API 서버의 기본 URL (예: `https://api.yourdomain.com/api`)
+
+**중요:** 환경변수를 설정하지 않으면 기본값 `http://localhost:8080/api`이 사용되며, 이는 Vercel에서 접근할 수 없습니다.
+
+## API 서버 URL 설정 방법
+
+### 방법 1: Vercel 환경변수 설정 (권장)
+1. Vercel 프로젝트 설정 → Environment Variables
+2. `API_URL` 변수 추가 (예: `https://api.yourdomain.com/api`)
+3. 재배포
+
+### 방법 2: URL 파라미터 사용
+브라우저에서 직접 URL 파라미터로 지정:
+```
+https://your-vercel-url.vercel.app/?apiUrl=https://api.yourdomain.com/api
+```
 
 ## 로컬 테스트
 
