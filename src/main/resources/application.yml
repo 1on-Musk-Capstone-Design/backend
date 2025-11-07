@@ -68,3 +68,13 @@ logging:
     com.corundumstudio.socketio: DEBUG
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+# SpringDoc OpenAPI 설정
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+    try-it-out-enabled: true
+  show-actuator: false

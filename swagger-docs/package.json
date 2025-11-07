@@ -1,0 +1,16 @@
+{
+  "name": "capstone-swagger-docs",
+  "version": "1.0.0",
+  "description": "Capstone Project API Documentation",
+  "scripts": {
+    "build": "echo 'No build step required'"
+  },
+  "keywords": [
+    "swagger",
+    "api",
+    "documentation"
+  ],
+  "author": "Capstone Team",
+  "license": "MIT"
+}
+

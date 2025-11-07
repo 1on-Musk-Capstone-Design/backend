@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Capstone Project API Documentation</title>
+    <link rel="stylesheet" type="text/css" href="https://unpkg.com/swagger-ui-dist@5.9.0/swagger-ui.css" />
+    <style>
+        html {
+            box-sizing: border-box;
+            overflow: -moz-scrollbars-vertical;
+            overflow-y: scroll;
+        }
+        *, *:before, *:after {
+            box-sizing: inherit;
+        }
+        body {
+            margin: 0;
+            background: #fafafa;
+        }
+    </style>
+</head>
+<body>
+    <div id="swagger-ui"></div>
+    <script src="https://unpkg.com/swagger-ui-dist@5.9.0/swagger-ui-bundle.js"></script>
+    <script src="https://unpkg.com/swagger-ui-dist@5.9.0/swagger-ui-standalone-preset.js"></script>
+    <script>
+        window.onload = function() {
+            // API 서버 URL (환경변수 또는 기본값)
+            const apiUrl = window.API_URL || 'http://localhost:8080/api';
+            const openApiUrl = `${apiUrl}/v3/api-docs`;
+            
+            const ui = SwaggerUIBundle({
+                url: openApiUrl,
+                dom_id: '#swagger-ui',
+                deepLinking: true,
+                presets: [
+                    SwaggerUIBundle.presets.apis,
+                    SwaggerUIStandalonePreset
+                ],
+                plugins: [
+                    SwaggerUIBundle.plugins.DownloadUrl
+                ],
+                layout: "StandaloneLayout",
+                tryItOutEnabled: true,
+                supportedSubmitMethods: ['get', 'post', 'put', 'delete', 'patch'],
+                validatorUrl: null,
+                onComplete: function() {
+                    console.log("Swagger UI loaded successfully");
+                },
+                onFailure: function(data) {
+                    console.error("Failed to load API docs:", data);
+                    document.getElementById('swagger-ui').innerHTML = 
+                        '<div style="padding: 20px; text-align: center;">' +
+                        '<h2>API 문서를 불러올 수 없습니다</h2>' +
+                        '<p>서버가 실행 중인지 확인하세요: <code>' + openApiUrl + '</code></p>' +
+                        '<p>환경변수 <code>API_URL</code>을 설정하여 API 서버 URL을 변경할 수 있습니다.</p>' +
+                        '</div>';
+                }
+            });
+        };
+    </script>
+</body>
+</html>
+

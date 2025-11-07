@@ -26,6 +26,9 @@ public class SecurityConfig {
                 // Health check & Actuator
                 .requestMatchers("/health", "/actuator/**").permitAll()
                 
+                // Swagger/OpenAPI 문서
+                .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                
                 // Socket.IO
                 .requestMatchers("/socket.io/**").permitAll()
                 
