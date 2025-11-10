@@ -56,6 +56,81 @@
       ]
     },
     {
+      "name": "Canvas - Create",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{authToken}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": { "mode": "raw", "raw": "{\n  \"title\": \"새로운 캔버스\"\n}" },
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/1/canvas",
+          "host": ["{{baseUrl}}"],
+          "path": ["api","v1","1","canvas"]
+        },
+        "description": "특정 워크스페이스에 캔버스를 생성"
+      }
+    },
+    {
+      "name": "Canvas - Get All by Workspace",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/1/canvas",
+          "host": ["{{baseUrl}}"],
+          "path": ["api","v1","1","canvas"]
+        },
+        "description": "특정 워크스페이스의 모든 캔버스 조회"
+      }
+    },
+    {
+      "name": "Canvas - Get By ID",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/canvas/1",
+          "host": ["{{baseUrl}}"],
+          "path": ["api","v1","canvas","1"]
+        },
+        "description": "캔버스 단건 조회"
+      }
+    },
+    {
+      "name": "Canvas - Update",
+      "request": {
+        "method": "PUT",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{authToken}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": { "mode": "raw", "raw": "{\n  \"title\": \"수정된 캔버스\"\n}" },
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/canvas/1",
+          "host": ["{{baseUrl}}"],
+          "path": ["api","v1","canvas","1"]
+        },
+        "description": "캔버스 제목 수정"
+      }
+    },
+    {
+      "name": "Canvas - Delete",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{authToken}}" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/canvas/1",
+          "host": ["{{baseUrl}}"],
+          "path": ["api","v1","canvas","1"]
+        },
+        "description": "캔버스 삭제"
+      }
+    },
+    {
       "name": "Get All Workspaces",
       "request": {
         "method": "GET",
@@ -1150,16 +1225,14 @@
           }
         },
         {
-          "name": "Get All Ideas",
+          "name": "Get All Ideas (by Workspace)",
           "request": {
             "method": "GET",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{authToken}}" }
-            ],
+            "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/v1/ideas",
+              "raw": "{{baseUrl}}/api/v1/ideas/workspaces/{{workspaceId}}",
               "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "ideas"]
+              "path": ["api", "v1", "ideas", "workspaces", "{{workspaceId}}"]
             }
           }
         },
@@ -1233,8 +1306,8 @@
         {
           "name": "Success Response",
           "originalRequest": { "method": "POST", "header": [], "body": { "mode": "raw" }, "url": { "raw": "{{baseUrl}}/api/v1/workspaces/1/voice/1/users" } },
-          "status": "OK",
-          "code": 200,
+          "status": "Created",
+          "code": 201,
           "_postman_previewlanguage": "json",
           "header": [{ "key": "Content-Type", "value": "application/json" }],
           "cookie": [],
@@ -1279,9 +1352,9 @@
         ],
         "body": { "mode": "raw", "raw": "{ \"workspaceUserId\": 1 }" },
         "url": {
-          "raw": "{{baseUrl}}/api/v1/workspaces/1/voice/users/move?fromSessionId=1&toSessionId=2",
+          "raw": "{{baseUrl}}/api/v1/workspaces/1/voice/1/users/move?fromSessionId=1&toSessionId=2",
           "host": ["{{baseUrl}}"],
-          "path": ["api","v1","workspaces","1","voice","users","move"],
+          "path": ["api","v1","workspaces","1","voice","1","users","move"],
           "query": [
             { "key": "fromSessionId", "value": "1" },
             { "key": "toSessionId", "value": "2" }

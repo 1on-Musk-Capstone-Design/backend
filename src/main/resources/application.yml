@@ -61,6 +61,22 @@ management:
     health:
       show-details: always
 
+# Swagger/OpenAPI 설정
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+    try-it-out-enabled: true
+    tags-sorter: alpha
+    operations-sorter: alpha
+    display-request-duration: true
+    doc-expansion: none
+  default-consumes-media-type: application/json
+  default-produces-media-type: application/json
+  show-actuator: false
+
 logging:
   level:
     com.capstone: DEBUG

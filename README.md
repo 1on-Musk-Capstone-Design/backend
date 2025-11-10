@@ -132,9 +132,18 @@ lsof -ti:8080 | xargs -r kill -9; lsof -ti:9092 | xargs -r kill -9; ./gradlew bo
 - **REST API**: `http://localhost:8080/api`
 - **Socket.IO**: `http://localhost:9092`
 - **헬스체크**: `http://localhost:8080/api/health`
+- **Swagger UI**: `http://localhost:8080/api/swagger-ui.html`
+- **OpenAPI Spec**: `http://localhost:8080/api/v3/api-docs`
 
-### 5. Postman 컬렉션
+### 5. API 문서
 
+#### Swagger UI
+서버 실행 후 브라우저에서 `http://localhost:8080/api/swagger-ui.html` 접속
+- 모든 API 목록 및 상세 정보 확인
+- 직접 API 테스트 가능
+- JWT 토큰 입력 가능 (우측 상단 "Authorize" 버튼)
+
+#### Postman 컬렉션
 루트의 `postman_collection.json`을 Postman에 임포트하여 API를 바로 테스트할 수 있습니다.
 
 **총 20개 API 포함:**
@@ -355,6 +364,11 @@ src/main/java/com/capstone/
   - [x] 음성 세션 시작/종료
   - [x] 세션 목록 조회
 
+- [x] **API 문서화**
+  - [x] Swagger/OpenAPI 통합
+  - [x] 20개 API 전체 문서화
+  - [x] JWT 인증 테스트 지원
+  
 - [x] **Postman 컬렉션**
   - [x] 20개 API 전체 포함
   - [x] Authorization 헤더 설정
@@ -366,8 +380,7 @@ src/main/java/com/capstone/
 - [ ] WebSocket/Socket.IO 실시간 이벤트 구현
 - [ ] 무한 컨버스 백엔드 로직
 - [ ] 프로덕션용 보안 강화
-- [ ] 테스트 코드 작성
-- [ ] API 문서 자동화 (Swagger/SpringDoc)
+- [ ] 테스트 코드 확대
 
 ## 🤝 기여 방법
 
