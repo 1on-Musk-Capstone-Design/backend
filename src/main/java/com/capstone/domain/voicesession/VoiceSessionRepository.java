@@ -7,5 +7,6 @@ import java.util.List;
 
 @Repository
 public interface VoiceSessionRepository extends JpaRepository<VoiceSession, Long> {
-    List<VoiceSession> findByWorkspace_WorkspaceId(Long workspaceId); // workspaceId를 기준으로 검색
+
+  List<VoiceSession> findByWorkspace_WorkspaceId(Long workspaceId); // workspaceId를 기준으로 검색
 }
