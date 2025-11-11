@@ -23,9 +23,9 @@
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "{{baseUrl}}/api/health",
+          "raw": "{{baseUrl}}/api/v1/health",
           "host": ["{{baseUrl}}"],
-          "path": ["api", "health"]
+          "path": ["api", "v1", "health"]
         },
         "description": "애플리케이션 상태 및 Socket.IO 서버 상태 확인"
       },
@@ -36,9 +36,9 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/health",
+              "raw": "{{baseUrl}}/api/v1/health",
               "host": ["{{baseUrl}}"],
-              "path": ["api", "health"]
+              "path": ["api", "v1", "health"]
             }
           },
           "status": "OK",

@@ -12,7 +12,7 @@ import java.util.Map;
  * OpenAI API 관련 REST API 컨트롤러 AI 클러스터링 및 분석 기능 제공
  */
 // @RestController
-@RequestMapping("/openai")
+@RequestMapping("/v1/openai")
 @CrossOrigin(origins = {"http://localhost:3000", "http://127.0.0.1:3000"})
 public class OpenAIController {
 

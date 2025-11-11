@@ -7,7 +7,7 @@ spring:
   application:
     name: capstone-project
   jwt:
-    secret: ${SPRING_JWT_SECRET:local-dev-secret-please-change}
+    secret: ${SPRING_JWT_SECRET:local-dev-secret-please-change-this-is-a-very-long-secret-key-for-jwt-token-generation-minimum-32-characters}
   
   datasource:
     url: jdbc:postgresql://localhost:5432/capstone_db

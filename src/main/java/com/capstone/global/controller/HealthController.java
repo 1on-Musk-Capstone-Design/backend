@@ -18,7 +18,7 @@ import java.util.Map;
 
 @Tag(name = "Health Check", description = "서버 상태 확인 API")
 @RestController
-@RequestMapping("/health")
+@RequestMapping("/v1/health")
 public class HealthController {
 
   @Autowired
