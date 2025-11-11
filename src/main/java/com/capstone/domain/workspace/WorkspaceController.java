@@ -79,7 +79,7 @@ public class WorkspaceController {
   @PutMapping("/{id}")
   public ResponseEntity<WorkspaceDtos.ListItem> updateWorkspace(
       @Parameter(description = "워크스페이스 ID", required = true) @PathVariable Long id,
-      @Parameter(description = "JWT 토큰 (개발용: 선택사항)", required = false) 
+      @Parameter(description = "JWT 토큰 (개발용: 선택사항)", required = false)
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String token,
       @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "수정할 워크스페이스 정보", required = true)
       @RequestBody WorkspaceDtos.UpdateRequest request) {
@@ -91,7 +91,8 @@ public class WorkspaceController {
       userId = jwtProvider.getUserIdFromAccessToken(jwt);
     }
 
-    return ResponseEntity.ok(workspaceService.updateWorkspaceName(id, request.getName().trim(), userId));
+    return ResponseEntity.ok(
+        workspaceService.updateWorkspaceName(id, request.getName().trim(), userId));
   }
 
   @Operation(summary = "워크스페이스 생성", description = "새로운 워크스페이스를 생성합니다. (개발용: Authorization 선택사항)")

@@ -12,26 +12,26 @@ import lombok.Setter;
 @Table(name = "voice_session")
 public class VoiceSession {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "wrokspace_id", nullable = false)
-    private Workspace workspace;
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "wrokspace_id", nullable = false)
+  private Workspace workspace;
 
-    @Column(name = "started_at", nullable = false)
-    private LocalDateTime startedAt;
+  @Column(name = "started_at", nullable = false)
+  private LocalDateTime startedAt;
 
-    @Column(name = "ended_at")
-    private LocalDateTime endedAt;
+  @Column(name = "ended_at")
+  private LocalDateTime endedAt;
 
-    public VoiceSession() {
-    }
+  public VoiceSession() {
+  }
 
-    public VoiceSession(Workspace workspace, LocalDateTime startedAt) {
-        this.workspace = workspace;
-        this.startedAt = startedAt;
-    }
+  public VoiceSession(Workspace workspace, LocalDateTime startedAt) {
+    this.workspace = workspace;
+    this.startedAt = startedAt;
+  }
 
 }

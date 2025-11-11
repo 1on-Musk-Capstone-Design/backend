@@ -21,27 +21,27 @@ import java.util.Map;
 @RequestMapping("/health")
 public class HealthController {
 
-    @Autowired
-    private SocketIOServer socketIOServer;
+  @Autowired
+  private SocketIOServer socketIOServer;
 
-    @Operation(summary = "헬스 체크", description = "서버 및 Socket.IO 서버의 상태를 확인합니다.")
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "서버 정상 동작")
-    })
-    @GetMapping
-    public ResponseEntity<Map<String, Object>> health() {
-        Map<String, Object> response = new HashMap<>();
-        response.put("status", "UP");
-        response.put("timestamp", LocalDateTime.now());
-        response.put("message", "Spring Boot 애플리케이션이 정상적으로 실행 중입니다.");
-        
-        // Socket.IO 서버 상태 확인
-        Map<String, Object> socketStatus = new HashMap<>();
-        socketStatus.put("running", socketIOServer != null);
-        socketStatus.put("port", socketIOServer.getConfiguration().getPort());
-        socketStatus.put("connectedClients", socketIOServer.getAllClients().size());
-        response.put("socketIO", socketStatus);
-        
-        return ResponseEntity.ok(response);
-    }
+  @Operation(summary = "헬스 체크", description = "서버 및 Socket.IO 서버의 상태를 확인합니다.")
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "200", description = "서버 정상 동작")
+  })
+  @GetMapping
+  public ResponseEntity<Map<String, Object>> health() {
+    Map<String, Object> response = new HashMap<>();
+    response.put("status", "UP");
+    response.put("timestamp", LocalDateTime.now());
+    response.put("message", "Spring Boot 애플리케이션이 정상적으로 실행 중입니다.");
+
+    // Socket.IO 서버 상태 확인
+    Map<String, Object> socketStatus = new HashMap<>();
+    socketStatus.put("running", socketIOServer != null);
+    socketStatus.put("port", socketIOServer.getConfiguration().getPort());
+    socketStatus.put("connectedClients", socketIOServer.getAllClients().size());
+    response.put("socketIO", socketStatus);
+
+    return ResponseEntity.ok(response);
+  }
 }

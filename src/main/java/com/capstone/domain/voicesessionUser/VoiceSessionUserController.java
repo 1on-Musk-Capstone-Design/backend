@@ -16,73 +16,75 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class VoiceSessionUserController {
 
-    private final VoiceSessionUserService service;
+  private final VoiceSessionUserService service;
 
-    @PostMapping
-    public ResponseEntity<VoiceSessionUserResponse> joinSession(
-            @PathVariable Long workspaceId,
-            @PathVariable Long sessionId,
-            @Valid @RequestBody VoiceSessionUserRequest request
-    ) {
-        if (request.getWorkspaceUserId() == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "사용자 ID는 필수입니다.");
-        }
-        VoiceSessionUser user = service.joinSession(workspaceId, sessionId, request.getWorkspaceUserId());
-        return ResponseEntity.status(HttpStatus.CREATED).body(VoiceSessionUserResponse.from(user));
+  @PostMapping
+  public ResponseEntity<VoiceSessionUserResponse> joinSession(
+      @PathVariable Long workspaceId,
+      @PathVariable Long sessionId,
+      @Valid @RequestBody VoiceSessionUserRequest request
+  ) {
+    if (request.getWorkspaceUserId() == null) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "사용자 ID는 필수입니다.");
     }
+    VoiceSessionUser user = service.joinSession(workspaceId, sessionId,
+        request.getWorkspaceUserId());
+    return ResponseEntity.status(HttpStatus.CREATED).body(VoiceSessionUserResponse.from(user));
+  }
 
-    @DeleteMapping("/{workspaceUserId}")
-    public ResponseEntity<VoiceSessionUserResponse> leaveSession(
-            @PathVariable Long workspaceId,
-            @PathVariable Long sessionId,
-            @PathVariable Long workspaceUserId
-    ) {
-        VoiceSessionUser user = service.leaveSession(workspaceId, sessionId, workspaceUserId);
-        return ResponseEntity.ok(VoiceSessionUserResponse.from(user));
-    }
+  @DeleteMapping("/{workspaceUserId}")
+  public ResponseEntity<VoiceSessionUserResponse> leaveSession(
+      @PathVariable Long workspaceId,
+      @PathVariable Long sessionId,
+      @PathVariable Long workspaceUserId
+  ) {
+    VoiceSessionUser user = service.leaveSession(workspaceId, sessionId, workspaceUserId);
+    return ResponseEntity.ok(VoiceSessionUserResponse.from(user));
+  }
 
-    @PostMapping("/move")
-    public ResponseEntity<VoiceSessionUserResponse> moveToSession(
-            @PathVariable Long workspaceId,
-            @RequestParam Long fromSessionId,
-            @RequestParam Long toSessionId,
-            @Valid @RequestBody VoiceSessionUserRequest request
-    ) {
-        if (request.getWorkspaceUserId() == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "사용자 ID는 필수입니다.");
-        }
-        VoiceSessionUser user = service.moveToSession(workspaceId, fromSessionId, toSessionId, request.getWorkspaceUserId());
-        return ResponseEntity.ok(VoiceSessionUserResponse.from(user));
+  @PostMapping("/move")
+  public ResponseEntity<VoiceSessionUserResponse> moveToSession(
+      @PathVariable Long workspaceId,
+      @RequestParam Long fromSessionId,
+      @RequestParam Long toSessionId,
+      @Valid @RequestBody VoiceSessionUserRequest request
+  ) {
+    if (request.getWorkspaceUserId() == null) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "사용자 ID는 필수입니다.");
     }
+    VoiceSessionUser user = service.moveToSession(workspaceId, fromSessionId, toSessionId,
+        request.getWorkspaceUserId());
+    return ResponseEntity.ok(VoiceSessionUserResponse.from(user));
+  }
 
-    @GetMapping
-    public ResponseEntity<List<VoiceSessionUserResponse>> getActiveUsers(
-            @PathVariable Long workspaceId,
-            @PathVariable Long sessionId
-    ) {
-        List<VoiceSessionUserResponse> dtos = service.getActiveUsers(workspaceId, sessionId).stream()
-                .map(VoiceSessionUserResponse::from)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(dtos);
-    }
+  @GetMapping
+  public ResponseEntity<List<VoiceSessionUserResponse>> getActiveUsers(
+      @PathVariable Long workspaceId,
+      @PathVariable Long sessionId
+  ) {
+    List<VoiceSessionUserResponse> dtos = service.getActiveUsers(workspaceId, sessionId).stream()
+        .map(VoiceSessionUserResponse::from)
+        .collect(Collectors.toList());
+    return ResponseEntity.ok(dtos);
+  }
 
-    @GetMapping("/all")
-    public ResponseEntity<List<VoiceSessionUserResponse>> getAllUsers(
-            @PathVariable Long workspaceId,
-            @PathVariable Long sessionId
-    ) {
-        List<VoiceSessionUserResponse> dtos = service.getAllUsers(workspaceId, sessionId).stream()
-                .map(VoiceSessionUserResponse::from)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(dtos);
-    }
+  @GetMapping("/all")
+  public ResponseEntity<List<VoiceSessionUserResponse>> getAllUsers(
+      @PathVariable Long workspaceId,
+      @PathVariable Long sessionId
+  ) {
+    List<VoiceSessionUserResponse> dtos = service.getAllUsers(workspaceId, sessionId).stream()
+        .map(VoiceSessionUserResponse::from)
+        .collect(Collectors.toList());
+    return ResponseEntity.ok(dtos);
+  }
 
-    @GetMapping("/count")
-    public ResponseEntity<Long> countActiveUsers(
-            @PathVariable Long workspaceId,
-            @PathVariable Long sessionId
-    ) {
-        long count = service.getActiveUserCount(workspaceId, sessionId);
-        return ResponseEntity.ok(count);
-    }
+  @GetMapping("/count")
+  public ResponseEntity<Long> countActiveUsers(
+      @PathVariable Long workspaceId,
+      @PathVariable Long sessionId
+  ) {
+    long count = service.getActiveUserCount(workspaceId, sessionId);
+    return ResponseEntity.ok(count);
+  }
 }

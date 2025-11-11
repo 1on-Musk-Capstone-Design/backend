@@ -47,7 +47,8 @@ class WorkspaceUserControllerTest {
     mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/join", workspaceId)
             .header(HttpHeaders.AUTHORIZATION, token)
             .contentType(MediaType.APPLICATION_JSON)
-            .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf()))
+            .with(
+                org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf()))
         .andExpect(status().isOk())
         .andExpect(content().string("워크스페이스 참여 성공"));
   }
@@ -83,9 +84,11 @@ class WorkspaceUserControllerTest {
     when(jwtProvider.getUserIdFromAccessToken("fake")).thenReturn(requesterId);
     doNothing().when(workspaceUserService).removeUser(workspaceId, targetUserId, requesterId);
 
-    mockMvc.perform(delete("/api/v1/workspaces/{workspaceId}/users/{userId}", workspaceId, targetUserId)
-            .header(HttpHeaders.AUTHORIZATION, token)
-            .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf()))
+    mockMvc.perform(
+            delete("/api/v1/workspaces/{workspaceId}/users/{userId}", workspaceId, targetUserId)
+                .header(HttpHeaders.AUTHORIZATION, token)
+                .with(
+                    org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf()))
         .andExpect(status().isOk())
         .andExpect(content().string("유저 삭제 완료"));
   }

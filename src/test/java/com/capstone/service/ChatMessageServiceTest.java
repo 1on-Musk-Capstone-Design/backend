@@ -20,76 +20,77 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class ChatMessageServiceTest {
 
-    @Mock
-    private ChatMessageRepository chatMessageRepository;
+  @Mock
+  private ChatMessageRepository chatMessageRepository;
 
-    @InjectMocks
-    private ChatMessageService chatMessageService;
+  @InjectMocks
+  private ChatMessageService chatMessageService;
 
-    @Test
-    void saveMessage_shouldReturnSavedMessage() {
-        // Given
-        Long workspaceId = 1L;
-        String userId = "user-456";
-        String content = "안녕하세요!";
-        
-        ChatMessage mockMessage = new ChatMessage();
-        mockMessage.setMessageId(1L);
-        mockMessage.setWorkspaceId(workspaceId);
-        mockMessage.setUserId(userId);
-        mockMessage.setContent(content);
-        mockMessage.setCreatedAt(Instant.now());
-        
-        when(chatMessageRepository.save(any(ChatMessage.class))).thenReturn(mockMessage);
+  @Test
+  void saveMessage_shouldReturnSavedMessage() {
+    // Given
+    Long workspaceId = 1L;
+    String userId = "user-456";
+    String content = "안녕하세요!";
 
-        // When
-        ChatMessage result = chatMessageService.saveMessage(workspaceId, userId, content);
+    ChatMessage mockMessage = new ChatMessage();
+    mockMessage.setMessageId(1L);
+    mockMessage.setWorkspaceId(workspaceId);
+    mockMessage.setUserId(userId);
+    mockMessage.setContent(content);
+    mockMessage.setCreatedAt(Instant.now());
 
-        // Then
-        assertThat(result).isNotNull();
-        assertThat(result.getMessageId()).isEqualTo(1L);
-        assertThat(result.getWorkspaceId()).isEqualTo(workspaceId);
-        assertThat(result.getUserId()).isEqualTo(userId);
-        assertThat(result.getContent()).isEqualTo(content);
-    }
+    when(chatMessageRepository.save(any(ChatMessage.class))).thenReturn(mockMessage);
 
-    @Test
-    void getMessagesByWorkspace_shouldReturnMessagesInOrder() {
-        // Given
-        Long workspaceId = 1L;
-        
-        ChatMessage message1 = new ChatMessage();
-        message1.setMessageId(1L);
-        message1.setContent("첫 번째 메시지");
-        message1.setCreatedAt(Instant.now().minusSeconds(10));
-        
-        ChatMessage message2 = new ChatMessage();
-        message2.setMessageId(2L);
-        message2.setContent("두 번째 메시지");
-        message2.setCreatedAt(Instant.now());
-        
-        List<ChatMessage> mockMessages = Arrays.asList(message1, message2);
-        when(chatMessageRepository.findByWorkspaceIdOrderByCreatedAtAsc(workspaceId)).thenReturn(mockMessages);
+    // When
+    ChatMessage result = chatMessageService.saveMessage(workspaceId, userId, content);
 
-        // When
-        List<ChatMessage> result = chatMessageService.getMessagesByWorkspace(workspaceId);
+    // Then
+    assertThat(result).isNotNull();
+    assertThat(result.getMessageId()).isEqualTo(1L);
+    assertThat(result.getWorkspaceId()).isEqualTo(workspaceId);
+    assertThat(result.getUserId()).isEqualTo(userId);
+    assertThat(result.getContent()).isEqualTo(content);
+  }
 
-        // Then
-        assertThat(result).hasSize(2);
-        assertThat(result.get(0).getContent()).isEqualTo("첫 번째 메시지");
-        assertThat(result.get(1).getContent()).isEqualTo("두 번째 메시지");
-    }
+  @Test
+  void getMessagesByWorkspace_shouldReturnMessagesInOrder() {
+    // Given
+    Long workspaceId = 1L;
 
-    @Test
-    void getMessageCountByWorkspace_shouldReturnCount() {
-        // Given
-        Long workspaceId = 1L;
-        when(chatMessageRepository.countByWorkspaceId(workspaceId)).thenReturn(5L);
+    ChatMessage message1 = new ChatMessage();
+    message1.setMessageId(1L);
+    message1.setContent("첫 번째 메시지");
+    message1.setCreatedAt(Instant.now().minusSeconds(10));
 
-        // When
-        long result = chatMessageService.getMessageCountByWorkspace(workspaceId);
+    ChatMessage message2 = new ChatMessage();
+    message2.setMessageId(2L);
+    message2.setContent("두 번째 메시지");
+    message2.setCreatedAt(Instant.now());
 
-        // Then
-        assertThat(result).isEqualTo(5L);
-    }
+    List<ChatMessage> mockMessages = Arrays.asList(message1, message2);
+    when(chatMessageRepository.findByWorkspaceIdOrderByCreatedAtAsc(workspaceId)).thenReturn(
+        mockMessages);
+
+    // When
+    List<ChatMessage> result = chatMessageService.getMessagesByWorkspace(workspaceId);
+
+    // Then
+    assertThat(result).hasSize(2);
+    assertThat(result.get(0).getContent()).isEqualTo("첫 번째 메시지");
+    assertThat(result.get(1).getContent()).isEqualTo("두 번째 메시지");
+  }
+
+  @Test
+  void getMessageCountByWorkspace_shouldReturnCount() {
+    // Given
+    Long workspaceId = 1L;
+    when(chatMessageRepository.countByWorkspaceId(workspaceId)).thenReturn(5L);
+
+    // When
+    long result = chatMessageService.getMessageCountByWorkspace(workspaceId);
+
+    // Then
+    assertThat(result).isEqualTo(5L);
+  }
 }

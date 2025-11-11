@@ -11,6 +11,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class VoiceSessionUserRequest {
 
-    @Schema(description = "워크스페이스 사용자 ID", example = "5", required = true)
-    private Long workspaceUserId;
+  @Schema(description = "워크스페이스 사용자 ID", example = "5", required = true)
+  private Long workspaceUserId;
 }
