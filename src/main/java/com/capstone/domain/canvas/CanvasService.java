@@ -1,11 +1,17 @@
 package com.capstone.domain.canvas;
 
+import static com.capstone.global.exception.ErrorCode.FORBIDDEN_WORKSPACE_ACCESS;
+import static com.capstone.global.exception.ErrorCode.NOT_FOUND_CANVAS;
+import static com.capstone.global.exception.ErrorCode.NOT_FOUND_USER;
+import static com.capstone.global.exception.ErrorCode.NOT_FOUND_WORKSPACE;
+
 import com.capstone.domain.user.entity.User;
 import com.capstone.domain.user.repository.UserRepository;
 import com.capstone.domain.workspace.Workspace;
 import com.capstone.domain.workspace.WorkspaceRepository;
 import com.capstone.domain.workspaceUser.WorkspaceUser;
 import com.capstone.domain.workspaceUser.WorkspaceUserRepository;
+import com.capstone.global.exception.CustomException;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -23,13 +29,13 @@ public class CanvasService {
 
   public CanvasResponse createCanvas(Long userId, Long workspaceId, CanvasRequest request) {
     Workspace workspace = workspaceRepository.findById(workspaceId)
-        .orElseThrow(() -> new IllegalArgumentException("워크스페이스를 찾을 수 없습니다."));
+        .orElseThrow(() -> new CustomException(NOT_FOUND_WORKSPACE));
 
     User user = userRepository.findById(userId)
-        .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+        .orElseThrow(() -> new CustomException(NOT_FOUND_USER));
 
     WorkspaceUser workspaceUser = workspaceUserRepository.findByWorkspaceAndUser(workspace, user)
-        .orElseThrow(() -> new IllegalArgumentException("워크스페이스 소속 사용자가 아닙니다."));
+        .orElseThrow(() -> new CustomException(FORBIDDEN_WORKSPACE_ACCESS));
 
     Canvas canvas = Canvas.builder()
         .workspace(workspace)
@@ -60,7 +66,7 @@ public class CanvasService {
 
   public CanvasResponse getCanvas(Long canvasId) {
     Canvas updateCanvas = canvasRepository.findById(canvasId)
-        .orElseThrow(() -> new IllegalArgumentException("캔버스를 찾을 수 없습니다."));
+        .orElseThrow(() -> new CustomException(NOT_FOUND_CANVAS));
 
     return CanvasResponse.builder()
         .id(updateCanvas.getId())
@@ -73,13 +79,13 @@ public class CanvasService {
   @Transactional
   public CanvasResponse updateCanvas(Long userId, Long canvasId, CanvasRequest request) {
     Canvas canvas = canvasRepository.findById(canvasId)
-        .orElseThrow(() -> new IllegalArgumentException("캔버스를 찾을 수 없습니다."));
+        .orElseThrow(() -> new CustomException(NOT_FOUND_CANVAS));
 
     workspaceUserRepository.findByWorkspaceAndUser(
         canvas.getWorkspace(),
         userRepository.findById(userId)
-            .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."))
-    ).orElseThrow(() -> new IllegalArgumentException("워크스페이스 소속 사용자가 아닙니다."));
+            .orElseThrow(() -> new CustomException(NOT_FOUND_USER))
+    ).orElseThrow(() -> new CustomException(FORBIDDEN_WORKSPACE_ACCESS));
 
     canvas.setTitle(request.getTitle());
     return CanvasResponse.builder()
@@ -92,13 +98,13 @@ public class CanvasService {
 
   public void deleteCanvas(Long userId, Long canvasId) {
     Canvas deleteCanvas = canvasRepository.findById(canvasId)
-        .orElseThrow(() -> new IllegalArgumentException("캔버스를 찾을 수 없습니다."));
+        .orElseThrow(() -> new CustomException(NOT_FOUND_CANVAS));
 
     workspaceUserRepository.findByWorkspaceAndUser(
         deleteCanvas.getWorkspace(),
         userRepository.findById(userId)
-            .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."))
-    ).orElseThrow(() -> new IllegalArgumentException("워크스페이스 소속 사용자가 아닙니다."));
+            .orElseThrow(() -> new CustomException(NOT_FOUND_USER))
+    ).orElseThrow(() -> new CustomException(FORBIDDEN_WORKSPACE_ACCESS));
 
     canvasRepository.delete(deleteCanvas);
   }

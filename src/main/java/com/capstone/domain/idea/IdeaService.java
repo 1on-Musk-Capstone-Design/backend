@@ -1,11 +1,18 @@
 package com.capstone.domain.idea;
 
+import static com.capstone.global.exception.ErrorCode.FORBIDDEN_WORKSPACE_ACCESS;
+import static com.capstone.global.exception.ErrorCode.NOT_FOUND_CANVAS;
+import static com.capstone.global.exception.ErrorCode.NOT_FOUND_IDEA;
+import static com.capstone.global.exception.ErrorCode.NOT_FOUND_USER;
+import static com.capstone.global.exception.ErrorCode.NOT_FOUND_WORKSPACE;
+
 import com.capstone.domain.canvas.Canvas;
 import com.capstone.domain.canvas.CanvasRepository;
 import com.capstone.domain.workspace.Workspace;
 import com.capstone.domain.workspace.WorkspaceRepository;
 import com.capstone.domain.workspaceUser.WorkspaceUserRepository;
 import com.capstone.domain.user.repository.UserRepository;
+import com.capstone.global.exception.CustomException;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -25,12 +32,12 @@ public class IdeaService {
   @Transactional
   public IdeaResponse createIdea(Long userId, IdeaRequest request) {
     Workspace workspace = workspaceRepository.findById(request.getWorkspaceId())
-        .orElseThrow(() -> new IllegalArgumentException("워크스페이스를 찾을 수 없습니다."));
+        .orElseThrow(() -> new CustomException(NOT_FOUND_WORKSPACE));
 
     workspaceUserRepository.findByWorkspaceAndUser(workspace,
             userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다.")))
-        .orElseThrow(() -> new IllegalArgumentException("워크스페이스 소속 사용자가 아닙니다."));
+                .orElseThrow(() -> new CustomException(NOT_FOUND_USER)))
+        .orElseThrow(() -> new CustomException(FORBIDDEN_WORKSPACE_ACCESS));
 
     Idea idea = Idea.builder()
         .workspace(workspace)
@@ -41,7 +48,7 @@ public class IdeaService {
 
     if (request.getCanvasId() != null) {
       Canvas canvas = canvasRepository.findById(request.getCanvasId())
-          .orElseThrow(() -> new IllegalArgumentException("캔버스를 찾을 수 없습니다."));
+          .orElseThrow(() -> new CustomException(NOT_FOUND_CANVAS));
       idea.setCanvas(canvas);
     }
 
@@ -58,23 +65,23 @@ public class IdeaService {
 
   public IdeaResponse getIdea(Long ideaId) {
     Idea idea = ideaRepository.findById(ideaId)
-        .orElseThrow(() -> new IllegalArgumentException("아이디어를 찾을 수 없습니다."));
+        .orElseThrow(() -> new CustomException(NOT_FOUND_IDEA));
     return IdeaResponse.from(idea);
   }
 
   @Transactional
   public IdeaResponse updateIdea(Long userId, Long ideaId, IdeaRequest request) {
     Idea idea = ideaRepository.findById(ideaId)
-        .orElseThrow(() -> new IllegalArgumentException("아이디어를 찾을 수 없습니다."));
+        .orElseThrow(() -> new CustomException(NOT_FOUND_IDEA));
 
     workspaceUserRepository.findByWorkspaceAndUser(idea.getWorkspace(),
             userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다.")))
-        .orElseThrow(() -> new IllegalArgumentException("워크스페이스 소속 사용자가 아닙니다."));
+                .orElseThrow(() -> new CustomException(NOT_FOUND_USER)))
+        .orElseThrow(() -> new CustomException(FORBIDDEN_WORKSPACE_ACCESS));
 
     if (request.getCanvasId() != null) {
       Canvas canvas = canvasRepository.findById(request.getCanvasId())
-          .orElseThrow(() -> new IllegalArgumentException("캔버스를 찾을 수 없습니다."));
+          .orElseThrow(() -> new CustomException(NOT_FOUND_CANVAS));
       idea.setCanvas(canvas);
     }
 
@@ -88,12 +95,12 @@ public class IdeaService {
   @Transactional
   public void deleteIdea(Long userId, Long ideaId) {
     Idea idea = ideaRepository.findById(ideaId)
-        .orElseThrow(() -> new IllegalArgumentException("아이디어를 찾을 수 없습니다."));
+        .orElseThrow(() -> new CustomException(NOT_FOUND_IDEA));
 
     workspaceUserRepository.findByWorkspaceAndUser(idea.getWorkspace(),
             userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다.")))
-        .orElseThrow(() -> new IllegalArgumentException("워크스페이스 소속 사용자가 아닙니다."));
+                .orElseThrow(() -> new CustomException(NOT_FOUND_USER)))
+        .orElseThrow(() -> new CustomException(FORBIDDEN_WORKSPACE_ACCESS));
 
     ideaRepository.delete(idea);
   }
