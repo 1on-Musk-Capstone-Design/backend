@@ -8,7 +8,7 @@ import org.springframework.http.HttpStatus;
 @RequiredArgsConstructor
 public enum ErrorCode {
 
-  NOT_FOUND_WORKSPACE("워크스페이를 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
+  NOT_FOUND_WORKSPACE("워크스페이스를 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
   NOT_FOUND_USER("사용자를 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
   NOT_FOUND_CANVAS("캔버스를 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
   NOT_FOUND_IDEA("아이디어를 찾을 수 없습니다", HttpStatus.NOT_FOUND),
