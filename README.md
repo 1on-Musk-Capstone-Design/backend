@@ -131,7 +131,7 @@ lsof -ti:8080 | xargs -r kill -9; lsof -ti:9092 | xargs -r kill -9; ./gradlew bo
 
 - **REST API**: `http://localhost:8080/api`
 - **Socket.IO**: `http://localhost:9092`
-- **헬스체크**: `http://localhost:8080/api/health`
+- **헬스체크**: `http://localhost:8080/api/v1/health`
 - **Swagger UI**: `http://localhost:8080/api/swagger-ui.html`
 - **OpenAPI Spec**: `http://localhost:8080/api/v3/api-docs`
 
@@ -146,10 +146,10 @@ lsof -ti:8080 | xargs -r kill -9; lsof -ti:9092 | xargs -r kill -9; ./gradlew bo
 #### Postman 컬렉션
 루트의 `postman_collection.json`을 Postman에 임포트하여 API를 바로 테스트할 수 있습니다.
 
-**총 20개 API 포함:**
+**총 32개 API 포함:**
 
 #### Health Check (1개)
-- `GET /api/health` - 서버 상태 확인
+- `GET /api/v1/health` - 서버 상태 확인
 
 #### Workspace API (5개)
 - `GET /api/v1/workspaces` - 워크스페이스 목록 조회
@@ -164,11 +164,11 @@ lsof -ti:8080 | xargs -r kill -9; lsof -ti:9092 | xargs -r kill -9; ./gradlew bo
 - `DELETE /api/v1/workspaces/{workspaceId}/users/{userId}` - 멤버 제거
 
 #### Idea API (5개)
-- `POST /v1/ideas` - 아이디어 생성
-- `GET /v1/ideas/workspaces/{workspaceId}` - 워크스페이스 아이디어 목록 조회
-- `GET /v1/{id}` - 아이디어 상세 조회
-- `PUT /v1/{id}` - 특정 아이디어 조회
-- `DELETE /v1/{id}` - 아이디어 삭제
+- `POST /api/v1/ideas` - 아이디어 생성
+- `GET /api/v1/ideas/workspaces/{workspaceId}` - 워크스페이스 아이디어 목록 조회
+- `GET /api/v1/ideas/{id}` - 아이디어 상세 조회
+- `PUT /api/v1/ideas/{id}` - 아이디어 수정
+- `DELETE /api/v1/ideas/{id}` - 아이디어 삭제
 
 #### Chat Message API (6개)
 - `POST /api/v1/chat/messages` - 채팅 메시지 전송
@@ -182,6 +182,21 @@ lsof -ti:8080 | xargs -r kill -9; lsof -ti:9092 | xargs -r kill -9; ./gradlew bo
 - `POST /api/v1/workspaces/{workspaceId}/voice` - 음성 세션 시작
 - `GET /api/v1/workspaces/{workspaceId}/voice` - 음성 세션 목록 조회
 - `PATCH /api/v1/workspaces/{workspaceId}/voice/{sessionId}` - 음성 세션 종료
+
+#### Voice Session User API (7개)
+- `POST /api/v1/workspaces/{workspaceId}/voice/{sessionId}/users` - 세션 참여
+- `DELETE /api/v1/workspaces/{workspaceId}/voice/{sessionId}/users/{userId}` - 세션 퇴장
+- `POST /api/v1/workspaces/{workspaceId}/voice/{sessionId}/users/move` - 세션 이동
+- `GET /api/v1/workspaces/{workspaceId}/voice/{sessionId}/users` - 활성 사용자 목록 조회
+- `GET /api/v1/workspaces/{workspaceId}/voice/{sessionId}/users/all` - 모든 사용자 조회
+- `GET /api/v1/workspaces/{workspaceId}/voice/{sessionId}/users/count` - 참여자 수 조회
+
+#### Canvas API (5개)
+- `POST /api/v1/{workspaceId}/canvas` - 캔버스 생성
+- `GET /api/v1/{workspaceId}/canvas` - 워크스페이스별 캔버스 목록 조회
+- `GET /api/v1/canvas/{canvasId}` - 캔버스 상세 조회
+- `PUT /api/v1/canvas/{canvasId}` - 캔버스 수정
+- `DELETE /api/v1/canvas/{canvasId}` - 캔버스 삭제
 
 #### Google OAuth API (2개)
 - `GET /api/v1/auth-google/login-uri` - Google 로그인 URI 조회
@@ -364,13 +379,24 @@ src/main/java/com/capstone/
   - [x] 음성 세션 시작/종료
   - [x] 세션 목록 조회
 
+- [x] **Canvas API (5개)**
+  - [x] 캔버스 생성/조회/수정/삭제
+  - [x] 워크스페이스별 캔버스 목록 조회
+
+- [x] **Voice Session User API (7개)**
+  - [x] 세션 참여/퇴장
+  - [x] 세션 이동
+  - [x] 활성 사용자 목록 조회
+  - [x] 모든 사용자 조회
+  - [x] 참여자 수 조회
+
 - [x] **API 문서화**
   - [x] Swagger/OpenAPI 통합
-  - [x] 20개 API 전체 문서화
+  - [x] 32개 API 전체 문서화
   - [x] JWT 인증 테스트 지원
   
 - [x] **Postman 컬렉션**
-  - [x] 20개 API 전체 포함
+  - [x] 32개 API 전체 포함
   - [x] Authorization 헤더 설정
   - [x] 샘플 응답 포함
 

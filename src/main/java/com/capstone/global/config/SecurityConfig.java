@@ -24,7 +24,7 @@ public class SecurityConfig {
         .authorizeHttpRequests(authz -> authz
 
             // Health check & Actuator
-            .requestMatchers("/health", "/actuator/**").permitAll()
+            .requestMatchers("/v1/health", "/actuator/**").permitAll()
 
             // Swagger/OpenAPI 문서
             .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
@@ -45,11 +45,11 @@ public class SecurityConfig {
             .permitAll()  // TODO: 프로덕션에서는 authenticated()로 변경
 
             // Canvas (개발용)
-            .requestMatchers(HttpMethod.GET, "/api/v1/*/canvas").permitAll()
-            .requestMatchers(HttpMethod.GET, "/api/v1/canvas/**").permitAll()
-            .requestMatchers(HttpMethod.POST, "/api/v1/*/canvas").permitAll()
-            .requestMatchers(HttpMethod.PUT, "/api/v1/canvas/**").permitAll()
-            .requestMatchers(HttpMethod.DELETE, "/api/v1/canvas/**").permitAll()
+            .requestMatchers(HttpMethod.GET, "/v1/*/canvas").permitAll()
+            .requestMatchers(HttpMethod.GET, "/v1/canvas/**").permitAll()
+            .requestMatchers(HttpMethod.POST, "/v1/*/canvas").permitAll()
+            .requestMatchers(HttpMethod.PUT, "/v1/canvas/**").permitAll()
+            .requestMatchers(HttpMethod.DELETE, "/v1/canvas/**").permitAll()
 
             // Idea (개발용)
             .requestMatchers(HttpMethod.GET, "/v1/ideas/**").permitAll()
@@ -63,6 +63,9 @@ public class SecurityConfig {
             // VoiceSession - 모두 허용 (개발용)
             .requestMatchers("/v1/workspaces/*/voice/**")
             .permitAll()  // TODO: 프로덕션에서는 authenticated()로 변경
+
+            // OpenAI (개발용)
+            .requestMatchers("/v1/openai/**").permitAll()  // TODO: 프로덕션에서는 authenticated()로 변경
 
             // 나머지는 인증 필요
             .anyRequest().authenticated()
