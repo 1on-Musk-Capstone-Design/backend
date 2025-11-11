@@ -1,9 +1,14 @@
 package com.capstone.domain.workspace;
 
+import static com.capstone.global.exception.ErrorCode.FORBIDDEN_WORKSPACE;
+import static com.capstone.global.exception.ErrorCode.NOT_FOUND_WORKSPACE;
+import static com.capstone.global.exception.ErrorCode.NOT_FOUND_WORKSPACE_USER;
+
 import com.capstone.domain.user.entity.User;
 import com.capstone.domain.user.repository.UserRepository;
 import com.capstone.domain.workspaceUser.WorkspaceUser;
 import com.capstone.domain.workspaceUser.WorkspaceUserRepository;
+import com.capstone.global.exception.CustomException;
 import com.capstone.global.type.Role;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -55,13 +60,13 @@ public class WorkspaceService {
   @Transactional(readOnly = true)
   public Workspace getWorkspaceById(Long id) {
     return workspaceRepository.findById(id)
-        .orElseThrow(() -> new RuntimeException("워크스페이스를 찾을 수 없습니다. ID: " + id));
+        .orElseThrow(() -> new CustomException(NOT_FOUND_WORKSPACE));
   }
 
   @Transactional
   public WorkspaceDtos.ListItem updateWorkspaceName(Long workspaceId, String name, Long userId) {
     Workspace workspace = workspaceRepository.findById(workspaceId)
-        .orElseThrow(() -> new RuntimeException("워크스페이스를 찾을 수 없습니다."));
+        .orElseThrow(() -> new CustomException(NOT_FOUND_WORKSPACE));
 
     // 개발/테스트: User가 없으면 자동으로 생성
     User user = userRepository.findById(userId)
@@ -75,7 +80,7 @@ public class WorkspaceService {
         });
 
     WorkspaceUser workspaceUser = workspaceUserRepository.findByWorkspaceAndUser(workspace, user)
-        .orElseThrow(() -> new RuntimeException("워크스페이스 멤버가 아닙니다."));
+        .orElseThrow(() -> new CustomException(NOT_FOUND_WORKSPACE_USER));
 
     if (workspaceUser.getRole() != Role.OWNER) {
       throw new SecurityException("워크스페이스 이름은 OWNER만 수정할 수 있습니다.");
@@ -106,10 +111,10 @@ public class WorkspaceService {
         });
 
     WorkspaceUser workspaceUser = workspaceUserRepository.findByWorkspaceAndUser(workspace, user)
-        .orElseThrow(() -> new RuntimeException("워크스페이스 참여 이력이 없습니다."));
+        .orElseThrow(() -> new CustomException(NOT_FOUND_WORKSPACE_USER));
 
     if (workspaceUser.getRole() != Role.OWNER) {
-      throw new RuntimeException("워크스페이스 삭제 권한이 없습니다.");
+      throw new CustomException(FORBIDDEN_WORKSPACE);
     }
 
     workspaceRepository.delete(workspace);

@@ -1,9 +1,16 @@
 package com.capstone.domain.workspaceUser;
 
+import static com.capstone.global.exception.ErrorCode.ALREADY_JOINED_WORKSPACE;
+import static com.capstone.global.exception.ErrorCode.FORBIDDEN_WORKSPACE;
+import static com.capstone.global.exception.ErrorCode.NOT_FOUND_USER;
+import static com.capstone.global.exception.ErrorCode.NOT_FOUND_WORKSPACE;
+import static com.capstone.global.exception.ErrorCode.NOT_FOUND_WORKSPACE_USER;
+
 import com.capstone.domain.user.entity.User;
 import com.capstone.domain.user.repository.UserRepository;
 import com.capstone.domain.workspace.Workspace;
 import com.capstone.domain.workspace.WorkspaceRepository;
+import com.capstone.global.exception.CustomException;
 import com.capstone.global.type.Role;
 import jakarta.transaction.Transactional;
 import java.util.List;
@@ -21,13 +28,13 @@ public class WorkspaceUserService {
   @Transactional
   public void joinWorkspace(Long workspaceId, Long userId) {
     Workspace workspace = workspaceRepository.findById(workspaceId)
-        .orElseThrow(() -> new RuntimeException("워크스페이스를 찾을 수 없습니다."));
+        .orElseThrow(() -> new CustomException(NOT_FOUND_WORKSPACE));
 
     User user = userRepository.findById(userId)
-        .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+        .orElseThrow(() -> new CustomException(NOT_FOUND_USER));
 
     if (workspaceUserRepository.existsByWorkspaceAndUser(workspace, user)) {
-      throw new RuntimeException("이미 워크스페이스에 참여한 유저입니다.");
+      throw new CustomException(ALREADY_JOINED_WORKSPACE);
     }
 
     WorkspaceUser workspaceUser = WorkspaceUser.builder()
@@ -42,7 +49,7 @@ public class WorkspaceUserService {
   @Transactional
   public List<WorkspaceUserResponse> getWorkspaceUsers(Long workspaceId) {
     Workspace workspace = workspaceRepository.findById(workspaceId)
-        .orElseThrow(() -> new RuntimeException("워크스페이스를 찾을 수 없습니다."));
+        .orElseThrow(() -> new CustomException(NOT_FOUND_WORKSPACE));
 
     return workspaceUserRepository.findByWorkspace(workspace).stream()
         .map(user -> WorkspaceUserResponse.builder()
@@ -59,24 +66,24 @@ public class WorkspaceUserService {
   @Transactional
   public void removeUser(Long workspaceId, Long userId, Long requesterId) {
     Workspace workspace = workspaceRepository.findById(workspaceId)
-        .orElseThrow(() -> new RuntimeException("워크스페이스를 찾을 수 없습니다."));
+        .orElseThrow(() -> new CustomException(NOT_FOUND_WORKSPACE));
 
     User requester = userRepository.findById(requesterId)
-        .orElseThrow(() -> new RuntimeException("요청자를 찾을 수 없습니다."));
+        .orElseThrow(() -> new CustomException(NOT_FOUND_USER));
     User target = userRepository.findById(userId)
-        .orElseThrow(() -> new RuntimeException("삭제할 유저를 찾을 수 없습니다."));
+        .orElseThrow(() -> new CustomException(NOT_FOUND_USER));
 
     WorkspaceUser requesterWorkspaceUser = workspaceUserRepository
         .findByWorkspaceAndUser(workspace, requester)
-        .orElseThrow(() -> new RuntimeException("요청자가 워크스페이스에 없습니다."));
+        .orElseThrow(() -> new CustomException(NOT_FOUND_WORKSPACE_USER));
 
     if (requesterWorkspaceUser.getRole() != Role.OWNER) {
-      throw new RuntimeException("삭제 권한이 없습니다.");
+      throw new CustomException(FORBIDDEN_WORKSPACE);
     }
 
     WorkspaceUser targetWorkspaceUser = workspaceUserRepository
         .findByWorkspaceAndUser(workspace, target)
-        .orElseThrow(() -> new RuntimeException("삭제할 유저가 워크스페이스에 없습니다."));
+        .orElseThrow(() -> new CustomException(NOT_FOUND_WORKSPACE_USER));
 
     workspaceUserRepository.delete(targetWorkspaceUser);
   }

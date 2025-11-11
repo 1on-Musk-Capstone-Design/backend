@@ -1,7 +1,11 @@
 package com.capstone.domain.voicesession;
 
+import static com.capstone.global.exception.ErrorCode.NOT_FOUND_SESSION;
+import static com.capstone.global.exception.ErrorCode.NOT_FOUND_WORKSPACE;
+
 import com.capstone.domain.workspace.Workspace;
 import com.capstone.domain.workspace.WorkspaceRepository;
+import com.capstone.global.exception.CustomException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,7 +27,7 @@ public class VoiceSessionService {
   @Transactional
   public VoiceSession startSession(Long workspaceId) {
     Workspace workspace = workspaceRepository.findById(workspaceId)
-        .orElseThrow(() -> new IllegalArgumentException("해당 워크스페이스를 찾을 수 없습니다: " + workspaceId));
+        .orElseThrow(() -> new CustomException(NOT_FOUND_WORKSPACE));
 
     VoiceSession session = new VoiceSession(workspace, LocalDateTime.now());
     return repository.save(session);
@@ -32,7 +36,7 @@ public class VoiceSessionService {
   @Transactional
   public VoiceSession endSession(Long sessionId) {
     VoiceSession session = repository.findById(sessionId)
-        .orElseThrow(() -> new IllegalArgumentException("해당 음성 세션을 찾을 수 없습니다: " + sessionId));
+        .orElseThrow(() -> new CustomException(NOT_FOUND_SESSION));
     session.setEndedAt(LocalDateTime.now());
     return repository.save(session);
   }

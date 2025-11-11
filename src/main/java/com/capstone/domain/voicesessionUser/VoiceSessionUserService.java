@@ -1,9 +1,17 @@
 package com.capstone.domain.voicesessionUser;
 
+import static com.capstone.global.exception.ErrorCode.FORBIDDEN_CLOSED_SESSION;
+import static com.capstone.global.exception.ErrorCode.FORBIDDEN_WORKSPACE_ACCESS;
+import static com.capstone.global.exception.ErrorCode.FORBIDDEN_WORKSPACE_SESSION;
+import static com.capstone.global.exception.ErrorCode.NOT_FOUND_SESSION;
+import static com.capstone.global.exception.ErrorCode.NOT_FOUND_SESSION_USER;
+import static com.capstone.global.exception.ErrorCode.NOT_FOUND_WORKSPACE_USER;
+
 import com.capstone.domain.voicesession.VoiceSession;
 import com.capstone.domain.voicesession.VoiceSessionRepository;
 import com.capstone.domain.workspaceUser.WorkspaceUser;
 import com.capstone.domain.workspaceUser.WorkspaceUserRepository;
+import com.capstone.global.exception.CustomException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,25 +35,25 @@ public class VoiceSessionUserService {
   public VoiceSessionUser joinSession(Long workspaceId, Long sessionId, Long workspaceUserId) {
     // 1. WorkspaceUser 조회
     WorkspaceUser workspaceUser = workspaceUserRepository.findById(workspaceUserId)
-        .orElseThrow(() -> new IllegalArgumentException("해당 워크스페이스 유저를 찾을 수 없습니다."));
+        .orElseThrow(() -> new CustomException(NOT_FOUND_WORKSPACE_USER));
 
     // 2. 워크스페이스 일치 확인
     if (!workspaceUser.getWorkspace().getWorkspaceId().equals(workspaceId)) {
-      throw new IllegalArgumentException("이 유저는 해당 워크스페이스에 속하지 않습니다.");
+      throw new CustomException(FORBIDDEN_WORKSPACE_ACCESS);
     }
 
     // 3. 세션 조회
     VoiceSession session = sessionRepository.findById(sessionId)
-        .orElseThrow(() -> new IllegalArgumentException("해당 음성 세션을 찾을 수 없습니다."));
+        .orElseThrow(() -> new CustomException(NOT_FOUND_SESSION));
 
     // 4. 세션이 해당 워크스페이스에 속하는지 확인
     if (!session.getWorkspace().getWorkspaceId().equals(workspaceId)) {
-      throw new IllegalArgumentException("이 세션은 해당 워크스페이스에 속하지 않습니다.");
+      throw new CustomException(FORBIDDEN_WORKSPACE_SESSION);
     }
 
     // 5. 세션 종료 여부 확인
     if (session.getEndedAt() != null) {
-      throw new IllegalStateException("종료된 세션에는 참여할 수 없습니다.");
+      throw new CustomException(FORBIDDEN_CLOSED_SESSION);
     }
 
     // 6. 이미 참여 중인지 확인
@@ -53,7 +61,7 @@ public class VoiceSessionUserService {
         .findBySessionIdAndWorkspaceUserIdAndLeftAtIsNull(sessionId, workspaceUserId);
 
     if (existing.isPresent()) {
-      throw new IllegalStateException("이미 이 세션에 참여 중입니다.");
+      throw new CustomException(FORBIDDEN_CLOSED_SESSION);
     }
 
     // 7. 참여자 생성
@@ -72,11 +80,11 @@ public class VoiceSessionUserService {
   public VoiceSessionUser leaveSession(Long workspaceId, Long sessionId, Long workspaceUserId) {
     VoiceSessionUser voiceSessionUser = voiceSessionUserRepository
         .findBySessionIdAndWorkspaceUserIdAndLeftAtIsNull(sessionId, workspaceUserId)
-        .orElseThrow(() -> new IllegalArgumentException("해당 세션에서 사용자를 찾을 수 없거나 이미 퇴장 했습니다."));
+        .orElseThrow(() -> new CustomException(NOT_FOUND_SESSION_USER));
 
     // 워크스페이스 일치 확인
     if (!voiceSessionUser.getWorkspaceUser().getWorkspace().getWorkspaceId().equals(workspaceId)) {
-      throw new IllegalArgumentException("이 세션은 해당 워크스페이스에 속하지 않습니다.");
+      throw new CustomException(FORBIDDEN_WORKSPACE_SESSION);
     }
 
     // 퇴장 처리
@@ -104,10 +112,10 @@ public class VoiceSessionUserService {
    */
   public List<VoiceSessionUser> getActiveUsers(Long workspaceId, Long sessionId) {
     VoiceSession session = sessionRepository.findById(sessionId)
-        .orElseThrow(() -> new IllegalArgumentException("해당 음성세션을 찾을 수 없습니다."));
+        .orElseThrow(() -> new CustomException(NOT_FOUND_SESSION));
 
     if (!session.getWorkspace().getWorkspaceId().equals(workspaceId)) {
-      throw new IllegalArgumentException("이 세션은 해당 워크스페이스에 속하지 않습니다.");
+      throw new CustomException(FORBIDDEN_WORKSPACE_SESSION);
     }
 
     return voiceSessionUserRepository.findBySessionIdAndLeftAtIsNull(sessionId);
@@ -118,10 +126,10 @@ public class VoiceSessionUserService {
    */
   public List<VoiceSessionUser> getAllUsers(Long workspaceId, Long sessionId) {
     VoiceSession session = sessionRepository.findById(sessionId)
-        .orElseThrow(() -> new IllegalArgumentException("해당 음성세션을 찾을 수 없습니다."));
+        .orElseThrow(() -> new CustomException(NOT_FOUND_SESSION));
 
     if (!session.getWorkspace().getWorkspaceId().equals(workspaceId)) {
-      throw new IllegalArgumentException("이 세션은 해당 워크스페이스에 속하지 않습니다.");
+      throw new CustomException(FORBIDDEN_WORKSPACE_SESSION);
     }
 
     return voiceSessionUserRepository.findBySessionId(sessionId);
@@ -132,10 +140,10 @@ public class VoiceSessionUserService {
    */
   public long getActiveUserCount(Long workspaceId, Long sessionId) {
     VoiceSession session = sessionRepository.findById(sessionId)
-        .orElseThrow(() -> new IllegalArgumentException("해당 음성세션을 찾을 수 없습니다."));
+        .orElseThrow(() -> new CustomException(NOT_FOUND_SESSION));
 
     if (!session.getWorkspace().getWorkspaceId().equals(workspaceId)) {
-      throw new IllegalArgumentException("이 세션은 해당 워크스페이스에 속하지 않습니다.");
+      throw new CustomException(FORBIDDEN_WORKSPACE_SESSION);
     }
 
     return voiceSessionUserRepository.countBySessionIdAndLeftAtIsNull(sessionId);
