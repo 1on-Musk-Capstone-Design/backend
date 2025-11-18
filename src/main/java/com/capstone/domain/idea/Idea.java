@@ -43,6 +43,12 @@ public class Idea {
   private String content;
 
   @Setter
+  private Double patchSizeX;
+
+  @Setter
+  private Double patchSizeY;
+
+  @Setter
   private Double positionX;
 
   @Setter

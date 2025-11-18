@@ -42,6 +42,8 @@ public class IdeaService {
     Idea idea = Idea.builder()
         .workspace(workspace)
         .content(request.getContent())
+        .patchSizeX(request.getPatchSizeX())
+        .patchSizeY(request.getPatchSizeY())
         .positionX(request.getPositionX())
         .positionY(request.getPositionY())
         .build();
@@ -86,6 +88,8 @@ public class IdeaService {
     }
 
     idea.setContent(request.getContent());
+    idea.setPatchSizeX(request.getPatchSizeX());
+    idea.setPatchSizeY(request.getPatchSizeY());
     idea.setPositionX(request.getPositionX());
     idea.setPositionY(request.getPositionY());
 
