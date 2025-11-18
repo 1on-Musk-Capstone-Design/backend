@@ -24,6 +24,13 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
 
+    // OpenAPI/Swagger (Schema 등 어노테이션 및 Swagger UI)
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0'
+
+   // Lombok
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok:1.18.38'
+
     // CORS/WebFlux (프로젝트에 이미 사용 중)
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
 
@@ -36,6 +43,10 @@ dependencies {
     // JSON 처리
     implementation 'com.fasterxml.jackson.core:jackson-databind'
 
+    // JWT
+    implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
+    implementation 'io.jsonwebtoken:jjwt-impl:0.12.6'
+    implementation 'io.jsonwebtoken:jjwt-jackson:0.12.6'
     runtimeOnly 'org.postgresql:postgresql'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
@@ -45,5 +56,3 @@ dependencies {
 tasks.withType(Test) {
     useJUnitPlatform()
 }
-
-

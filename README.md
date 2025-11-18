@@ -103,6 +103,7 @@ export OPENAI_API_KEY=your-openai-api-key-here
 
 ### 3. 애플리케이션 실행
 
+#### Maven
 ```bash
 # 의존성 설치
 mvn clean install
@@ -111,23 +112,122 @@ mvn clean install
 mvn spring-boot:run
 ```
 
+#### Gradle (Wrapper 사용 권장)
+```bash
+# 빌드
+./gradlew build
+
+# 테스트
+./gradlew test
+
+# 애플리케이션 실행
+./gradlew bootRun
+
+# (포트가 점유 중일 경우) 8080/9092 포트 정리 후 실행
+lsof -ti:8080 | xargs -r kill -9; lsof -ti:9092 | xargs -r kill -9; ./gradlew bootRun
+```
+
 ### 4. 접속 정보
 
 - **REST API**: `http://localhost:8080/api`
 - **Socket.IO**: `http://localhost:9092`
-- **헬스체크**: `http://localhost:8080/api/health`
+- **헬스체크**: `http://localhost:8080/api/v1/health`
+- **Swagger UI**: `http://localhost:8080/api/swagger-ui.html`
+- **OpenAPI Spec**: `http://localhost:8080/api/v3/api-docs`
+
+### 5. API 문서
+
+#### Swagger UI
+서버 실행 후 브라우저에서 `http://localhost:8080/api/swagger-ui.html` 접속
+- 모든 API 목록 및 상세 정보 확인
+- 직접 API 테스트 가능
+- JWT 토큰 입력 가능 (우측 상단 "Authorize" 버튼)
+
+#### Postman 컬렉션
+루트의 `postman_collection.json`을 Postman에 임포트하여 API를 바로 테스트할 수 있습니다.
+
+**총 32개 API 포함:**
+
+#### Health Check (1개)
+- `GET /api/v1/health` - 서버 상태 확인
+
+#### Workspace API (5개)
+- `GET /api/v1/workspaces` - 워크스페이스 목록 조회
+- `POST /api/v1/workspaces` - 워크스페이스 생성
+- `GET /api/v1/workspaces/{id}` - 워크스페이스 상세 조회
+- `PUT /api/v1/workspaces/{id}` - 워크스페이스 이름 변경
+- `DELETE /api/v1/workspaces/{id}` - 워크스페이스 삭제
+
+#### Workspace Member API (3개)
+- `POST /api/v1/workspaces/{workspaceId}/join` - 워크스페이스 참여
+- `GET /api/v1/workspaces/{workspaceId}/users` - 멤버 목록 조회
+- `DELETE /api/v1/workspaces/{workspaceId}/users/{userId}` - 멤버 제거
+
+#### Idea API (5개)
+- `POST /api/v1/ideas` - 아이디어 생성
+- `GET /api/v1/ideas/workspaces/{workspaceId}` - 워크스페이스 아이디어 목록 조회
+- `GET /api/v1/ideas/{id}` - 아이디어 상세 조회
+- `PUT /api/v1/ideas/{id}` - 아이디어 수정
+- `DELETE /api/v1/ideas/{id}` - 아이디어 삭제
+
+#### Chat Message API (6개)
+- `POST /api/v1/chat/messages` - 채팅 메시지 전송
+- `POST /api/v1/chat/messages/file` - 파일/이미지 메시지 생성
+- `GET /api/v1/chat/messages/workspace/{workspaceId}` - 워크스페이스별 메시지 조회
+- `GET /api/v1/chat/messages/workspace/{workspaceId}/recent` - 최근 메시지 조회
+- `GET /api/v1/chat/messages/user/{userId}` - 사용자별 메시지 조회
+- `GET /api/v1/chat/messages/workspace/{workspaceId}/count` - 메시지 개수 조회
+
+#### Voice Session API (3개)
+- `POST /api/v1/workspaces/{workspaceId}/voice` - 음성 세션 시작
+- `GET /api/v1/workspaces/{workspaceId}/voice` - 음성 세션 목록 조회
+- `PATCH /api/v1/workspaces/{workspaceId}/voice/{sessionId}` - 음성 세션 종료
+
+#### Voice Session User API (7개)
+- `POST /api/v1/workspaces/{workspaceId}/voice/{sessionId}/users` - 세션 참여
+- `DELETE /api/v1/workspaces/{workspaceId}/voice/{sessionId}/users/{userId}` - 세션 퇴장
+- `POST /api/v1/workspaces/{workspaceId}/voice/{sessionId}/users/move` - 세션 이동
+- `GET /api/v1/workspaces/{workspaceId}/voice/{sessionId}/users` - 활성 사용자 목록 조회
+- `GET /api/v1/workspaces/{workspaceId}/voice/{sessionId}/users/all` - 모든 사용자 조회
+- `GET /api/v1/workspaces/{workspaceId}/voice/{sessionId}/users/count` - 참여자 수 조회
+
+#### Canvas API (5개)
+- `POST /api/v1/{workspaceId}/canvas` - 캔버스 생성
+- `GET /api/v1/{workspaceId}/canvas` - 워크스페이스별 캔버스 목록 조회
+- `GET /api/v1/canvas/{canvasId}` - 캔버스 상세 조회
+- `PUT /api/v1/canvas/{canvasId}` - 캔버스 수정
+- `DELETE /api/v1/canvas/{canvasId}` - 캔버스 삭제
+
+#### Google OAuth API (2개)
+- `GET /api/v1/auth-google/login-uri` - Google 로그인 URI 조회
+- `POST /api/v1/auth-google?code={code}` - Google 로그인/회원가입
+
+> **참고:** 개발/테스트 환경에서는 Authorization 헤더가 기본적으로 비활성화되어 있습니다. 
+> JWT 토큰을 받은 후 사용하려면 Postman의 Variables 탭에서 `authToken` 변수를 설정하고, 
+> 원하는 요청의 Authorization 헤더를 활성화하세요.
 
 ## 🔧 설정 파일
 
 ### application.yml 주요 설정
 
 ```yaml
+# 서버 설정
+server:
+  port: 8080
+  servlet:
+    context-path: /api  # 모든 API의 기본 경로
+
 # 데이터베이스 설정
 spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/capstone_db
     username: postgres
     password: postgres
+  
+  jpa:
+    hibernate:
+      ddl-auto: create-drop  # 개발용 (프로덕션에서는 validate로 변경)
+    show-sql: true
 
 # Socket.IO 설정
 socketio:
@@ -136,11 +236,34 @@ socketio:
   cors:
     origins: "http://localhost:3000,http://127.0.0.1:3000"
 
-# OpenAI API 설정
+# OpenAI API 설정 (AI 클러스터링용)
 openai:
   api-key: ${OPENAI_API_KEY:your-openai-api-key-here}
   model: text-embedding-ada-002
+
+# OAuth2 (Google) 설정
+oauth2:
+  google:
+    client-id: ${GOOGLE_CLIENT_ID:dummy}
+    client-secret: ${GOOGLE_CLIENT_SECRET:dummy}
+    redirect-uri: ${GOOGLE_REDIRECT_URI:http://localhost:3000/auth/callback}
 ```
+
+### 보안 설정 (SecurityConfig)
+
+현재 개발/테스트를 위해 대부분의 API가 인증 없이 접근 가능하도록 설정되어 있습니다.
+
+**허용된 엔드포인트:**
+- Health Check, Actuator
+- Socket.IO
+- Google OAuth
+- Workspace API (GET, POST, PUT, DELETE)
+- Chat Message API
+- Voice Session API
+
+**프로덕션 배포 시:**
+- `SecurityConfig.java`의 TODO 주석 참고
+- POST, PUT, DELETE 메서드는 `.authenticated()`로 변경 필요
 
 ## 📡 Socket.IO 이벤트
 
@@ -167,39 +290,123 @@ openai:
 src/main/java/com/capstone/
 ├── CapstoneApplication.java          # 메인 애플리케이션
 ├── domain/                           # 도메인별 기능
-│   └── workspace/                    # 워크스페이스 도메인
-│       ├── Workspace.java           # 워크스페이스 엔티티
-│       ├── WorkspaceController.java # 워크스페이스 API
-│       ├── WorkspaceDtos.java       # 워크스페이스 DTO
-│       ├── WorkspaceRepository.java # 워크스페이스 리포지토리
-│       └── WorkspaceService.java    # 워크스페이스 서비스
+│   ├── chat/                         # 채팅 도메인
+│   │   ├── ChatMessage.java         # 채팅 메시지 엔티티
+│   │   ├── ChatMessageController.java
+│   │   ├── ChatMessageService.java
+│   │   └── ChatMessageRepository.java
+│   ├── idea/                         # 아이디어 도메인
+│   │   ├── Idea.java                 # 아이디어 엔티티
+│   │   ├── IdeaController.java       # 아이디어 컨트롤러
+│   │   ├── IdeaRepository.java       # 아이디어 리포지토리
+│   │   ├── IdeaRequest.java          # 아이디어 요청 DTO
+│   │   ├── IdeaResponse.java         # 아이디어 응답 DTO
+│   │   └── IdeaService.java   
+│   ├── user/                         # 사용자 도메인
+│   │   └── entity/
+│   │       └── User.java            # 사용자 엔티티
+│   ├── voicesession/                 # 음성 세션 도메인
+│   │   ├── VoiceSession.java       # 음성 세션 엔티티
+│   │   ├── VoiceSessionController.java
+│   │   ├── VoiceSessionService.java
+│   │   └── VoiceSessionRepository.java
+│   ├── workspace/                    # 워크스페이스 도메인
+│   │   ├── Workspace.java           # 워크스페이스 엔티티
+│   │   ├── WorkspaceController.java # 워크스페이스 API
+│   │   ├── WorkspaceDtos.java       # 워크스페이스 DTO
+│   │   ├── WorkspaceRepository.java
+│   │   └── WorkspaceService.java
+│   └── workspaceUser/                # 워크스페이스 멤버 도메인
+│       ├── WorkspaceUser.java       # 멤버 엔티티
+│       ├── WorkspaceUserController.java
+│       └── WorkspaceUserService.java
 └── global/                          # 공통 컴포넌트
     ├── config/                       # 설정 클래스들
-    │   ├── SecurityConfig.java      # 보안 설정
+    │   ├── SecurityConfig.java      # 보안 설정 (HTTP 메서드별 권한 구분)
     │   └── SocketIOConfig.java      # Socket.IO 설정
     ├── controller/                   # 공통 컨트롤러
     │   ├── HealthController.java    # 헬스체크 API
-    │   └── OpenAIController.java    # OpenAI API
-    └── service/                     # 공통 서비스
-        └── SocketIOService.java     # Socket.IO 이벤트 처리
+    │   └── OpenAIController.java    # OpenAI API (비활성화)
+    ├── oauth/                        # OAuth 인증
+    │   ├── JwtProvider.java         # JWT 토큰 생성/검증
+    │   ├── TokenDto.java
+    │   ├── controller/
+    │   │   └── GoogleController.java # Google OAuth API
+    │   └── service/
+    │       └── GoogleService.java    # Google OAuth 서비스
+    ├── service/                      # 공통 서비스
+    │   └── SocketIOService.java     # Socket.IO 이벤트 처리
+    └── type/
+        └── Role.java                # 사용자 권한 (OWNER, MEMBER)
 ```
 
 ## 🚧 개발 상태
 
 ### ✅ 완료된 기능
-- [x] Socket.IO 서버 설정 및 이벤트 핸들러
-- [x] CORS 설정 및 보안 구성
-- [x] 기본 애플리케이션 설정
-- [x] PostgreSQL 연결 설정
-- [x] 헬스체크 API
+- [x] **기본 설정**
+  - [x] Socket.IO 서버 설정 및 이벤트 핸들러
+  - [x] CORS 설정 및 보안 구성 (HTTP 메서드별 권한 구분)
+  - [x] PostgreSQL 연결 설정
+  - [x] Context-path 설정 (`/api`)
+  - [x] 헬스체크 API
+
+- [x] **인증/인가**
+  - [x] Google OAuth 2.0 통합
+  - [x] JWT 토큰 생성/검증
+  - [x] Spring Security 설정 (개발/프로덕션 구분)
+  - [x] Authorization 헤더 optional 처리 (개발용)
+
+- [x] **Workspace API (5개)**
+  - [x] 워크스페이스 생성/조회/수정/삭제
+  - [x] 자동 User 생성 (개발용)
+
+- [x] **Workspace Member API (3개)**
+  - [x] 워크스페이스 참여
+  - [x] 멤버 목록 조회
+  - [x] 멤버 제거 (OWNER 권한)
+
+- [x] **Idea API (5개)**
+  - [x] 워크스페이스 생성/조회/수정/삭제
+
+- [x] **Chat Message API (6개)**
+  - [x] 채팅 메시지 전송
+  - [x] 파일/이미지 메시지 생성
+  - [x] 워크스페이스별/사용자별 메시지 조회
+  - [x] 최근 메시지 조회
+  - [x] 메시지 개수 조회
+
+- [x] **Voice Session API (3개)**
+  - [x] 음성 세션 시작/종료
+  - [x] 세션 목록 조회
+
+- [x] **Canvas API (5개)**
+  - [x] 캔버스 생성/조회/수정/삭제
+  - [x] 워크스페이스별 캔버스 목록 조회
+
+- [x] **Voice Session User API (7개)**
+  - [x] 세션 참여/퇴장
+  - [x] 세션 이동
+  - [x] 활성 사용자 목록 조회
+  - [x] 모든 사용자 조회
+  - [x] 참여자 수 조회
+
+- [x] **API 문서화**
+  - [x] Swagger/OpenAPI 통합
+  - [x] 32개 API 전체 문서화
+  - [x] JWT 인증 테스트 지원
+  
+- [x] **Postman 컬렉션**
+  - [x] 32개 API 전체 포함
+  - [x] Authorization 헤더 설정
+  - [x] 샘플 응답 포함
 
 ### 🔄 진행 예정
-- [ ] 사용자 인증/인가 시스템
-- [ ] 세션 관리 API
-- [ ] 채팅 메시지 저장/조회
 - [ ] 아이디어 박스 CRUD API
-- [ ] AI 클러스터링 서비스
-- [ ] 음성 채팅 통합
+- [ ] AI 클러스터링 서비스 (OpenAI 통합)
+- [ ] WebSocket/Socket.IO 실시간 이벤트 구현
+- [ ] 무한 컨버스 백엔드 로직
+- [ ] 프로덕션용 보안 강화
+- [ ] 테스트 코드 확대
 
 ## 🤝 기여 방법
 
