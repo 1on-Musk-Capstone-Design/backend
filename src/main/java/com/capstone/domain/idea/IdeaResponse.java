@@ -11,6 +11,8 @@ public class IdeaResponse {
   private Long workspaceId;
   private Long canvasId;
   private String content;
+  private Double patchSizeX;
+  private Double patchSizeY;
   private Double positionX;
   private Double positionY;
   private String createdAt;
@@ -22,6 +24,8 @@ public class IdeaResponse {
         .workspaceId(idea.getWorkspace().getWorkspaceId())
         .canvasId(idea.getCanvas() != null ? idea.getCanvas().getId() : null)
         .content(idea.getContent())
+        .patchSizeX(idea.getPatchSizeX())
+        .patchSizeY(idea.getPatchSizeY())
         .positionX(idea.getPositionX())
         .positionY(idea.getPositionY())
         .createdAt(idea.getCreatedAt().toString())

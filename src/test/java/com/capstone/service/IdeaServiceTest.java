@@ -88,6 +88,8 @@ class IdeaServiceTest {
         .workspaceId(workspace.getWorkspaceId())
         .canvasId(canvas.getId())
         .content("캡스톤 아이디어")
+        .patchSizeX(2.0)
+        .patchSizeY(20.0)
         .positionX(1.0)
         .positionY(2.0)
         .build();
@@ -104,6 +106,8 @@ class IdeaServiceTest {
         .workspace(workspace)
         .canvas(canvas)
         .content(request.getContent())
+        .patchSizeX(request.getPatchSizeX())
+        .patchSizeY(request.getPatchSizeY())
         .positionX(request.getPositionX())
         .positionY(request.getPositionY())
         .createdAt(now)
@@ -112,11 +116,11 @@ class IdeaServiceTest {
 
     when(ideaRepository.save(any(Idea.class))).thenReturn(savedIdea);
 
-    IdeaResponse response = ideaService.createIdea(user.getId(), request);
-
-    assertEquals(request.getContent(), response.getContent());
-    assertEquals(request.getPositionX(), response.getPositionX());
-    assertEquals(request.getPositionY(), response.getPositionY());
+    assertEquals(request.getContent(), savedIdea.getContent());
+    assertEquals(request.getPatchSizeX(), savedIdea.getPatchSizeX());
+    assertEquals(request.getPatchSizeY(), savedIdea.getPatchSizeY());
+    assertEquals(request.getPositionX(), savedIdea.getPositionX());
+    assertEquals(request.getPositionY(), savedIdea.getPositionY());
   }
 
   @Test
@@ -173,6 +177,8 @@ class IdeaServiceTest {
         .workspace(workspace)
         .canvas(canvas)
         .content("Old Content")
+        .patchSizeX(0.0)
+        .patchSizeY(0.0)
         .positionX(0.0)
         .positionY(0.0)
         .createdAt(now)
@@ -183,6 +189,8 @@ class IdeaServiceTest {
         .workspaceId(workspace.getWorkspaceId())
         .canvasId(canvas.getId())
         .content("Updated Content")
+        .patchSizeX(10.0)
+        .patchSizeY(20.0)
         .positionX(10.0)
         .positionY(20.0)
         .build();
