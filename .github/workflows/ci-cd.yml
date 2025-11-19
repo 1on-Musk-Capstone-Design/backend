@@ -88,7 +88,17 @@ jobs:
           name: application-jar
           path: build/libs/
 
-      - name: Setup SSH
+      - name: Setup SSH key with correct permissions
+        run: |
+          echo "Setting up SSH key..."
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          echo "${{ secrets.AWS_SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 400 ~/.ssh/deploy_key
+          echo "✅ SSH key file created with 400 permissions"
+          ls -l ~/.ssh/deploy_key
+
+      - name: Setup SSH agent
         uses: webfactory/ssh-agent@v0.9.0
         with:
           ssh-private-key: ${{ secrets.AWS_SSH_PRIVATE_KEY }}
@@ -103,6 +113,8 @@ jobs:
           fi
           echo "✅ SSH_AUTH_SOCK: $SSH_AUTH_SOCK"
           ssh-add -l || echo "Warning: No keys in agent"
+          echo "Key file permissions:"
+          ls -l ~/.ssh/deploy_key || echo "Key file not found"
 
       - name: Add server to known hosts
         run: |
