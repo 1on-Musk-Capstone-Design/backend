@@ -101,6 +101,24 @@ jobs:
           ssh-keyscan -H ${{ secrets.AWS_SERVER_HOST }} >> ~/.ssh/known_hosts
           chmod 600 ~/.ssh/known_hosts
 
+      - name: Verify SSH connection
+        run: |
+          echo "Testing SSH connection..."
+          ssh -v -o StrictHostKeyChecking=no -o ConnectTimeout=10 ec2-user@${{ secrets.AWS_SERVER_HOST }} "echo 'SSH connection successful'" || {
+            echo "❌ SSH connection failed"
+            exit 1
+          }
+          echo "✅ SSH connection verified"
+
+      - name: Prepare server directory
+        run: |
+          echo "Preparing server directory..."
+          ssh -o StrictHostKeyChecking=no ec2-user@${{ secrets.AWS_SERVER_HOST }} << 'EOF'
+            mkdir -p ~/capstone-app
+            chmod 755 ~/capstone-app
+            echo "Directory prepared: $(ls -ld ~/capstone-app)"
+          EOF
+
       - name: Stop existing application
         run: |
           ssh -o StrictHostKeyChecking=no ec2-user@${{ secrets.AWS_SERVER_HOST }} \
@@ -109,12 +127,21 @@ jobs:
 
       - name: Upload JAR to server
         run: |
-          echo "Uploading JAR file..."
-          ls -lh build/libs/
-          scp -v -o StrictHostKeyChecking=no \
+          echo "=== Uploading JAR file ==="
+          echo "JAR file info:"
+          ls -lh build/libs/capstone-project-0.0.1-SNAPSHOT.jar
+          echo "File size: $(du -h build/libs/capstone-project-0.0.1-SNAPSHOT.jar | cut -f1)"
+          echo "Starting SCP transfer..."
+          scp -v -o StrictHostKeyChecking=no -o ConnectTimeout=30 \
             build/libs/capstone-project-0.0.1-SNAPSHOT.jar \
-            ec2-user@${{ secrets.AWS_SERVER_HOST }}:~/capstone-app/capstone-app.jar
-          echo "JAR upload completed"
+            ec2-user@${{ secrets.AWS_SERVER_HOST }}:~/capstone-app/capstone-app.jar || {
+            echo "❌ SCP upload failed"
+            exit 1
+          }
+          echo "✅ JAR upload completed"
+          echo "Verifying file on server..."
+          ssh -o StrictHostKeyChecking=no ec2-user@${{ secrets.AWS_SERVER_HOST }} \
+            "ls -lh ~/capstone-app/capstone-app.jar && echo 'File verified on server'"
 
       - name: Restart application
         run: |
