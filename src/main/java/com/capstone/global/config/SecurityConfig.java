@@ -35,6 +35,9 @@ public class SecurityConfig {
             // Google OAuth (인증 필요 없음)
             .requestMatchers("/v1/auth-google/**").permitAll()
 
+            // User info
+            .requestMatchers("/v1/users/me").permitAll()
+
             // Workspace - 읽기는 허용, 쓰기는 인증 필요 (개발용: 임시로 모두 허용)
             .requestMatchers(HttpMethod.GET, "/v1/workspaces/**").permitAll()
             .requestMatchers(HttpMethod.POST, "/v1/workspaces/**")

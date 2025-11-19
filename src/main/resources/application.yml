@@ -1,4 +1,5 @@
 server:
+  address: 0.0.0.0  # 모든 네트워크 인터페이스에 바인딩 (외부 접속 허용)
   port: 8080
   servlet:
     context-path: /api
@@ -18,7 +19,7 @@ spring:
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: update  # create-drop에서 update로 변경하여 데이터 유지
     show-sql: true
     properties:
       hibernate:
@@ -31,10 +32,10 @@ spring:
 
 # Socket.IO 설정
 socketio:
-  host: localhost
+  host: 0.0.0.0  # 모든 네트워크 인터페이스에 바인딩 (외부 접속 허용)
   port: 9092
   cors:
-    origins: "http://localhost:3000,http://127.0.0.1:3000"
+    origins: "*"  # 프로덕션에서는 실제 프론트엔드 도메인으로 변경 권장
 
 # OpenAI API 설정 (AI 클러스터링용)
 openai:
@@ -45,11 +46,11 @@ openai:
 # OAuth2 (Google) 로컬 기본값
 oauth2:
   google:
-    client-id: ${GOOGLE_CLIENT_ID:dummy}
-    client-secret: ${GOOGLE_CLIENT_SECRET:dummy}
-    redirect-uri: ${GOOGLE_REDIRECT_URI:http://localhost:3000/auth/callback}
-    token-uri: ${GOOGLE_TOKEN_URI:https://oauth2.googleapis.com/token}
-    resource-uri: ${GOOGLE_RESOURCE_URI:https://www.googleapis.com/oauth2/v2/userinfo}
+    client-id: ${GOOGLE_CLIENT_ID:your-google-client-id}
+    client-secret: ${GOOGLE_CLIENT_SECRET:your-google-client-secret}
+    redirect-uri: ${GOOGLE_REDIRECT_URI:http://localhost:3000/auth/callback}  # 배포 시 환경변수로 도메인 설정 필요 (예: https://yourdomain.com/auth/callback)
+    token-uri: https://oauth2.googleapis.com/token
+    resource-uri: https://www.googleapis.com/oauth2/v2/userinfo
     login-uri: ${GOOGLE_LOGIN_URI:https://accounts.google.com/o/oauth2/v2/auth}
 
 management:
@@ -84,3 +85,8 @@ logging:
     com.corundumstudio.socketio: DEBUG
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+workspace:
+  invite:
+    base-url: ${WORKSPACE_INVITE_BASE_URL:http://localhost:3000/invite}
+    expire-hours: ${WORKSPACE_INVITE_EXPIRE_HOURS:168}

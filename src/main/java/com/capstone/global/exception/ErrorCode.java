@@ -22,7 +22,13 @@ public enum ErrorCode {
   FORBIDDEN_WORKSPACE("워크스페이스 권한이 없습니다.", HttpStatus.FORBIDDEN),
   FORBIDDEN_WORKSPACE_SESSION("해당 세션은 해당 워크스페이스에 접근할 권한이 없습니다.", HttpStatus.FORBIDDEN),
   FORBIDDEN_WORKSPACE_ACCESS("워크스페이스 소속 사용자가 아닙니다.", HttpStatus.FORBIDDEN),
-  FORBIDDEN_CLOSED_SESSION("이미 종료된 세션에는 참여할 수 없습니다.", HttpStatus.FORBIDDEN);
+  FORBIDDEN_CLOSED_SESSION("이미 종료된 세션에는 참여할 수 없습니다.", HttpStatus.FORBIDDEN),
+
+  UNAUTHORIZED_USER("인증 정보가 필요합니다.", HttpStatus.UNAUTHORIZED),
+  INVALID_TOKEN("유효하지 않은 토큰입니다.", HttpStatus.UNAUTHORIZED),
+
+  INVALID_INVITE_TOKEN("유효하지 않은 초대 토큰입니다.", HttpStatus.BAD_REQUEST),
+  EXPIRED_INVITE_TOKEN("만료된 초대 토큰입니다.", HttpStatus.BAD_REQUEST);
 
   private final String message;
   private final HttpStatus httpStatus;

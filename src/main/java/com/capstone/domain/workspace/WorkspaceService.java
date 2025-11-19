@@ -58,6 +58,17 @@ public class WorkspaceService {
   }
 
   @Transactional(readOnly = true)
+  public List<Workspace> getWorkspacesByUserId(Long userId) {
+    User user = userRepository.findById(userId)
+        .orElseThrow(() -> new CustomException(com.capstone.global.exception.ErrorCode.NOT_FOUND_USER));
+    
+    List<WorkspaceUser> workspaceUsers = workspaceUserRepository.findByUser(user);
+    return workspaceUsers.stream()
+        .map(WorkspaceUser::getWorkspace)
+        .toList();
+  }
+
+  @Transactional(readOnly = true)
   public Workspace getWorkspaceById(Long id) {
     return workspaceRepository.findById(id)
         .orElseThrow(() -> new CustomException(NOT_FOUND_WORKSPACE));
