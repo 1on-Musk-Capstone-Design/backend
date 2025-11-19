@@ -97,14 +97,9 @@ public class IdeaService {
   }
 
   @Transactional
-  public void deleteIdea(Long userId, Long ideaId) {
+  public void deleteIdea(Long ideaId) {
     Idea idea = ideaRepository.findById(ideaId)
         .orElseThrow(() -> new CustomException(NOT_FOUND_IDEA));
-
-    workspaceUserRepository.findByWorkspaceAndUser(idea.getWorkspace(),
-            userRepository.findById(userId)
-                .orElseThrow(() -> new CustomException(NOT_FOUND_USER)))
-        .orElseThrow(() -> new CustomException(FORBIDDEN_WORKSPACE_ACCESS));
 
     ideaRepository.delete(idea);
   }
