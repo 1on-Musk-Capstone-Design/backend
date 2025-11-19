@@ -27,14 +27,26 @@ public class WorkspaceController {
   private final WorkspaceService workspaceService;
   private final JwtProvider jwtProvider;
 
-  @Operation(summary = "워크스페이스 목록 조회", description = "모든 워크스페이스 목록을 조회합니다.")
+  @Operation(summary = "워크스페이스 목록 조회", description = "본인이 속한 워크스페이스 목록을 조회합니다.")
   @ApiResponses(value = {
       @ApiResponse(responseCode = "200", description = "조회 성공",
           content = @Content(schema = @Schema(implementation = WorkspaceDtos.ListItem.class)))
   })
+  @SecurityRequirement(name = "Bearer Authentication")
   @GetMapping
-  public ResponseEntity<List<WorkspaceDtos.ListItem>> getAllWorkspaces() {
-    List<Workspace> workspaces = workspaceService.getAllWorkspaces();
+  public ResponseEntity<List<WorkspaceDtos.ListItem>> getAllWorkspaces(
+      @Parameter(description = "JWT 토큰", required = true)
+      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String token) {
+    
+    // Authorization 헤더가 없으면 빈 리스트 반환
+    if (token == null || token.trim().isEmpty()) {
+      return ResponseEntity.ok(List.of());
+    }
+    
+    String jwt = token.replace("Bearer ", "").trim();
+    Long userId = jwtProvider.getUserIdFromAccessToken(jwt);
+    
+    List<Workspace> workspaces = workspaceService.getWorkspacesByUserId(userId);
 
     List<WorkspaceDtos.ListItem> response = workspaces.stream()
         .map(workspace -> {
