@@ -6,10 +6,10 @@ on:
       - develop
       - main
       - feature/aws-sync
-  # pull_request:
-  #   branches:
-  #     - develop
-  #     - main
+  pull_request:
+    branches:
+      - develop
+      - main
 
 jobs:
   build-and-test:
