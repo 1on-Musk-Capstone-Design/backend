@@ -1,47 +1,51 @@
 package com.capstone.domain.workspace;
 
 import java.time.Instant;
+import lombok.Getter;
+import lombok.Setter;
 
 public class WorkspaceDtos {
-    public static class CreateRequest {
-        private String name;
 
-        public String getName() {
-            return name;
-        }
+  @Setter
+  @Getter
+  public static class CreateRequest {
 
-        public void setName(String name) {
-            this.name = name;
-        }
-    }
+    private String name;
 
-    public static class Response {
-        private Long workspaceId;
-        private String name;
-        private Instant createdAt;
+  }
 
-        public Long getWorkspaceId() {
-            return workspaceId;
-        }
+  @Setter
+  @Getter
+  public static class Response {
 
-        public void setWorkspaceId(Long workspaceId) {
-            this.workspaceId = workspaceId;
-        }
+    private Long workspaceId;
+    private String name;
+    private Instant createdAt;
 
-        public String getName() {
-            return name;
-        }
+  }
 
-        public void setName(String name) {
-            this.name = name;
-        }
+  @Setter
+  @Getter
+  public static class ListItem {
 
-        public Instant getCreatedAt() {
-            return createdAt;
-        }
+    private Long workspaceId;
+    private String name;
 
-        public void setCreatedAt(Instant createdAt) {
-            this.createdAt = createdAt;
-        }
-    }
+  }
+
+  @Setter
+  @Getter
+  public static class UpdateRequest {
+
+    private String name;
+
+  }
+
+  @Setter
+  @Getter
+  public static class DeleteResponse {
+
+    private String message;
+
+  }
 }
