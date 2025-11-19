@@ -38,12 +38,6 @@ public class GoogleController {
       log.error("OAuth 로그인 처리 실패", e);
       throw e;
     }
-  @Value("${oauth2.google.login-uri}")
-  private String loginUri;
-
-  @PostMapping
-  public ResponseEntity<TokenDto> loginOrJoin(@RequestParam String code) {
-    return ResponseEntity.ok(googleService.loginOrJoin(code));
   }
 
   @GetMapping("/login-uri")
