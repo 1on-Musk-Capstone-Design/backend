@@ -41,6 +41,7 @@ jobs:
 
       - name: Build with Gradle
         run: ./gradlew clean build -x test
+        continue-on-error: false
 
       - name: Run tests
         run: ./gradlew test
@@ -67,7 +68,7 @@ jobs:
     name: Deploy to AWS
     needs: build-and-test
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/feature/aws-sync')
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/feature/aws-sync') && secrets.AWS_SSH_PRIVATE_KEY != ''
     
     steps:
       - name: Checkout code
@@ -83,6 +84,8 @@ jobs:
         uses: webfactory/ssh-agent@v0.9.0
         with:
           ssh-private-key: ${{ secrets.AWS_SSH_PRIVATE_KEY }}
+        env:
+          SSH_AUTH_SOCK: /tmp/ssh_agent.sock
 
       - name: Add server to known hosts
         run: |
