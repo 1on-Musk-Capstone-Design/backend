@@ -1,5 +1,6 @@
 package com.capstone.domain.workspace;
 
+import com.capstone.domain.workspaceInvite.WorkspaceInviteService;
 import com.capstone.global.oauth.JwtProvider;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -25,6 +26,7 @@ import java.util.stream.Collectors;
 public class WorkspaceController {
 
   private final WorkspaceService workspaceService;
+  private final WorkspaceInviteService workspaceInviteService;
   private final JwtProvider jwtProvider;
 
   @Operation(summary = "워크스페이스 목록 조회", description = "본인이 속한 워크스페이스 목록을 조회합니다.")
@@ -58,6 +60,49 @@ public class WorkspaceController {
         .collect(Collectors.toList());
 
     return ResponseEntity.ok(response);
+  }
+
+  @Operation(summary = "워크스페이스 초대 링크 생성", description = "OWNER가 초대 링크를 생성합니다.")
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "200", description = "생성 성공")
+  })
+  @SecurityRequirement(name = "Bearer Authentication")
+  @PostMapping("/{id}/invite-link")
+  public ResponseEntity<WorkspaceDtos.InviteLinkResponse> createInviteLink(
+      @Parameter(description = "워크스페이스 ID", required = true) @PathVariable Long id,
+      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String token
+  ) {
+    if (token == null || token.trim().isEmpty()) {
+      return ResponseEntity.status(401).build();
+    }
+
+    String jwt = token.replace("Bearer ", "").trim();
+    Long userId = jwtProvider.getUserIdFromAccessToken(jwt);
+
+    WorkspaceDtos.InviteLinkResponse response = workspaceInviteService.createInvite(id, userId);
+    return ResponseEntity.ok(response);
+  }
+
+  @Operation(summary = "초대 링크 수락", description = "초대 링크를 통해 워크스페이스에 참여합니다.")
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "200", description = "참여 성공"),
+      @ApiResponse(responseCode = "400", description = "초대 토큰이 유효하지 않거나 만료됨")
+  })
+  @SecurityRequirement(name = "Bearer Authentication")
+  @PostMapping("/invite/{token}/accept")
+  public ResponseEntity<String> acceptInvite(
+      @Parameter(description = "초대 토큰", required = true) @PathVariable String token,
+      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader
+  ) {
+    if (authHeader == null || authHeader.trim().isEmpty()) {
+      return ResponseEntity.status(401).build();
+    }
+
+    String jwt = authHeader.replace("Bearer ", "").trim();
+    Long userId = jwtProvider.getUserIdFromAccessToken(jwt);
+
+    workspaceInviteService.acceptInvite(token, userId);
+    return ResponseEntity.ok("워크스페이스 참여 성공");
   }
 
   @Operation(summary = "워크스페이스 상세 조회", description = "특정 워크스페이스의 상세 정보를 조회합니다.")

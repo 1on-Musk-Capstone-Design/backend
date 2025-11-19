@@ -48,4 +48,13 @@ public class WorkspaceDtos {
     private String message;
 
   }
+
+  @Setter
+  @Getter
+  public static class InviteLinkResponse {
+
+    private String token;
+    private String inviteUrl;
+    private Instant expiresAt;
+  }
 }

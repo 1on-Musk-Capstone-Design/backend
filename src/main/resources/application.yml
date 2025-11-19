@@ -85,3 +85,8 @@ logging:
     com.corundumstudio.socketio: DEBUG
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+workspace:
+  invite:
+    base-url: ${WORKSPACE_INVITE_BASE_URL:http://localhost:3000/invite}
+    expire-hours: ${WORKSPACE_INVITE_EXPIRE_HOURS:168}
