@@ -94,18 +94,32 @@ jobs:
           ssh-private-key: ${{ secrets.AWS_SSH_PRIVATE_KEY }}
         continue-on-error: false
 
+      - name: Verify SSH key
+        run: |
+          echo "Checking SSH key setup..."
+          if [ -z "$SSH_AUTH_SOCK" ]; then
+            echo "❌ SSH_AUTH_SOCK is not set"
+            exit 1
+          fi
+          echo "✅ SSH_AUTH_SOCK: $SSH_AUTH_SOCK"
+          ssh-add -l || echo "Warning: No keys in agent"
+
       - name: Add server to known hosts
         run: |
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
           ssh-keyscan -H ${{ secrets.AWS_SERVER_HOST }} >> ~/.ssh/known_hosts
           chmod 600 ~/.ssh/known_hosts
+          echo "✅ Known hosts updated"
 
       - name: Verify SSH connection
         run: |
           echo "Testing SSH connection..."
-          ssh -v -o StrictHostKeyChecking=no -o ConnectTimeout=10 ec2-user@${{ secrets.AWS_SERVER_HOST }} "echo 'SSH connection successful'" || {
+          echo "Using SSH_AUTH_SOCK: $SSH_AUTH_SOCK"
+          ssh -v -o StrictHostKeyChecking=no -o ConnectTimeout=10 -o IdentitiesOnly=yes ec2-user@${{ secrets.AWS_SERVER_HOST }} "echo 'SSH connection successful'" || {
             echo "❌ SSH connection failed"
+            echo "Trying to debug..."
+            ssh-add -l || echo "No keys in agent"
             exit 1
           }
           echo "✅ SSH connection verified"
