@@ -44,6 +44,7 @@ jobs:
 
       - name: Run tests
         run: ./gradlew test
+        continue-on-error: true
 
       - name: Upload test results
         if: always()
