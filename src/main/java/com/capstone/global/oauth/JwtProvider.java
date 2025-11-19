@@ -46,8 +46,8 @@ public class JwtProvider {
     Claims claims = Jwts.parser()
         .setSigningKey(getSigningKey())
         .build()
-        .parseSignedClaims(token)
-        .getPayload();
+        .parseClaimsJws(token)
+        .getBody();
 
     return claims.get("user_id", Long.class);
   }
