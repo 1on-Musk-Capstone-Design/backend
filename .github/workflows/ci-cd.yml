@@ -40,7 +40,7 @@ jobs:
             ${{ runner.os }}-gradle-
 
       - name: Build with Gradle
-        run: ./gradlew clean build -x test
+        run: ./gradlew clean build -x test --stacktrace
         continue-on-error: false
 
       - name: Run tests
@@ -84,10 +84,14 @@ jobs:
         uses: webfactory/ssh-agent@v0.9.0
         with:
           ssh-private-key: ${{ secrets.AWS_SSH_PRIVATE_KEY }}
+        continue-on-error: false
 
       - name: Add server to known hosts
         run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
           ssh-keyscan -H ${{ secrets.AWS_SERVER_HOST }} >> ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
 
       - name: Stop existing application
         run: |
@@ -97,27 +101,41 @@ jobs:
 
       - name: Upload JAR to server
         run: |
-          scp -o StrictHostKeyChecking=no \
+          echo "Uploading JAR file..."
+          ls -lh build/libs/
+          scp -v -o StrictHostKeyChecking=no \
             build/libs/capstone-project-0.0.1-SNAPSHOT.jar \
             ec2-user@${{ secrets.AWS_SERVER_HOST }}:~/capstone-app/capstone-app.jar
+          echo "JAR upload completed"
 
       - name: Restart application
         run: |
-          ssh -o StrictHostKeyChecking=no ec2-user@${{ secrets.AWS_SERVER_HOST }} << 'EOF'
+          ssh -v -o StrictHostKeyChecking=no ec2-user@${{ secrets.AWS_SERVER_HOST }} << 'EOF'
+            set -e
             cd ~/capstone-app
+            echo "Current directory: $(pwd)"
+            echo "JAR file exists: $(test -f capstone-app.jar && echo 'yes' || echo 'no')"
             if [ -f app.pid ]; then
-              kill -9 $(cat app.pid) 2>/dev/null || true
+              OLD_PID=$(cat app.pid)
+              echo "Stopping old process: $OLD_PID"
+              kill -9 $OLD_PID 2>/dev/null || echo "Process $OLD_PID not running"
             fi
+            echo "Starting application..."
             nohup java -jar capstone-app.jar > app.log 2>&1 &
-            echo $! > app.pid
-            echo "Application restarted with PID: $(cat app.pid)"
+            NEW_PID=$!
+            echo $NEW_PID > app.pid
+            echo "Application restarted with PID: $NEW_PID"
+            sleep 2
+            ps -p $NEW_PID || echo "Warning: Process may not have started"
           EOF
 
       - name: Wait for application to start
         run: |
-          sleep 10
+          echo "Waiting for application to start..."
+          sleep 15
           for i in {1..30}; do
-            if curl -f http://${{ secrets.AWS_SERVER_HOST }}:8080/api/v1/health > /dev/null 2>&1; then
+            echo "Health check attempt $i/30..."
+            if curl -f -v http://${{ secrets.AWS_SERVER_HOST }}:8080/api/v1/health 2>&1; then
               echo "Application is healthy!"
               exit 0
             fi
@@ -125,6 +143,7 @@ jobs:
             sleep 2
           done
           echo "Application failed to start within timeout"
+          ssh -o StrictHostKeyChecking=no ec2-user@${{ secrets.AWS_SERVER_HOST }} "tail -50 ~/capstone-app/app.log" || true
           exit 1
 
       - name: Health check
