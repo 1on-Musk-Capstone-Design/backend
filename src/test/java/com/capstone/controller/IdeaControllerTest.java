@@ -50,7 +50,6 @@ public class IdeaControllerTest {
   private IdeaResponse ideaResponse;
 
   private final String token = "BAD TOKEN";
-  private final Long userId = 1L;
   private final Long workspaceId = 5L;
   private final Long canvasId = 3L;
   private final Long ideaId = 1L;
@@ -78,6 +77,7 @@ public class IdeaControllerTest {
   @Test
   @DisplayName("아이디어 생성 성공")
   void successCreateIdea() throws Exception {
+    Long userId = 1L;
     given(jwtProvider.getUserIdFromAccessToken("BAD TOKEN")).willReturn(userId);
     given(ideaService.createIdea(any(Long.class), any(IdeaRequest.class)))
         .willReturn(ideaResponse);
@@ -153,12 +153,10 @@ public class IdeaControllerTest {
   @Test
   @DisplayName("아이디어 삭제 성공")
   void successDeleteIdea() throws Exception {
-    given(jwtProvider.getUserIdFromAccessToken("BAD TOKEN")).willReturn(userId);
-    doNothing().when(ideaService).deleteIdea(userId, ideaId);
+    doNothing().when(ideaService).deleteIdea(ideaId);
 
     mockMvc.perform(delete("/v1/ideas/{ideaId}", ideaId)
-            .with(csrf())
-            .header("Authorization", token))
+            .with(csrf()))
         .andExpect(status().isOk());
   }
 }
