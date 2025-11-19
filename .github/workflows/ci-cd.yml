@@ -217,6 +217,21 @@ jobs:
             exit 1
           }
 
+      - name: Upload environment variables to server
+        env:
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          GOOGLE_REDIRECT_URI: ${{ secrets.GOOGLE_REDIRECT_URI }}
+          GOOGLE_LOGIN_URI: ${{ secrets.GOOGLE_LOGIN_URI }}
+        run: |
+          ssh -o StrictHostKeyChecking=no ec2-user@${{ secrets.AWS_SERVER_HOST }} "cat > ~/capstone-app/.env << 'ENVEOF'
+          GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
+          GOOGLE_REDIRECT_URI=${{ secrets.GOOGLE_REDIRECT_URI }}
+          GOOGLE_LOGIN_URI=${{ secrets.GOOGLE_LOGIN_URI }}
+          ENVEOF
+          chmod 600 ~/capstone-app/.env && echo '✅ Environment variables file created'"
+
       - name: Restart application
         run: |
           ssh -v -o StrictHostKeyChecking=no ec2-user@${{ secrets.AWS_SERVER_HOST }} << 'EOF'
@@ -248,6 +263,17 @@ jobs:
             # Kill any process on port 8080
             sudo lsof -ti:8080 | xargs -r kill -9 2>/dev/null || echo "No process on port 8080"
             sleep 2
+            
+            # Load environment variables from .env file
+            if [ -f .env ]; then
+              echo "Loading environment variables from .env file..."
+              set -a
+              source .env
+              set +a
+              echo "✅ Environment variables loaded"
+            else
+              echo "⚠️ Warning: .env file not found, using default values"
+            fi
             
             echo "Starting application..."
             nohup java -jar capstone-app.jar > app.log 2>&1 &
