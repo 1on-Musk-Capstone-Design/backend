@@ -92,7 +92,8 @@ jobs:
       - name: Stop existing application
         run: |
           ssh -o StrictHostKeyChecking=no ec2-user@${{ secrets.AWS_SERVER_HOST }} \
-            "sudo lsof -ti:8080 | xargs kill -9 2>/dev/null || echo 'No process running on port 8080'"
+            "sudo lsof -ti:8080 | xargs -r kill -9 2>/dev/null || echo 'No process running on port 8080'"
+        continue-on-error: true
 
       - name: Upload JAR to server
         run: |
@@ -104,6 +105,9 @@ jobs:
         run: |
           ssh -o StrictHostKeyChecking=no ec2-user@${{ secrets.AWS_SERVER_HOST }} << 'EOF'
             cd ~/capstone-app
+            if [ -f app.pid ]; then
+              kill -9 $(cat app.pid) 2>/dev/null || true
+            fi
             nohup java -jar capstone-app.jar > app.log 2>&1 &
             echo $! > app.pid
             echo "Application restarted with PID: $(cat app.pid)"
