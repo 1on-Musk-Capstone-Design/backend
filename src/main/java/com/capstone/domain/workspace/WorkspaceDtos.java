@@ -57,4 +57,14 @@ public class WorkspaceDtos {
     private String inviteUrl;
     private Instant expiresAt;
   }
+
+  @Setter
+  @Getter
+  public static class InviteAcceptRequest {
+
+    /**
+     * 초대 링크를 통해 참여할 사용자 ID (Authorization 헤더가 없는 경우 필수)
+     */
+    private Long userId;
+  }
 }

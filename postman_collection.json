@@ -661,15 +661,20 @@
         "header": [
           {
             "key": "Authorization",
-            "value": "Bearer {{authToken}}"
+            "value": "Bearer {{authToken}}",
+            "description": "선택사항: Authorization 없으면 body에 userId 전달"
           }
         ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"userId\": 2\n}"
+        },
         "url": {
           "raw": "{{baseUrl}}/api/v1/workspaces/invite/INVITE_TOKEN/accept",
           "host": ["{{baseUrl}}"],
           "path": ["api", "v1", "workspaces", "invite", "INVITE_TOKEN", "accept"]
         },
-        "description": "초대 링크를 통해 워크스페이스에 참여합니다."
+        "description": "초대 링크를 통해 워크스페이스에 참여합니다. (Authorization 또는 userId 중 하나 필요)"
       },
       "response": [
         {
@@ -679,9 +684,14 @@
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{authToken}}"
+                "value": "Bearer {{authToken}}",
+                "description": "선택사항"
               }
             ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": 2\n}"
+            },
             "url": {
               "raw": "{{baseUrl}}/api/v1/workspaces/invite/INVITE_TOKEN/accept",
               "host": ["{{baseUrl}}"],
@@ -699,6 +709,33 @@
           ],
           "cookie": [],
           "body": "워크스페이스 참여 성공"
+        },
+        {
+          "name": "Bad Request - Missing User Info",
+          "originalRequest": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{ }"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/workspaces/invite/INVITE_TOKEN/accept",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "workspaces", "invite", "INVITE_TOKEN", "accept"]
+            }
+          },
+          "status": "Bad Request",
+          "code": 400,
+          "_postman_previewlanguage": "text",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "text/plain"
+            }
+          ],
+          "cookie": [],
+          "body": "userId 또는 Authorization 헤더가 필요합니다."
         }
       ]
     },
