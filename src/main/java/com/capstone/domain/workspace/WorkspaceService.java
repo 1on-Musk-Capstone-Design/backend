@@ -97,7 +97,9 @@ public class WorkspaceService {
 
   @Transactional
   public void deleteWorkspace(Long workspaceId, Long userId) {
-    log.info("워크스페이스 삭제 시도 - workspaceId: {}, userId: {}", workspaceId, userId);
+    log.info("=== 워크스페이스 삭제 시도 시작 ===");
+    log.info("workspaceId: {} (타입: {})", workspaceId, workspaceId.getClass().getSimpleName());
+    log.info("userId: {} (타입: {})", userId, userId.getClass().getSimpleName());
     
     // owner를 함께 로드하여 조회
     Workspace workspace = workspaceRepository.findByIdWithOwner(workspaceId)
@@ -106,11 +108,16 @@ public class WorkspaceService {
           return new CustomException(NOT_FOUND_WORKSPACE);
         });
 
+    log.info("워크스페이스 조회 성공 - workspaceId: {}, name: {}", 
+        workspace.getWorkspaceId(), workspace.getName());
+
     User user = userRepository.findById(userId)
         .orElseThrow(() -> {
           log.error("사용자를 찾을 수 없음 - userId: {}", userId);
           return new CustomException(NOT_FOUND_USER);
         });
+
+    log.info("사용자 조회 성공 - userId: {}, email: {}", user.getId(), user.getEmail());
 
     // OWNER 확인
     if (workspace.getOwner() == null) {
@@ -118,17 +125,31 @@ public class WorkspaceService {
       throw new CustomException(FORBIDDEN_WORKSPACE);
     }
 
-    Long ownerId = workspace.getOwner().getId();
-    log.info("워크스페이스 OWNER 확인 - workspaceId: {}, userId: {}, ownerId: {}", 
-        workspaceId, userId, ownerId);
+    User owner = workspace.getOwner();
+    Long ownerId = owner.getId();
+    
+    log.info("=== OWNER 확인 ===");
+    log.info("workspaceId: {}", workspaceId);
+    log.info("요청 userId: {} (타입: {})", userId, userId.getClass().getSimpleName());
+    log.info("워크스페이스 ownerId: {} (타입: {})", ownerId, ownerId.getClass().getSimpleName());
+    log.info("owner email: {}", owner.getEmail());
+    log.info("owner name: {}", owner.getName());
+    log.info("비교 결과: ownerId.equals(userId) = {}", ownerId.equals(userId));
+    log.info("비교 결과: ownerId == userId = {}", ownerId == userId);
+    log.info("비교 결과: ownerId.longValue() == userId.longValue() = {}", 
+        ownerId.longValue() == userId.longValue());
 
-    if (!ownerId.equals(userId)) {
-      log.error("OWNER 권한이 아님 - workspaceId: {}, userId: {}, ownerId: {}", 
-          workspaceId, userId, ownerId);
+    // Long 타입 비교를 안전하게 처리
+    if (!ownerId.equals(userId) && ownerId.longValue() != userId.longValue()) {
+      log.error("=== OWNER 권한이 아님 ===");
+      log.error("workspaceId: {}", workspaceId);
+      log.error("요청 userId: {} (타입: {})", userId, userId.getClass().getSimpleName());
+      log.error("워크스페이스 ownerId: {} (타입: {})", ownerId, ownerId.getClass().getSimpleName());
       throw new CustomException(FORBIDDEN_WORKSPACE);
     }
 
-    log.info("워크스페이스 삭제 진행 - workspaceId: {}, userId: {}", workspaceId, userId);
+    log.info("=== OWNER 권한 확인 완료, 삭제 진행 ===");
     workspaceRepository.delete(workspace);
+    log.info("워크스페이스 삭제 완료 - workspaceId: {}, userId: {}", workspaceId, userId);
   }
 }
