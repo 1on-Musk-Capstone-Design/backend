@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -48,17 +49,19 @@ public class WorkspaceUserController {
   @DeleteMapping("/users/{userId}")
   public ResponseEntity<String> removeUser(
       @PathVariable Long workspaceId,
-      @PathVariable Long userId,
-      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String token) {
+      @PathVariable("userId") Long targetUserId,
+      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String token,
+      @io.swagger.v3.oas.annotations.parameters.RequestBody(
+          description = "Authorization 없이 본인을 삭제할 경우 userId 필수", required = false)
+      @RequestBody(required = false) SelfIdentityRequest request,
+      @RequestParam(value = "userId", required = false) Long userIdParam) {
 
-    // 개발/테스트: Authorization 없으면 더미 userId 사용
-    Long requesterId = 1L;
-    if (token != null && !token.trim().isEmpty()) {
-      String jwt = token.replace("Bearer ", "").trim();
-      requesterId = jwtProvider.getUserIdFromAccessToken(jwt);
+    Long requesterId = resolveUserId(token, request != null ? request.getUserId() : null, userIdParam);
+    if (requesterId == null) {
+      return ResponseEntity.badRequest().body("userId 또는 Authorization 헤더가 필요합니다.");
     }
 
-    workspaceUserService.removeUser(workspaceId, userId, requesterId);
+    workspaceUserService.removeUser(workspaceId, targetUserId, requesterId);
     return ResponseEntity.ok("유저 삭제 완료");
   }
 
@@ -68,16 +71,10 @@ public class WorkspaceUserController {
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String token,
       @io.swagger.v3.oas.annotations.parameters.RequestBody(
           description = "Authorization 헤더가 없을 경우 userId 필수", required = false)
-      @RequestBody(required = false) LeaveRequest request) {
+      @RequestBody(required = false) SelfIdentityRequest request,
+      @RequestParam(value = "userId", required = false) Long userIdParam) {
 
-    Long userId = null;
-    if (token != null && !token.trim().isEmpty()) {
-      String jwt = token.replace("Bearer ", "").trim();
-      userId = jwtProvider.getUserIdFromAccessToken(jwt);
-    } else if (request != null && request.getUserId() != null) {
-      userId = request.getUserId();
-    }
-
+    Long userId = resolveUserId(token, request != null ? request.getUserId() : null, userIdParam);
     if (userId == null) {
       return ResponseEntity.badRequest().body("userId 또는 Authorization 헤더가 필요합니다.");
     }
@@ -86,7 +83,18 @@ public class WorkspaceUserController {
     return ResponseEntity.ok("워크스페이스를 나갔습니다.");
   }
 
-  public static class LeaveRequest {
+  private Long resolveUserId(String token, Long bodyUserId, Long paramUserId) {
+    if (token != null && !token.trim().isEmpty()) {
+      String jwt = token.replace("Bearer ", "").trim();
+      return jwtProvider.getUserIdFromAccessToken(jwt);
+    }
+    if (bodyUserId != null) {
+      return bodyUserId;
+    }
+    return paramUserId;
+  }
+
+  public static class SelfIdentityRequest {
     private Long userId;
 
     public Long getUserId() {
