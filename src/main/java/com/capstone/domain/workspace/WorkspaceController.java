@@ -89,20 +89,30 @@ public class WorkspaceController {
   @Operation(summary = "초대 링크 수락", description = "초대 링크를 통해 워크스페이스에 참여합니다.")
   @ApiResponses(value = {
       @ApiResponse(responseCode = "200", description = "참여 성공"),
-      @ApiResponse(responseCode = "400", description = "초대 토큰이 유효하지 않거나 만료됨")
+      @ApiResponse(responseCode = "400", description = "잘못된 요청"),
+      @ApiResponse(responseCode = "401", description = "인증 필요 (userId 미제공 시)")
   })
-  @SecurityRequirement(name = "Bearer Authentication")
   @PostMapping("/invite/{token}/accept")
   public ResponseEntity<String> acceptInvite(
       @Parameter(description = "초대 토큰", required = true) @PathVariable String token,
-      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader
+      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authHeader,
+      @io.swagger.v3.oas.annotations.parameters.RequestBody(
+          description = "초대 링크 수락 요청 (Authorization 없을 경우 userId 필수)", required = false)
+      @RequestBody(required = false) WorkspaceDtos.InviteAcceptRequest request
   ) {
-    if (authHeader == null || authHeader.trim().isEmpty()) {
-      return ResponseEntity.status(401).build();
+    Long userId = null;
+
+    if (authHeader != null && !authHeader.trim().isEmpty()) {
+      String jwt = authHeader.replace("Bearer ", "").trim();
+      userId = jwtProvider.getUserIdFromAccessToken(jwt);
+    } else if (request != null && request.getUserId() != null) {
+      userId = request.getUserId();
     }
 
-    String jwt = authHeader.replace("Bearer ", "").trim();
-    Long userId = jwtProvider.getUserIdFromAccessToken(jwt);
+    if (userId == null) {
+      log.warn("초대 수락 요청에 사용자 정보가 없음 - token: {}", token);
+      return ResponseEntity.badRequest().body("userId 또는 Authorization 헤더가 필요합니다.");
+    }
 
     workspaceInviteService.acceptInvite(token, userId);
     return ResponseEntity.ok("워크스페이스 참여 성공");
