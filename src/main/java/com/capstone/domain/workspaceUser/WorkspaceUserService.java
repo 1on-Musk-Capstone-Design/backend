@@ -10,6 +10,7 @@ import com.capstone.domain.user.entity.User;
 import com.capstone.domain.user.repository.UserRepository;
 import com.capstone.domain.workspace.Workspace;
 import com.capstone.domain.workspace.WorkspaceRepository;
+import com.capstone.domain.workspace.WorkspaceService;
 import com.capstone.global.exception.CustomException;
 import com.capstone.global.type.Role;
 import jakarta.transaction.Transactional;
@@ -26,6 +27,7 @@ public class WorkspaceUserService {
   private final WorkspaceUserRepository workspaceUserRepository;
   private final WorkspaceRepository workspaceRepository;
   private final UserRepository userRepository;
+  private final WorkspaceService workspaceService;
 
   @Transactional
   public void joinWorkspace(Long workspaceId, Long userId) {
@@ -92,7 +94,12 @@ public class WorkspaceUserService {
     }
 
     if (targetWorkspaceUser.getRole() == Role.OWNER) {
-      transferOwnershipIfNeeded(workspace, targetWorkspaceUser);
+      boolean deleted = handleOwnerLeaving(workspace, targetWorkspaceUser, isSelf, requesterId);
+      if (deleted) {
+        log.info("마지막 OWNER가 워크스페이스를 떠나며 삭제되었습니다. workspaceId={}, userId={}", workspaceId,
+            requesterId);
+        return;
+      }
     }
 
     workspaceUserRepository.delete(targetWorkspaceUser);
@@ -111,32 +118,41 @@ public class WorkspaceUserService {
         .orElseThrow(() -> new CustomException(NOT_FOUND_WORKSPACE_USER));
 
     if (workspaceUser.getRole() == Role.OWNER) {
-      transferOwnershipIfNeeded(workspace, workspaceUser);
+      boolean deleted = handleOwnerLeaving(workspace, workspaceUser, true, userId);
+      if (deleted) {
+        log.info("마지막 OWNER가 워크스페이스를 떠나며 삭제되었습니다. workspaceId={}, userId={}", workspaceId, userId);
+        return;
+      }
     }
 
     workspaceUserRepository.delete(workspaceUser);
   }
 
-  private void transferOwnershipIfNeeded(Workspace workspace, WorkspaceUser leavingUser) {
+  private boolean handleOwnerLeaving(Workspace workspace, WorkspaceUser leavingUser, boolean isSelf,
+      Long actingUserId) {
     List<WorkspaceUser> workspaceUsers = workspaceUserRepository.findByWorkspace(workspace);
 
     long ownerCount = workspaceUsers.stream()
         .filter(wu -> wu.getRole() == Role.OWNER)
         .count();
 
-    if (ownerCount > 1) {
-      return;
+    if (ownerCount <= 1) {
+      if (isSelf) {
+        log.info("마지막 OWNER가 워크스페이스를 떠납니다. workspaceId={}, userId={}", workspace.getWorkspaceId(),
+            actingUserId);
+        workspaceService.deleteWorkspace(workspace.getWorkspaceId(), actingUserId);
+        return true;
+      }
+
+      log.warn("다른 사용자가 마지막 OWNER를 제거하려고 시도했습니다. workspaceId={}, actingUser={}", workspace.getWorkspaceId(),
+          actingUserId);
+      throw new CustomException(FORBIDDEN_WORKSPACE);
     }
 
     WorkspaceUser nextOwner = workspaceUsers.stream()
         .filter(wu -> !wu.getId().equals(leavingUser.getId()))
         .findFirst()
-        .orElse(null);
-
-    if (nextOwner == null) {
-      log.warn("마지막 OWNER는 워크스페이스를 나갈 수 없습니다 - workspaceId: {}", workspace.getWorkspaceId());
-      throw new CustomException(FORBIDDEN_WORKSPACE);
-    }
+        .orElseThrow(() -> new CustomException(FORBIDDEN_WORKSPACE));
 
     nextOwner.updateRole(Role.OWNER);
     workspace.setOwner(nextOwner.getUser());
@@ -145,5 +161,6 @@ public class WorkspaceUserService {
 
     log.info("워크스페이스 OWNER 변경 - workspaceId: {}, newOwnerId: {}", workspace.getWorkspaceId(),
         nextOwner.getUser().getId());
+    return false;
   }
 }

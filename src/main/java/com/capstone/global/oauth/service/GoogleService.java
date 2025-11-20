@@ -47,26 +47,26 @@ public class GoogleService {
     log.info("OAuth 로그인 시작 - code: {}", code != null ? code.substring(0, Math.min(10, code.length())) + "..." : "null");
     
     try {
-      String accessToken = getAccessToken(code);
+    String accessToken = getAccessToken(code);
       log.info("Access token 획득 성공");
       
-      JsonNode userInfo = getUserInfo(accessToken);
+    JsonNode userInfo = getUserInfo(accessToken);
       log.info("사용자 정보 획득 성공");
 
-      String email = userInfo.get("email").asText();
-      String name = userInfo.get("name").asText();
+    String email = userInfo.get("email").asText();
+    String name = userInfo.get("name").asText();
       String picture = userInfo.get("picture") != null ? userInfo.get("picture").asText() : null;
       
       log.info("사용자 정보 - email: {}, name: {}", email, name);
 
-      User user = userRepository.findByEmail(email.trim())
+    User user = userRepository.findByEmail(email.trim())
           .orElseGet(() -> {
             log.info("새 사용자 생성 시도 - email: {}, name: {}", email, name);
             try {
               User newUser = User.builder()
                   .email(email.trim())
-                  .name(name)
-                  .profileImage(picture)
+                .name(name)
+                .profileImage(picture)
                   .build();
               User saved = userRepository.save(newUser);
               log.info("사용자 저장 완료 - id: {}, email: {}", saved.getId(), saved.getEmail());
@@ -84,17 +84,17 @@ public class GoogleService {
 
       log.info("기존/신규 사용자 확인 - id: {}, email: {}", user.getId(), user.getEmail());
 
-      String jwtAccessToken = jwtProvider.createAccessToken(user.getId(), user.getEmail());
-      String jwtRefreshToken = jwtProvider.createRefreshToken(user.getId(), user.getEmail());
+    String jwtAccessToken = jwtProvider.createAccessToken(user.getId(), user.getEmail());
+    String jwtRefreshToken = jwtProvider.createRefreshToken(user.getId(), user.getEmail());
 
-      user.setRefreshToken(jwtRefreshToken);
+    user.setRefreshToken(jwtRefreshToken);
       User updatedUser = userRepository.save(user);
       log.info("Refresh token 저장 완료 - id: {}, email: {}", updatedUser.getId(), updatedUser.getEmail());
 
-      return TokenDto.builder()
-          .accessToken(jwtAccessToken)
-          .refreshToken(jwtRefreshToken)
-          .build();
+    return TokenDto.builder()
+        .accessToken(jwtAccessToken)
+        .refreshToken(jwtRefreshToken)
+        .build();
     } catch (Exception e) {
       log.error("OAuth 로그인 처리 중 오류 발생", e);
       throw e;
