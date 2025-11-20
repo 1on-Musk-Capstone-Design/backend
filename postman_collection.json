@@ -7,7 +7,7 @@
   "variable": [
     {
       "key": "baseUrl",
-      "value": "http://localhost:8080",
+      "value": "http://51.20.106.74:8080/",
       "type": "string"
     },
     {
@@ -1291,7 +1291,7 @@
           "host": ["{{baseUrl}}"],
           "path": ["api", "v1", "workspaces", "1", "users", "2"]
         },
-        "description": "워크스페이스에서 특정 유저를 제거합니다. (OWNER만 가능)"
+        "description": "워크스페이스에서 특정 유저를 제거합니다. (OWNER만 가능, 또는 자신을 나가는 경우)"
       },
       "response": [
         {
@@ -1321,6 +1321,82 @@
           ],
           "cookie": [],
           "body": "유저 삭제 완료"
+        }
+      ]
+    },
+    {
+      "name": "Leave Workspace",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{authToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/workspaces/1/leave",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "v1", "workspaces", "1", "leave"]
+        },
+        "description": "워크스페이스에서 나갑니다. (모든 멤버 가능, OWNER는 다른 OWNER가 있을 때만 가능)"
+      },
+      "response": [
+        {
+          "name": "Success Response",
+          "originalRequest": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/workspaces/1/leave",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "workspaces", "1", "leave"]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "text",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "text/plain"
+            }
+          ],
+          "cookie": [],
+          "body": "워크스페이스를 나갔습니다."
+        },
+        {
+          "name": "Forbidden - Last Owner",
+          "originalRequest": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/workspaces/1/leave",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "workspaces", "1", "leave"]
+            }
+          },
+          "status": "Forbidden",
+          "code": 403,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "cookie": [],
+          "body": ""
         }
       ]
     },
