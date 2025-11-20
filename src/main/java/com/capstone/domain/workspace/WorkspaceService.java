@@ -1,6 +1,8 @@
 package com.capstone.domain.workspace;
 
 import static com.capstone.global.exception.ErrorCode.FORBIDDEN_WORKSPACE;
+import static com.capstone.global.exception.ErrorCode.FORBIDDEN_WORKSPACE_ACCESS;
+import static com.capstone.global.exception.ErrorCode.NOT_FOUND_USER;
 import static com.capstone.global.exception.ErrorCode.NOT_FOUND_WORKSPACE;
 import static com.capstone.global.exception.ErrorCode.NOT_FOUND_WORKSPACE_USER;
 
@@ -110,19 +112,11 @@ public class WorkspaceService {
   public void deleteWorkspace(Long workspaceId, Long userId) {
     Workspace workspace = getWorkspaceById(workspaceId);
 
-    // 개발/테스트: User가 없으면 자동으로 생성
     User user = userRepository.findById(userId)
-        .orElseGet(() -> {
-          User newUser = User.builder()
-              .email("test@example.com")
-              .name("테스트 사용자")
-              .profileImage(null)
-              .build();
-          return userRepository.save(newUser);
-        });
+        .orElseThrow(() -> new CustomException(NOT_FOUND_USER));
 
     WorkspaceUser workspaceUser = workspaceUserRepository.findByWorkspaceAndUser(workspace, user)
-        .orElseThrow(() -> new CustomException(NOT_FOUND_WORKSPACE_USER));
+        .orElseThrow(() -> new CustomException(FORBIDDEN_WORKSPACE_ACCESS));
 
     if (workspaceUser.getRole() != Role.OWNER) {
       throw new CustomException(FORBIDDEN_WORKSPACE);
