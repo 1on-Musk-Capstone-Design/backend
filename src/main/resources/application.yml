@@ -14,7 +14,7 @@ spring:
     url: jdbc:postgresql://localhost:5432/capstone_db
     driver-class-name: org.postgresql.Driver
     username: postgres
-    password: postgres
+    password: musk12!
   
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect

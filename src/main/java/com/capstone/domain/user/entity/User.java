@@ -26,6 +26,7 @@ public class User {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
+  @jakarta.persistence.Column(unique = true, nullable = false)
   private String email;
   private String name;
   private String profileImage;
