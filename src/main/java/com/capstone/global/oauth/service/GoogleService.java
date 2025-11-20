@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -60,15 +61,25 @@ public class GoogleService {
 
       User user = userRepository.findByEmail(email.trim())
           .orElseGet(() -> {
-            log.info("새 사용자 생성 - email: {}, name: {}", email, name);
-            User newUser = User.builder()
-                .email(email)
-                .name(name)
-                .profileImage(picture)
-                .build();
-            User saved = userRepository.save(newUser);
-            log.info("사용자 저장 완료 - id: {}, email: {}", saved.getId(), saved.getEmail());
-            return saved;
+            log.info("새 사용자 생성 시도 - email: {}, name: {}", email, name);
+            try {
+              User newUser = User.builder()
+                  .email(email.trim())
+                  .name(name)
+                  .profileImage(picture)
+                  .build();
+              User saved = userRepository.save(newUser);
+              log.info("사용자 저장 완료 - id: {}, email: {}", saved.getId(), saved.getEmail());
+              return saved;
+            } catch (DataIntegrityViolationException e) {
+              // 동시 요청으로 인한 중복 저장 시도 시, 기존 사용자 조회
+              log.warn("사용자 중복 저장 시도 감지 - email: {}, 기존 사용자 조회 중", email);
+              return userRepository.findByEmail(email.trim())
+                  .orElseThrow(() -> {
+                    log.error("사용자 조회 실패 - email: {}", email);
+                    return new RuntimeException("사용자 저장 및 조회 실패", e);
+                  });
+            }
           });
 
       log.info("기존/신규 사용자 확인 - id: {}, email: {}", user.getId(), user.getEmail());
