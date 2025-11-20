@@ -13,11 +13,13 @@ import com.capstone.domain.workspaceUser.WorkspaceUserRepository;
 import com.capstone.global.exception.CustomException;
 import com.capstone.global.type.Role;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class WorkspaceService {
@@ -110,18 +112,34 @@ public class WorkspaceService {
 
   @Transactional
   public void deleteWorkspace(Long workspaceId, Long userId) {
+    log.info("워크스페이스 삭제 시도 - workspaceId: {}, userId: {}", workspaceId, userId);
+    
     Workspace workspace = getWorkspaceById(workspaceId);
 
     User user = userRepository.findById(userId)
-        .orElseThrow(() -> new CustomException(NOT_FOUND_USER));
+        .orElseThrow(() -> {
+          log.error("사용자를 찾을 수 없음 - userId: {}", userId);
+          return new CustomException(NOT_FOUND_USER);
+        });
 
     WorkspaceUser workspaceUser = workspaceUserRepository.findByWorkspaceAndUser(workspace, user)
-        .orElseThrow(() -> new CustomException(FORBIDDEN_WORKSPACE_ACCESS));
+        .orElseThrow(() -> {
+          log.error("워크스페이스 소속 사용자가 아님 - workspaceId: {}, userId: {}", workspaceId, userId);
+          return new CustomException(FORBIDDEN_WORKSPACE_ACCESS);
+        });
 
-    if (workspaceUser.getRole() != Role.OWNER) {
+    log.info("워크스페이스 사용자 권한 확인 - workspaceId: {}, userId: {}, role: {}", 
+        workspaceId, userId, workspaceUser.getRole());
+
+    // Role enum 비교를 명확하게 처리
+    Role userRole = workspaceUser.getRole();
+    if (userRole == null || !userRole.equals(Role.OWNER)) {
+      log.error("OWNER 권한이 아님 - workspaceId: {}, userId: {}, role: {}", 
+          workspaceId, userId, userRole);
       throw new CustomException(FORBIDDEN_WORKSPACE);
     }
 
+    log.info("워크스페이스 삭제 진행 - workspaceId: {}, userId: {}", workspaceId, userId);
     workspaceRepository.delete(workspace);
   }
 }
