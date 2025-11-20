@@ -1,5 +1,6 @@
 package com.capstone.domain.workspace;
 
+import com.capstone.domain.user.entity.User;
 import jakarta.persistence.*;
 import java.time.Instant;
 import lombok.Getter;
@@ -18,6 +19,10 @@ public class Workspace {
 
   @Column(name = "name", nullable = false, length = 100)
   private String name;
+
+  @ManyToOne
+  @JoinColumn(name = "owner_id", nullable = false)
+  private User owner;
 
   @Column(name = "created_at", nullable = false, updatable = false)
   private Instant createdAt = Instant.now();

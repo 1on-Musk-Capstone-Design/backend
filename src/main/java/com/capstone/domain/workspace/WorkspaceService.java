@@ -30,21 +30,15 @@ public class WorkspaceService {
 
   @Transactional
   public Workspace createWorkspace(String name, Long userId) {
-    // 개발/테스트: User가 없으면 자동으로 생성
     User owner = userRepository.findById(userId)
-        .orElseGet(() -> {
-          User newUser = User.builder()
-              .email("test@example.com")
-              .name("테스트 사용자")
-              .profileImage(null)
-              .build();
-          return userRepository.save(newUser);
-        });
+        .orElseThrow(() -> new CustomException(NOT_FOUND_USER));
 
     Workspace workspace = new Workspace();
     workspace.setName(name);
+    workspace.setOwner(owner);
     Workspace savedWorkspace = workspaceRepository.save(workspace);
 
+    // OWNER도 workspace_users에 추가 (멤버십 관리)
     WorkspaceUser workspaceUser = WorkspaceUser.builder()
         .workspace(savedWorkspace)
         .user(owner)
@@ -83,22 +77,12 @@ public class WorkspaceService {
     Workspace workspace = workspaceRepository.findById(workspaceId)
         .orElseThrow(() -> new CustomException(NOT_FOUND_WORKSPACE));
 
-    // 개발/테스트: User가 없으면 자동으로 생성
     User user = userRepository.findById(userId)
-        .orElseGet(() -> {
-          User newUser = User.builder()
-              .email("test@example.com")
-              .name("테스트 사용자")
-              .profileImage(null)
-              .build();
-          return userRepository.save(newUser);
-        });
+        .orElseThrow(() -> new CustomException(NOT_FOUND_USER));
 
-    WorkspaceUser workspaceUser = workspaceUserRepository.findByWorkspaceAndUser(workspace, user)
-        .orElseThrow(() -> new CustomException(NOT_FOUND_WORKSPACE_USER));
-
-    if (workspaceUser.getRole() != Role.OWNER) {
-      throw new SecurityException("워크스페이스 이름은 OWNER만 수정할 수 있습니다.");
+    // OWNER만 수정 가능
+    if (!workspace.getOwner().getId().equals(userId)) {
+      throw new CustomException(FORBIDDEN_WORKSPACE);
     }
 
     workspace.setName(name);
@@ -122,20 +106,10 @@ public class WorkspaceService {
           return new CustomException(NOT_FOUND_USER);
         });
 
-    WorkspaceUser workspaceUser = workspaceUserRepository.findByWorkspaceAndUser(workspace, user)
-        .orElseThrow(() -> {
-          log.error("워크스페이스 소속 사용자가 아님 - workspaceId: {}, userId: {}", workspaceId, userId);
-          return new CustomException(FORBIDDEN_WORKSPACE_ACCESS);
-        });
-
-    log.info("워크스페이스 사용자 권한 확인 - workspaceId: {}, userId: {}, role: {}", 
-        workspaceId, userId, workspaceUser.getRole());
-
-    // Role enum 비교를 명확하게 처리
-    Role userRole = workspaceUser.getRole();
-    if (userRole == null || !userRole.equals(Role.OWNER)) {
-      log.error("OWNER 권한이 아님 - workspaceId: {}, userId: {}, role: {}", 
-          workspaceId, userId, userRole);
+    // OWNER만 삭제 가능
+    if (!workspace.getOwner().getId().equals(userId)) {
+      log.error("OWNER 권한이 아님 - workspaceId: {}, userId: {}, ownerId: {}", 
+          workspaceId, userId, workspace.getOwner().getId());
       throw new CustomException(FORBIDDEN_WORKSPACE);
     }
 
