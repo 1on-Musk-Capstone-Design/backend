@@ -134,13 +134,20 @@
       "name": "Get All Workspaces",
       "request": {
         "method": "GET",
-        "header": [],
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{authToken}}",
+            "type": "text",
+            "disabled": true
+          }
+        ],
         "url": {
           "raw": "{{baseUrl}}/api/v1/workspaces",
           "host": ["{{baseUrl}}"],
           "path": ["api", "v1", "workspaces"]
         },
-        "description": "모든 워크스페이스 목록 조회"
+        "description": "본인이 속한 워크스페이스 목록 조회 (Authorization 헤더가 있으면 필터링, 없으면 빈 리스트 반환)"
       },
       "response": [
         {
@@ -357,9 +364,7 @@
           },
           {
             "key": "Authorization",
-            "value": "Bearer {{authToken}}",
-            "type": "text",
-            "disabled": true
+            "value": "Bearer {{authToken}}"
           }
         ],
         "body": {
@@ -479,16 +484,15 @@
         "header": [
           {
             "key": "Authorization",
-            "value": "Bearer {{authToken}}",
-            "type": "text",
-            "disabled": true
+            "value": "Bearer {{authToken}}"
           }
         ],
         "url": {
           "raw": "{{baseUrl}}/api/v1/workspaces/1",
           "host": ["{{baseUrl}}"],
           "path": ["api", "v1", "workspaces", "1"]
-        }
+        },
+        "description": "워크스페이스를 삭제합니다. (OWNER만 가능)"
       },
       "response": [
         {
@@ -512,21 +516,26 @@
             }
           ],
           "cookie": [],
-          "body": "{\n  \"message\": \"워크스페이스가 삭제되었습니다.\"\n}"
+          "body": "워크스페이스가 삭제되었습니다."
         },
         {
-          "name": "Not Found Response",
+          "name": "Forbidden - Not Owner",
           "originalRequest": {
             "method": "DELETE",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
             "url": {
-              "raw": "{{baseUrl}}/api/v1/workspaces/999",
+              "raw": "{{baseUrl}}/api/v1/workspaces/1",
               "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "workspaces", "999"]
+              "path": ["api", "v1", "workspaces", "1"]
             }
           },
-          "status": "Not Found",
-          "code": 404,
+          "status": "Forbidden",
+          "code": 403,
           "_postman_previewlanguage": "json",
           "header": [
             {
@@ -536,6 +545,168 @@
           ],
           "cookie": [],
           "body": ""
+        },
+        {
+          "name": "Unauthorized - No Token",
+          "originalRequest": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/workspaces/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "workspaces", "1"]
+            }
+          },
+          "status": "Unauthorized",
+          "code": 401,
+          "_postman_previewlanguage": "text",
+          "header": [],
+          "cookie": [],
+          "body": "인증 토큰이 필요합니다."
+        }
+      ]
+    },
+    {
+      "name": "Create Workspace Invite Link",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{authToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/workspaces/1/invite-link",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "v1", "workspaces", "1", "invite-link"]
+        },
+        "description": "워크스페이스 초대 링크를 생성합니다. (OWNER만 가능)"
+      },
+      "response": [
+        {
+          "name": "Success Response",
+          "originalRequest": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/workspaces/1/invite-link",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "workspaces", "1", "invite-link"]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "cookie": [],
+          "body": "{\n  \"token\": \"abc123def456...\",\n  \"inviteUrl\": \"http://localhost:3000/invite?token=abc123def456...\",\n  \"expiresAt\": \"2024-01-22T10:30:00Z\"\n}"
+        }
+      ]
+    },
+    {
+      "name": "Accept Workspace Invite",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{authToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/workspaces/invite/INVITE_TOKEN/accept",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "v1", "workspaces", "invite", "INVITE_TOKEN", "accept"]
+        },
+        "description": "초대 링크를 통해 워크스페이스에 참여합니다."
+      },
+      "response": [
+        {
+          "name": "Success Response",
+          "originalRequest": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/workspaces/invite/INVITE_TOKEN/accept",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "workspaces", "invite", "INVITE_TOKEN", "accept"]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "text",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "text/plain"
+            }
+          ],
+          "cookie": [],
+          "body": "워크스페이스 참여 성공"
+        }
+      ]
+    },
+    {
+      "name": "Get Logged In User",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{authToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/users/me",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "v1", "users", "me"]
+        },
+        "description": "현재 로그인한 사용자의 정보를 조회합니다."
+      },
+      "response": [
+        {
+          "name": "Success Response",
+          "originalRequest": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "users", "me"]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "cookie": [],
+          "body": "{\n  \"id\": 1,\n  \"email\": \"user@example.com\",\n  \"name\": \"사용자 이름\",\n  \"profileImage\": \"https://example.com/profile.jpg\"\n}"
         }
       ]
     },
@@ -551,7 +722,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"workspaceId\": 1,\n  \"userId\": \"user-123\",\n  \"content\": \"안녕하세요! 팀 프로젝트에 대해 이야기해봅시다.\"\n}"
+          "raw": "{\n  \"workspaceId\": 1,\n  \"userId\": 1,\n  \"content\": \"안녕하세요! 팀 프로젝트에 대해 이야기해봅시다.\"\n}"
         },
         "url": {
           "raw": "{{baseUrl}}/api/v1/chat/messages",
@@ -591,7 +762,7 @@
             }
           ],
           "cookie": [],
-          "body": "{\n  \"messageId\": 1,\n  \"workspaceId\": 1,\n  \"userId\": \"user-123\",\n  \"content\": \"안녕하세요! 팀 프로젝트에 대해 이야기해봅시다.\",\n  \"createdAt\": \"2024-01-15T10:30:00Z\"\n}"
+          "body": "{\n  \"messageId\": 1,\n  \"workspaceId\": 1,\n  \"userId\": 1,\n  \"content\": \"안녕하세요! 팀 프로젝트에 대해 이야기해봅시다.\",\n  \"createdAt\": \"2024-01-15T10:30:00Z\"\n}"
         },
         {
           "name": "Bad Request - Empty Content",
@@ -605,7 +776,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"workspaceId\": 1,\n  \"userId\": \"user-123\",\n  \"content\": \"\"\n}"
+              "raw": "{\n  \"workspaceId\": 1,\n  \"userId\": 1,\n  \"content\": \"\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/v1/chat/messages",
@@ -661,7 +832,7 @@
             }
           ],
           "cookie": [],
-          "body": "[\n  {\n    \"messageId\": 1,\n    \"workspaceId\": 1,\n    \"userId\": \"user-123\",\n    \"content\": \"안녕하세요! 팀 프로젝트에 대해 이야기해봅시다.\",\n    \"createdAt\": \"2024-01-15T10:30:00Z\"\n  },\n  {\n    \"messageId\": 2,\n    \"workspaceId\": 1,\n    \"userId\": \"user-456\",\n    \"content\": \"네, 좋은 아이디어가 있을까요?\",\n    \"createdAt\": \"2024-01-15T10:31:00Z\"\n  }\n]"
+          "body": "[\n  {\n    \"messageId\": 1,\n    \"workspaceId\": 1,\n    \"userId\": 1,\n    \"content\": \"안녕하세요! 팀 프로젝트에 대해 이야기해봅시다.\",\n    \"createdAt\": \"2024-01-15T10:30:00Z\"\n  },\n  {\n    \"messageId\": 2,\n    \"workspaceId\": 1,\n    \"userId\": 2,\n    \"content\": \"네, 좋은 아이디어가 있을까요?\",\n    \"createdAt\": \"2024-01-15T10:31:00Z\"\n  }\n]"
         },
         {
           "name": "Empty List Response",
@@ -735,7 +906,7 @@
             }
           ],
           "cookie": [],
-          "body": "[\n  {\n    \"messageId\": 5,\n    \"workspaceId\": 1,\n    \"userId\": \"user-789\",\n    \"content\": \"최근 메시지입니다.\",\n    \"createdAt\": \"2024-01-15T10:35:00Z\"\n  },\n  {\n    \"messageId\": 4,\n    \"workspaceId\": 1,\n    \"userId\": \"user-456\",\n    \"content\": \"이전 메시지입니다.\",\n    \"createdAt\": \"2024-01-15T10:34:00Z\"\n  }\n]"
+          "body": "[\n  {\n    \"messageId\": 5,\n    \"workspaceId\": 1,\n    \"userId\": 3,\n    \"content\": \"최근 메시지입니다.\",\n    \"createdAt\": \"2024-01-15T10:35:00Z\"\n  },\n  {\n    \"messageId\": 4,\n    \"workspaceId\": 1,\n    \"userId\": 2,\n    \"content\": \"이전 메시지입니다.\",\n    \"createdAt\": \"2024-01-15T10:34:00Z\"\n  }\n]"
         }
       ]
     },
@@ -745,11 +916,11 @@
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "{{baseUrl}}/api/v1/chat/messages/user/user-123",
+          "raw": "{{baseUrl}}/api/v1/chat/messages/user/1",
           "host": ["{{baseUrl}}"],
-          "path": ["api", "v1", "chat", "messages", "user", "user-123"]
+          "path": ["api", "v1", "chat", "messages", "user", "1"]
         },
-        "description": "특정 사용자의 채팅 메시지 목록 조회"
+        "description": "특정 사용자의 채팅 메시지 목록 조회 (userId는 Long 타입)"
       },
       "response": [
         {
@@ -758,9 +929,9 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/v1/chat/messages/user/user-123",
+              "raw": "{{baseUrl}}/api/v1/chat/messages/user/1",
               "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "chat", "messages", "user", "user-123"]
+              "path": ["api", "v1", "chat", "messages", "user", "1"]
             }
           },
           "status": "OK",
@@ -773,7 +944,7 @@
             }
           ],
           "cookie": [],
-          "body": "[\n  {\n    \"messageId\": 3,\n    \"workspaceId\": 1,\n    \"userId\": \"user-123\",\n    \"content\": \"사용자 123의 최신 메시지\",\n    \"createdAt\": \"2024-01-15T10:33:00Z\"\n  },\n  {\n    \"messageId\": 1,\n    \"workspaceId\": 1,\n    \"userId\": \"user-123\",\n    \"content\": \"안녕하세요! 팀 프로젝트에 대해 이야기해봅시다.\",\n    \"createdAt\": \"2024-01-15T10:30:00Z\"\n  }\n]"
+          "body": "[\n  {\n    \"messageId\": 3,\n    \"workspaceId\": 1,\n    \"userId\": 1,\n    \"content\": \"사용자 1의 최신 메시지\",\n    \"createdAt\": \"2024-01-15T10:33:00Z\"\n  },\n  {\n    \"messageId\": 1,\n    \"workspaceId\": 1,\n    \"userId\": 1,\n    \"content\": \"안녕하세요! 팀 프로젝트에 대해 이야기해봅시다.\",\n    \"createdAt\": \"2024-01-15T10:30:00Z\"\n  }\n]"
         }
       ]
     },
@@ -824,7 +995,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"workspaceId\": 1,\n  \"userId\": \"user-123\",\n  \"content\": \"이미지 설명\",\n  \"messageType\": \"image\",\n  \"fileUrl\": \"https://cdn.example.com/path/img.png\",\n  \"fileName\": \"img.png\",\n  \"mimeType\": \"image/png\",\n  \"fileSize\": 123456\n}"
+          "raw": "{\n  \"workspaceId\": 1,\n  \"userId\": 1,\n  \"content\": \"이미지 설명\",\n  \"messageType\": \"image\",\n  \"fileUrl\": \"https://cdn.example.com/path/img.png\",\n  \"fileName\": \"img.png\",\n  \"mimeType\": \"image/png\",\n  \"fileSize\": 123456\n}"
         },
         "url": {
           "raw": "{{baseUrl}}/api/v1/chat/messages/file",
@@ -847,7 +1018,7 @@
           "_postman_previewlanguage": "json",
           "header": [ { "key": "Content-Type", "value": "application/json" } ],
           "cookie": [],
-          "body": "{\n  \"messageId\": 10,\n  \"workspaceId\": 1,\n  \"userId\": \"user-123\",\n  \"content\": \"이미지 설명\",\n  \"messageType\": \"image\",\n  \"fileUrl\": \"https://cdn.example.com/path/img.png\",\n  \"fileName\": \"img.png\",\n  \"mimeType\": \"image/png\",\n  \"fileSize\": 123456,\n  \"createdAt\": \"2024-01-15T10:30:00Z\"\n}"
+          "body": "{\n  \"messageId\": 10,\n  \"workspaceId\": 1,\n  \"userId\": 1,\n  \"content\": \"이미지 설명\",\n  \"messageType\": \"image\",\n  \"fileUrl\": \"https://cdn.example.com/path/img.png\",\n  \"fileName\": \"img.png\",\n  \"mimeType\": \"image/png\",\n  \"fileSize\": 123456,\n  \"createdAt\": \"2024-01-15T10:30:00Z\"\n}"
         }
       ]
     },

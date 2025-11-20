@@ -1,6 +1,7 @@
 package com.capstone.domain.workspace;
 
 import com.capstone.domain.workspaceInvite.WorkspaceInviteService;
+import com.capstone.global.exception.CustomException;
 import com.capstone.global.oauth.JwtProvider;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -11,6 +12,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -23,6 +25,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @RequestMapping("/v1/workspaces")
 @CrossOrigin(origins = {"http://localhost:3000", "http://127.0.0.1:3000"})
+@Slf4j
 public class WorkspaceController {
 
   private final WorkspaceService workspaceService;
@@ -186,32 +189,51 @@ public class WorkspaceController {
     return ResponseEntity.ok(resp);
   }
 
-  @Operation(summary = "워크스페이스 삭제", description = "워크스페이스를 삭제합니다. (개발용: Authorization 선택사항)")
+  @Operation(summary = "워크스페이스 삭제", description = "워크스페이스를 삭제합니다. (OWNER만 가능)")
   @ApiResponses(value = {
       @ApiResponse(responseCode = "200", description = "삭제 성공"),
+      @ApiResponse(responseCode = "401", description = "인증 토큰이 필요하거나 유효하지 않음"),
+      @ApiResponse(responseCode = "403", description = "워크스페이스 OWNER 권한이 없음"),
       @ApiResponse(responseCode = "404", description = "워크스페이스를 찾을 수 없음")
   })
   @SecurityRequirement(name = "Bearer Authentication")
   @DeleteMapping("/{id}")
   public ResponseEntity<String> deleteWorkspace(
       @Parameter(description = "워크스페이스 ID", required = true) @PathVariable Long id,
-      @Parameter(description = "JWT 토큰 (개발용: 선택사항)", required = false)
+      @Parameter(description = "JWT 토큰", required = false)
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String token
   ) {
+    log.info("=== 워크스페이스 삭제 요청 ===");
+    log.info("workspaceId: {}", id);
+    log.info("Authorization header present: {}", token != null && !token.trim().isEmpty());
+    
     Long userId;
     if (token != null && !token.trim().isEmpty()) {
       try {
         String jwt = token.replace("Bearer ", "").trim();
         userId = jwtProvider.getUserIdFromAccessToken(jwt);
+        log.info("JWT에서 파싱한 userId: {} (타입: {})", userId, userId.getClass().getSimpleName());
       } catch (Exception e) {
+        log.error("JWT 파싱 실패: {}", e.getMessage(), e);
         return ResponseEntity.status(401).body("유효하지 않은 토큰입니다.");
       }
     } else {
+      log.warn("인증 토큰이 없음");
       return ResponseEntity.status(401).body("인증 토큰이 필요합니다.");
     }
 
-    workspaceService.deleteWorkspace(id, userId);
-
-    return ResponseEntity.ok("워크스페이스가 삭제되었습니다.");
+    try {
+      workspaceService.deleteWorkspace(id, userId);
+      log.info("워크스페이스 삭제 성공 - workspaceId: {}, userId: {}", id, userId);
+      return ResponseEntity.ok("워크스페이스가 삭제되었습니다.");
+    } catch (CustomException e) {
+      log.error("워크스페이스 삭제 실패 - workspaceId: {}, userId: {}, error: {}", 
+          id, userId, e.getMessage());
+      return ResponseEntity.status(e.getErrorCode().getHttpStatus()).body(e.getMessage());
+    } catch (Exception e) {
+      log.error("워크스페이스 삭제 중 예상치 못한 오류 - workspaceId: {}, userId: {}", 
+          id, userId, e.getMessage(), e);
+      return ResponseEntity.status(500).body("서버 오류가 발생했습니다.");
+    }
   }
 }

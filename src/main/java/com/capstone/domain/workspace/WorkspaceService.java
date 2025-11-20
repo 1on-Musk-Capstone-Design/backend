@@ -117,7 +117,8 @@ public class WorkspaceService {
           return new CustomException(NOT_FOUND_USER);
         });
 
-    log.info("사용자 조회 성공 - userId: {}, email: {}", user.getId(), user.getEmail());
+    log.info("사용자 조회 성공 - userId: {}, email: {}, name: {}", 
+        user.getId(), user.getEmail(), user.getName());
 
     // OWNER 확인
     if (workspace.getOwner() == null) {
@@ -134,17 +135,22 @@ public class WorkspaceService {
     log.info("워크스페이스 ownerId: {} (타입: {})", ownerId, ownerId.getClass().getSimpleName());
     log.info("owner email: {}", owner.getEmail());
     log.info("owner name: {}", owner.getName());
+    log.info("user email: {}", user.getEmail());
+    log.info("user name: {}", user.getName());
     log.info("비교 결과: ownerId.equals(userId) = {}", ownerId.equals(userId));
-    log.info("비교 결과: ownerId == userId = {}", ownerId == userId);
     log.info("비교 결과: ownerId.longValue() == userId.longValue() = {}", 
         ownerId.longValue() == userId.longValue());
+    log.info("비교 결과: Objects.equals(ownerId, userId) = {}", 
+        java.util.Objects.equals(ownerId, userId));
 
-    // Long 타입 비교를 안전하게 처리
-    if (!ownerId.equals(userId) && ownerId.longValue() != userId.longValue()) {
+    // Long 타입 비교를 안전하게 처리 - Objects.equals 사용
+    if (!java.util.Objects.equals(ownerId, userId)) {
       log.error("=== OWNER 권한이 아님 ===");
       log.error("workspaceId: {}", workspaceId);
-      log.error("요청 userId: {} (타입: {})", userId, userId.getClass().getSimpleName());
-      log.error("워크스페이스 ownerId: {} (타입: {})", ownerId, ownerId.getClass().getSimpleName());
+      log.error("요청 userId: {} (타입: {}), email: {}, name: {}", 
+          userId, userId.getClass().getSimpleName(), user.getEmail(), user.getName());
+      log.error("워크스페이스 ownerId: {} (타입: {}), email: {}, name: {}", 
+          ownerId, ownerId.getClass().getSimpleName(), owner.getEmail(), owner.getName());
       throw new CustomException(FORBIDDEN_WORKSPACE);
     }
 
