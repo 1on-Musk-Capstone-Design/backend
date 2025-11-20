@@ -15,10 +15,12 @@ import com.capstone.global.type.Role;
 import jakarta.transaction.Transactional;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class WorkspaceUserService {
 
   private final WorkspaceUserRepository workspaceUserRepository;
@@ -89,15 +91,8 @@ public class WorkspaceUserService {
       throw new CustomException(FORBIDDEN_WORKSPACE);
     }
 
-    // OWNER가 자신을 나가려는 경우는 허용하지 않음 (워크스페이스에 최소 1명의 OWNER 필요)
-    if (isOwner && isSelf && targetWorkspaceUser.getRole() == Role.OWNER) {
-      // OWNER가 혼자만 있는 경우는 워크스페이스를 삭제해야 함
-      long ownerCount = workspaceUserRepository.findByWorkspace(workspace).stream()
-          .filter(wu -> wu.getRole() == Role.OWNER)
-          .count();
-      if (ownerCount <= 1) {
-        throw new CustomException(FORBIDDEN_WORKSPACE);
-      }
+    if (targetWorkspaceUser.getRole() == Role.OWNER) {
+      transferOwnershipIfNeeded(workspace, targetWorkspaceUser);
     }
 
     workspaceUserRepository.delete(targetWorkspaceUser);
@@ -115,16 +110,40 @@ public class WorkspaceUserService {
         .findByWorkspaceAndUser(workspace, user)
         .orElseThrow(() -> new CustomException(NOT_FOUND_WORKSPACE_USER));
 
-    // OWNER가 나가려는 경우, 다른 OWNER가 있는지 확인
     if (workspaceUser.getRole() == Role.OWNER) {
-      long ownerCount = workspaceUserRepository.findByWorkspace(workspace).stream()
-          .filter(wu -> wu.getRole() == Role.OWNER)
-          .count();
-      if (ownerCount <= 1) {
-        throw new CustomException(FORBIDDEN_WORKSPACE);
-      }
+      transferOwnershipIfNeeded(workspace, workspaceUser);
     }
 
     workspaceUserRepository.delete(workspaceUser);
+  }
+
+  private void transferOwnershipIfNeeded(Workspace workspace, WorkspaceUser leavingUser) {
+    List<WorkspaceUser> workspaceUsers = workspaceUserRepository.findByWorkspace(workspace);
+
+    long ownerCount = workspaceUsers.stream()
+        .filter(wu -> wu.getRole() == Role.OWNER)
+        .count();
+
+    if (ownerCount > 1) {
+      return;
+    }
+
+    WorkspaceUser nextOwner = workspaceUsers.stream()
+        .filter(wu -> !wu.getId().equals(leavingUser.getId()))
+        .findFirst()
+        .orElse(null);
+
+    if (nextOwner == null) {
+      log.warn("마지막 OWNER는 워크스페이스를 나갈 수 없습니다 - workspaceId: {}", workspace.getWorkspaceId());
+      throw new CustomException(FORBIDDEN_WORKSPACE);
+    }
+
+    nextOwner.updateRole(Role.OWNER);
+    workspace.setOwner(nextOwner.getUser());
+    workspaceRepository.save(workspace);
+    workspaceUserRepository.save(nextOwner);
+
+    log.info("워크스페이스 OWNER 변경 - workspaceId: {}, newOwnerId: {}", workspace.getWorkspaceId(),
+        nextOwner.getUser().getId());
   }
 }

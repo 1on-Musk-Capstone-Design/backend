@@ -64,16 +64,36 @@ public class WorkspaceUserController {
   @DeleteMapping("/leave")
   public ResponseEntity<String> leaveWorkspace(
       @PathVariable Long workspaceId,
-      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String token) {
+      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String token,
+      @io.swagger.v3.oas.annotations.parameters.RequestBody(
+          description = "Authorization 헤더가 없을 경우 userId 필수", required = false)
+      @RequestBody(required = false) LeaveRequest request) {
 
-    // 개발/테스트: Authorization 없으면 더미 userId 사용
-    Long userId = 1L;
+    Long userId = null;
     if (token != null && !token.trim().isEmpty()) {
       String jwt = token.replace("Bearer ", "").trim();
       userId = jwtProvider.getUserIdFromAccessToken(jwt);
+    } else if (request != null && request.getUserId() != null) {
+      userId = request.getUserId();
+    }
+
+    if (userId == null) {
+      return ResponseEntity.badRequest().body("userId 또는 Authorization 헤더가 필요합니다.");
     }
 
     workspaceUserService.leaveWorkspace(workspaceId, userId);
     return ResponseEntity.ok("워크스페이스를 나갔습니다.");
+  }
+
+  public static class LeaveRequest {
+    private Long userId;
+
+    public Long getUserId() {
+      return userId;
+    }
+
+    public void setUserId(Long userId) {
+      this.userId = userId;
+    }
   }
 }

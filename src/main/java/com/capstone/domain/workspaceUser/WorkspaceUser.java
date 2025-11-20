@@ -44,4 +44,7 @@ public class WorkspaceUser {
   @Column(name = "joined_at", nullable = false, updatable = false)
   private Timestamp joinedAt;
 
+  public void updateRole(Role role) {
+    this.role = role;
+  }
 }
