@@ -77,14 +77,54 @@ public class WorkspaceUserService {
         .findByWorkspaceAndUser(workspace, requester)
         .orElseThrow(() -> new CustomException(NOT_FOUND_WORKSPACE_USER));
 
-    if (requesterWorkspaceUser.getRole() != Role.OWNER) {
-      throw new CustomException(FORBIDDEN_WORKSPACE);
-    }
-
     WorkspaceUser targetWorkspaceUser = workspaceUserRepository
         .findByWorkspaceAndUser(workspace, target)
         .orElseThrow(() -> new CustomException(NOT_FOUND_WORKSPACE_USER));
 
+    // 권한 확인: OWNER이거나 자신을 나가는 경우 허용
+    boolean isOwner = requesterWorkspaceUser.getRole() == Role.OWNER;
+    boolean isSelf = requesterId.equals(userId);
+
+    if (!isOwner && !isSelf) {
+      throw new CustomException(FORBIDDEN_WORKSPACE);
+    }
+
+    // OWNER가 자신을 나가려는 경우는 허용하지 않음 (워크스페이스에 최소 1명의 OWNER 필요)
+    if (isOwner && isSelf && targetWorkspaceUser.getRole() == Role.OWNER) {
+      // OWNER가 혼자만 있는 경우는 워크스페이스를 삭제해야 함
+      long ownerCount = workspaceUserRepository.findByWorkspace(workspace).stream()
+          .filter(wu -> wu.getRole() == Role.OWNER)
+          .count();
+      if (ownerCount <= 1) {
+        throw new CustomException(FORBIDDEN_WORKSPACE);
+      }
+    }
+
     workspaceUserRepository.delete(targetWorkspaceUser);
+  }
+
+  @Transactional
+  public void leaveWorkspace(Long workspaceId, Long userId) {
+    Workspace workspace = workspaceRepository.findById(workspaceId)
+        .orElseThrow(() -> new CustomException(NOT_FOUND_WORKSPACE));
+
+    User user = userRepository.findById(userId)
+        .orElseThrow(() -> new CustomException(NOT_FOUND_USER));
+
+    WorkspaceUser workspaceUser = workspaceUserRepository
+        .findByWorkspaceAndUser(workspace, user)
+        .orElseThrow(() -> new CustomException(NOT_FOUND_WORKSPACE_USER));
+
+    // OWNER가 나가려는 경우, 다른 OWNER가 있는지 확인
+    if (workspaceUser.getRole() == Role.OWNER) {
+      long ownerCount = workspaceUserRepository.findByWorkspace(workspace).stream()
+          .filter(wu -> wu.getRole() == Role.OWNER)
+          .count();
+      if (ownerCount <= 1) {
+        throw new CustomException(FORBIDDEN_WORKSPACE);
+      }
+    }
+
+    workspaceUserRepository.delete(workspaceUser);
   }
 }

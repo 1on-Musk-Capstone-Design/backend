@@ -60,4 +60,20 @@ public class WorkspaceUserController {
     workspaceUserService.removeUser(workspaceId, userId, requesterId);
     return ResponseEntity.ok("유저 삭제 완료");
   }
+
+  @DeleteMapping("/leave")
+  public ResponseEntity<String> leaveWorkspace(
+      @PathVariable Long workspaceId,
+      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String token) {
+
+    // 개발/테스트: Authorization 없으면 더미 userId 사용
+    Long userId = 1L;
+    if (token != null && !token.trim().isEmpty()) {
+      String jwt = token.replace("Bearer ", "").trim();
+      userId = jwtProvider.getUserIdFromAccessToken(jwt);
+    }
+
+    workspaceUserService.leaveWorkspace(workspaceId, userId);
+    return ResponseEntity.ok("워크스페이스를 나갔습니다.");
+  }
 }
