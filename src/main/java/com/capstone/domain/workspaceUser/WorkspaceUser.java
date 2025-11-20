@@ -11,6 +11,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import java.sql.Timestamp;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -23,7 +24,10 @@ import org.hibernate.annotations.CreationTimestamp;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "workspace_users")
+@Table(name = "workspace_users",
+    uniqueConstraints = {
+        @UniqueConstraint(name = "uk_workspace_user_unique", columnNames = {"workspace_id", "user_id"})
+    })
 public class WorkspaceUser {
 
   @Id

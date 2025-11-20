@@ -18,6 +18,7 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.dao.DataIntegrityViolationException;
 
 @Service
 @RequiredArgsConstructor
@@ -47,7 +48,12 @@ public class WorkspaceUserService {
         .role(Role.MEMBER)
         .build();
 
-    workspaceUserRepository.save(workspaceUser);
+    try {
+      workspaceUserRepository.save(workspaceUser);
+    } catch (DataIntegrityViolationException e) {
+      log.warn("중복 워크스페이스 참여 시도 감지 - workspaceId: {}, userId: {}", workspaceId, userId);
+      throw new CustomException(ALREADY_JOINED_WORKSPACE);
+    }
   }
 
   @Transactional
