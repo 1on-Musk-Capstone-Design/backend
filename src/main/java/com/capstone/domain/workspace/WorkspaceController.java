@@ -198,11 +198,16 @@ public class WorkspaceController {
       @Parameter(description = "JWT 토큰 (개발용: 선택사항)", required = false)
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String token
   ) {
-    // 개발/테스트: Authorization 없으면 더미 userId 사용
-    Long userId = 1L;
+    Long userId;
     if (token != null && !token.trim().isEmpty()) {
-      String jwt = token.replace("Bearer ", "").trim();
-      userId = jwtProvider.getUserIdFromAccessToken(jwt);
+      try {
+        String jwt = token.replace("Bearer ", "").trim();
+        userId = jwtProvider.getUserIdFromAccessToken(jwt);
+      } catch (Exception e) {
+        return ResponseEntity.status(401).body("유효하지 않은 토큰입니다.");
+      }
+    } else {
+      return ResponseEntity.status(401).body("인증 토큰이 필요합니다.");
     }
 
     workspaceService.deleteWorkspace(id, userId);

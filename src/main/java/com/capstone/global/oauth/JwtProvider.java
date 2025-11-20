@@ -49,7 +49,26 @@ public class JwtProvider {
         .parseSignedClaims(token)
         .getPayload();
 
-    return claims.get("user_id", Long.class);
+    Object userIdObj = claims.get("user_id");
+    if (userIdObj == null) {
+      throw new IllegalArgumentException("토큰에 user_id가 없습니다.");
+    }
+    
+    // Integer 또는 Long 타입 모두 처리
+    if (userIdObj instanceof Long) {
+      return (Long) userIdObj;
+    } else if (userIdObj instanceof Integer) {
+      return ((Integer) userIdObj).longValue();
+    } else if (userIdObj instanceof Number) {
+      return ((Number) userIdObj).longValue();
+    } else {
+      // String으로 저장된 경우도 처리
+      try {
+        return Long.parseLong(userIdObj.toString());
+      } catch (NumberFormatException e) {
+        throw new IllegalArgumentException("토큰의 user_id가 유효한 숫자가 아닙니다: " + userIdObj);
+      }
+    }
   }
 
   private SecretKey getSigningKey() {
