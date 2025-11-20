@@ -74,14 +74,15 @@ public class WorkspaceService {
 
   @Transactional
   public WorkspaceDtos.ListItem updateWorkspaceName(Long workspaceId, String name, Long userId) {
-    Workspace workspace = workspaceRepository.findById(workspaceId)
+    // owner를 함께 로드하여 조회
+    Workspace workspace = workspaceRepository.findByIdWithOwner(workspaceId)
         .orElseThrow(() -> new CustomException(NOT_FOUND_WORKSPACE));
 
     User user = userRepository.findById(userId)
         .orElseThrow(() -> new CustomException(NOT_FOUND_USER));
 
     // OWNER만 수정 가능
-    if (!workspace.getOwner().getId().equals(userId)) {
+    if (workspace.getOwner() == null || !workspace.getOwner().getId().equals(userId)) {
       throw new CustomException(FORBIDDEN_WORKSPACE);
     }
 
@@ -98,7 +99,12 @@ public class WorkspaceService {
   public void deleteWorkspace(Long workspaceId, Long userId) {
     log.info("워크스페이스 삭제 시도 - workspaceId: {}, userId: {}", workspaceId, userId);
     
-    Workspace workspace = getWorkspaceById(workspaceId);
+    // owner를 함께 로드하여 조회
+    Workspace workspace = workspaceRepository.findByIdWithOwner(workspaceId)
+        .orElseThrow(() -> {
+          log.error("워크스페이스를 찾을 수 없음 - workspaceId: {}", workspaceId);
+          return new CustomException(NOT_FOUND_WORKSPACE);
+        });
 
     User user = userRepository.findById(userId)
         .orElseThrow(() -> {
@@ -106,10 +112,19 @@ public class WorkspaceService {
           return new CustomException(NOT_FOUND_USER);
         });
 
-    // OWNER만 삭제 가능
-    if (!workspace.getOwner().getId().equals(userId)) {
+    // OWNER 확인
+    if (workspace.getOwner() == null) {
+      log.error("워크스페이스에 OWNER가 설정되지 않음 - workspaceId: {}", workspaceId);
+      throw new CustomException(FORBIDDEN_WORKSPACE);
+    }
+
+    Long ownerId = workspace.getOwner().getId();
+    log.info("워크스페이스 OWNER 확인 - workspaceId: {}, userId: {}, ownerId: {}", 
+        workspaceId, userId, ownerId);
+
+    if (!ownerId.equals(userId)) {
       log.error("OWNER 권한이 아님 - workspaceId: {}, userId: {}, ownerId: {}", 
-          workspaceId, userId, workspace.getOwner().getId());
+          workspaceId, userId, ownerId);
       throw new CustomException(FORBIDDEN_WORKSPACE);
     }
 

@@ -14,7 +14,7 @@ public class ChatMessageDtos {
   public static class SendRequest {
 
     private Long workspaceId;
-    private String userId;
+    private Long userId;
     private String content;
 
   }
@@ -28,7 +28,7 @@ public class ChatMessageDtos {
 
     private Long messageId;
     private Long workspaceId;
-    private String userId;
+    private Long userId;
     private String content;
     private String messageType; // text | image | file
     private String fileUrl;
@@ -47,7 +47,7 @@ public class ChatMessageDtos {
   public static class FileMessageRequest {
 
     private Long workspaceId;
-    private String userId;
+    private Long userId;
     private String content; // optional
     private String messageType; // image | file
     private String fileUrl;
@@ -65,7 +65,7 @@ public class ChatMessageDtos {
   public static class ListResponse {
 
     private Long messageId;
-    private String userId;
+    private Long userId;
     private String content;
     private Instant createdAt;
 

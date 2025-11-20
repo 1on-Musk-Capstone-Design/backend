@@ -49,7 +49,7 @@ public class ChatMessageController {
     ChatMessageDtos.Response resp = new ChatMessageDtos.Response();
     resp.setMessageId(saved.getMessageId());
     resp.setWorkspaceId(saved.getWorkspaceId());
-    resp.setUserId(saved.getUserId());
+    resp.setUserId(saved.getUser().getId());
     resp.setContent(saved.getContent());
     resp.setMessageType(saved.getMessageType());
     resp.setFileUrl(saved.getFileUrl());
@@ -84,7 +84,7 @@ public class ChatMessageController {
     ChatMessageDtos.Response response = new ChatMessageDtos.Response();
     response.setMessageId(savedMessage.getMessageId());
     response.setWorkspaceId(savedMessage.getWorkspaceId());
-    response.setUserId(savedMessage.getUserId());
+    response.setUserId(savedMessage.getUser().getId());
     response.setContent(savedMessage.getContent());
     response.setMessageType(savedMessage.getMessageType());
     response.setFileUrl(savedMessage.getFileUrl());
@@ -109,7 +109,7 @@ public class ChatMessageController {
           ChatMessageDtos.Response dto = new ChatMessageDtos.Response();
           dto.setMessageId(message.getMessageId());
           dto.setWorkspaceId(message.getWorkspaceId());
-          dto.setUserId(message.getUserId());
+          dto.setUserId(message.getUser().getId());
           dto.setContent(message.getContent());
           dto.setCreatedAt(message.getCreatedAt());
           return dto;
@@ -134,7 +134,7 @@ public class ChatMessageController {
           ChatMessageDtos.Response dto = new ChatMessageDtos.Response();
           dto.setMessageId(message.getMessageId());
           dto.setWorkspaceId(message.getWorkspaceId());
-          dto.setUserId(message.getUserId());
+          dto.setUserId(message.getUser().getId());
           dto.setContent(message.getContent());
           dto.setCreatedAt(message.getCreatedAt());
           return dto;
@@ -149,7 +149,7 @@ public class ChatMessageController {
    */
   @GetMapping("/user/{userId}")
   public ResponseEntity<List<ChatMessageDtos.Response>> getMessagesByUser(
-      @PathVariable String userId) {
+      @PathVariable Long userId) {
     List<ChatMessage> messages = chatMessageService.getMessagesByUser(userId);
 
     List<ChatMessageDtos.Response> response = messages.stream()
@@ -157,7 +157,7 @@ public class ChatMessageController {
           ChatMessageDtos.Response dto = new ChatMessageDtos.Response();
           dto.setMessageId(message.getMessageId());
           dto.setWorkspaceId(message.getWorkspaceId());
-          dto.setUserId(message.getUserId());
+          dto.setUserId(message.getUser().getId());
           dto.setContent(message.getContent());
           dto.setCreatedAt(message.getCreatedAt());
           return dto;
