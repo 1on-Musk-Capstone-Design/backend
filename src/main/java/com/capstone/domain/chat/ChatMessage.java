@@ -1,5 +1,6 @@
 package com.capstone.domain.chat;
 
+import com.capstone.domain.user.entity.User;
 import jakarta.persistence.*;
 import java.time.Instant;
 import lombok.Getter;
@@ -19,8 +20,9 @@ public class ChatMessage {
   @Column(name = "workspace_id", nullable = false)
   private Long workspaceId;
 
-  @Column(name = "user_id", nullable = false, length = 100)
-  private String userId;
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "user_id", nullable = false)
+  private User user;
 
   @Column(name = "content", nullable = false, columnDefinition = "TEXT")
   private String content;

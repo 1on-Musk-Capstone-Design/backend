@@ -25,7 +25,7 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> 
   /**
    * 특정 사용자의 메시지 조회
    */
-  List<ChatMessage> findByUserIdOrderByCreatedAtDesc(String userId);
+  List<ChatMessage> findByUserOrderByCreatedAtDesc(com.capstone.domain.user.entity.User user);
 
   /**
    * 특정 워크스페이스의 메시지 개수 조회

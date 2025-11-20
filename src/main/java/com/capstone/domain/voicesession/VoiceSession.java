@@ -17,7 +17,7 @@ public class VoiceSession {
   private Long id;
 
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "wrokspace_id", nullable = false)
+  @JoinColumn(name = "workspace_id", nullable = false)
   private Workspace workspace;
 
   @Column(name = "started_at", nullable = false)

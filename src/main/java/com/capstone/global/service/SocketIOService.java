@@ -78,7 +78,7 @@ public class SocketIOService {
             ChatMessageDtos.Response response = new ChatMessageDtos.Response();
             response.setMessageId(savedMessage.getMessageId());
             response.setWorkspaceId(savedMessage.getWorkspaceId());
-            response.setUserId(savedMessage.getUserId());
+            response.setUserId(savedMessage.getUser().getId());
             response.setContent(savedMessage.getContent());
             response.setMessageType(savedMessage.getMessageType());
             response.setFileUrl(savedMessage.getFileUrl());
@@ -108,7 +108,8 @@ public class SocketIOService {
                 new com.fasterxml.jackson.core.type.TypeReference<java.util.Map<String, Object>>() {
                 }
             );
-            String userId = (String) payload.get("userId");
+            Long userId = payload.get("userId") == null ? null
+                : Long.valueOf(payload.get("userId").toString());
             String content =
                 payload.get("content") == null ? null : payload.get("content").toString();
             String messageType = (String) payload.getOrDefault("messageType", "file");
@@ -132,7 +133,7 @@ public class SocketIOService {
             ChatMessageDtos.Response response = new ChatMessageDtos.Response();
             response.setMessageId(saved.getMessageId());
             response.setWorkspaceId(saved.getWorkspaceId());
-            response.setUserId(saved.getUserId());
+            response.setUserId(saved.getUser().getId());
             response.setContent(saved.getContent());
             response.setMessageType(saved.getMessageType());
             response.setFileUrl(saved.getFileUrl());

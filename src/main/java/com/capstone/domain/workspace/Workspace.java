@@ -20,7 +20,7 @@ public class Workspace {
   @Column(name = "name", nullable = false, length = 100)
   private String name;
 
-  @ManyToOne
+  @ManyToOne(fetch = FetchType.EAGER)
   @JoinColumn(name = "owner_id", nullable = false)
   private User owner;
 

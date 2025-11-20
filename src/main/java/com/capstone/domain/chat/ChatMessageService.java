@@ -1,5 +1,9 @@
 package com.capstone.domain.chat;
 
+import com.capstone.domain.user.entity.User;
+import com.capstone.domain.user.repository.UserRepository;
+import com.capstone.global.exception.CustomException;
+import com.capstone.global.exception.ErrorCode;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -11,19 +15,24 @@ import java.util.List;
 public class ChatMessageService {
 
   private final ChatMessageRepository chatMessageRepository;
+  private final UserRepository userRepository;
 
-  public ChatMessageService(ChatMessageRepository chatMessageRepository) {
+  public ChatMessageService(ChatMessageRepository chatMessageRepository, UserRepository userRepository) {
     this.chatMessageRepository = chatMessageRepository;
+    this.userRepository = userRepository;
   }
 
   /**
    * 채팅 메시지 저장
    */
   @Transactional
-  public ChatMessage saveMessage(Long workspaceId, String userId, String content) {
+  public ChatMessage saveMessage(Long workspaceId, Long userId, String content) {
+    User user = userRepository.findById(userId)
+        .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_USER));
+    
     ChatMessage message = new ChatMessage();
     message.setWorkspaceId(workspaceId);
-    message.setUserId(userId);
+    message.setUser(user);
     message.setContent(content);
     message.setMessageType("text");
 
@@ -36,7 +45,7 @@ public class ChatMessageService {
   @Transactional
   public ChatMessage saveFileMessage(
       Long workspaceId,
-      String userId,
+      Long userId,
       String content,
       String messageType,
       String fileUrl,
@@ -44,9 +53,12 @@ public class ChatMessageService {
       String mimeType,
       Long fileSize
   ) {
+    User user = userRepository.findById(userId)
+        .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_USER));
+    
     ChatMessage message = new ChatMessage();
     message.setWorkspaceId(workspaceId);
-    message.setUserId(userId);
+    message.setUser(user);
     message.setContent(content);
     message.setMessageType(messageType);
     message.setFileUrl(fileUrl);
@@ -77,8 +89,10 @@ public class ChatMessageService {
    * 특정 사용자의 메시지 조회
    */
   @Transactional(readOnly = true)
-  public List<ChatMessage> getMessagesByUser(String userId) {
-    return chatMessageRepository.findByUserIdOrderByCreatedAtDesc(userId);
+  public List<ChatMessage> getMessagesByUser(Long userId) {
+    User user = userRepository.findById(userId)
+        .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_USER));
+    return chatMessageRepository.findByUserOrderByCreatedAtDesc(user);
   }
 
   /**
