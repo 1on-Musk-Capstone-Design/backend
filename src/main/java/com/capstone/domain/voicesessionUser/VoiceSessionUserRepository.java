@@ -38,4 +38,9 @@ public interface VoiceSessionUserRepository extends JpaRepository<VoiceSessionUs
   @Query("SELECT v FROM VoiceSessionUser v JOIN FETCH v.workspaceUser wu WHERE v.session.id = :sessionId AND v.leftAt IS NULL")
   List<VoiceSessionUser> findActiveUsersWithWorkspaceUserBySessionId(
       @Param("sessionId") Long sessionId);
+
+  /**
+   * 특정 WorkspaceUser에 연결된 모든 VoiceSessionUser 조회
+   */
+  List<VoiceSessionUser> findByWorkspaceUser(com.capstone.domain.workspaceUser.WorkspaceUser workspaceUser);
 }

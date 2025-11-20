@@ -6,8 +6,15 @@ import static com.capstone.global.exception.ErrorCode.NOT_FOUND_USER;
 import static com.capstone.global.exception.ErrorCode.NOT_FOUND_WORKSPACE;
 import static com.capstone.global.exception.ErrorCode.NOT_FOUND_WORKSPACE_USER;
 
+import com.capstone.domain.canvas.CanvasRepository;
+import com.capstone.domain.chat.ChatMessageRepository;
+import com.capstone.domain.idea.IdeaRepository;
 import com.capstone.domain.user.entity.User;
 import com.capstone.domain.user.repository.UserRepository;
+import com.capstone.domain.voicesession.VoiceSessionRepository;
+import com.capstone.domain.voicesessionUser.VoiceSessionUserRepository;
+import com.capstone.domain.workspaceInvitation.WorkspaceInvitationRepository;
+import com.capstone.domain.workspaceInvite.WorkspaceInviteRepository;
 import com.capstone.domain.workspaceUser.WorkspaceUser;
 import com.capstone.domain.workspaceUser.WorkspaceUserRepository;
 import com.capstone.global.exception.CustomException;
@@ -27,6 +34,13 @@ public class WorkspaceService {
   private final WorkspaceRepository workspaceRepository;
   private final UserRepository userRepository;
   private final WorkspaceUserRepository workspaceUserRepository;
+  private final WorkspaceInviteRepository workspaceInviteRepository;
+  private final WorkspaceInvitationRepository workspaceInvitationRepository;
+  private final ChatMessageRepository chatMessageRepository;
+  private final CanvasRepository canvasRepository;
+  private final IdeaRepository ideaRepository;
+  private final VoiceSessionRepository voiceSessionRepository;
+  private final VoiceSessionUserRepository voiceSessionUserRepository;
 
   @Transactional
   public Workspace createWorkspace(String name, Long userId) {
@@ -155,6 +169,66 @@ public class WorkspaceService {
     }
 
     log.info("=== OWNER 권한 확인 완료, 삭제 진행 ===");
+    
+    // 워크스페이스 삭제 전 관련 데이터 먼저 삭제
+    log.info("워크스페이스 관련 데이터 삭제 시작 - workspaceId: {}", workspaceId);
+    
+    // WorkspaceUser를 먼저 조회 (VoiceSessionUser 삭제에 필요)
+    List<WorkspaceUser> workspaceUsers = workspaceUserRepository.findByWorkspace(workspace);
+    
+    // 1. VoiceSessionUser 삭제 (workspace_user_id를 통해 간접 참조)
+    for (WorkspaceUser workspaceUser : workspaceUsers) {
+      List<com.capstone.domain.voicesessionUser.VoiceSessionUser> voiceSessionUsers = 
+          voiceSessionUserRepository.findByWorkspaceUser(workspaceUser);
+      voiceSessionUserRepository.deleteAll(voiceSessionUsers);
+    }
+    log.info("VoiceSessionUser 삭제 완료 - {}개", workspaceUsers.size());
+    
+    // 2. VoiceSession 삭제
+    List<com.capstone.domain.voicesession.VoiceSession> voiceSessions = 
+        voiceSessionRepository.findByWorkspace_WorkspaceId(workspaceId);
+    voiceSessionRepository.deleteAll(voiceSessions);
+    log.info("VoiceSession 삭제 완료 - {}개", voiceSessions.size());
+    
+    // 3. ChatMessage 삭제
+    List<com.capstone.domain.chat.ChatMessage> chatMessages = 
+        chatMessageRepository.findByWorkspaceIdOrderByCreatedAtAsc(workspaceId);
+    chatMessageRepository.deleteAll(chatMessages);
+    log.info("ChatMessage 삭제 완료 - {}개", chatMessages.size());
+    
+    // 4. Canvas 삭제
+    List<com.capstone.domain.canvas.Canvas> canvases = canvasRepository.findAll().stream()
+        .filter(canvas -> canvas.getWorkspace().getWorkspaceId().equals(workspaceId))
+        .toList();
+    canvasRepository.deleteAll(canvases);
+    log.info("Canvas 삭제 완료 - {}개", canvases.size());
+    
+    // 5. Idea 삭제
+    List<com.capstone.domain.idea.Idea> ideas = ideaRepository.findAll().stream()
+        .filter(idea -> idea.getWorkspace().getWorkspaceId().equals(workspaceId))
+        .toList();
+    ideaRepository.deleteAll(ideas);
+    log.info("Idea 삭제 완료 - {}개", ideas.size());
+    
+    // 6. WorkspaceInvitation 삭제
+    List<com.capstone.domain.workspaceInvitation.WorkspaceInvitation> invitations = 
+        workspaceInvitationRepository.findByWorkspace(workspace);
+    workspaceInvitationRepository.deleteAll(invitations);
+    log.info("WorkspaceInvitation 삭제 완료 - {}개", invitations.size());
+    
+    // 7. WorkspaceInvite 삭제
+    List<com.capstone.domain.workspaceInvite.WorkspaceInvite> invites = 
+        workspaceInviteRepository.findAll().stream()
+            .filter(invite -> invite.getWorkspace().getWorkspaceId().equals(workspaceId))
+            .toList();
+    workspaceInviteRepository.deleteAll(invites);
+    log.info("WorkspaceInvite 삭제 완료 - {}개", invites.size());
+    
+    // 8. WorkspaceUser 삭제 (가장 마지막)
+    workspaceUserRepository.deleteAll(workspaceUsers);
+    log.info("WorkspaceUser 삭제 완료 - {}개", workspaceUsers.size());
+    
+    // 9. 마지막으로 Workspace 삭제
     workspaceRepository.delete(workspace);
     log.info("워크스페이스 삭제 완료 - workspaceId: {}, userId: {}", workspaceId, userId);
   }
