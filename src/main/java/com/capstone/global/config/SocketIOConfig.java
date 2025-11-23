@@ -26,6 +26,9 @@ public class SocketIOConfig {
     // CORS 설정 - Socket.IO는 "*" 대신 "*:*" 형식을 사용
     String origin = "*".equals(corsOrigins) ? "*:*" : corsOrigins;
     config.setOrigin(origin);
+    
+    // CORS preflight 요청(OPTIONS) 허용
+    config.setAllowCustomRequests(true);
 
     // 연결 설정
     config.setMaxFramePayloadLength(1024 * 1024); // 1MB
