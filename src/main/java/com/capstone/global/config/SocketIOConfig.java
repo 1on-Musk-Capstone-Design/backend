@@ -23,8 +23,9 @@ public class SocketIOConfig {
     config.setHostname(host);
     config.setPort(port);
 
-    // CORS 설정
-    config.setOrigin(corsOrigins);
+    // CORS 설정 - Socket.IO는 "*" 대신 "*:*" 형식을 사용
+    String origin = "*".equals(corsOrigins) ? "*:*" : corsOrigins;
+    config.setOrigin(origin);
 
     // 연결 설정
     config.setMaxFramePayloadLength(1024 * 1024); // 1MB
