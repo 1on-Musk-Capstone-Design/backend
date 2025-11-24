@@ -33,9 +33,6 @@ public class GoogleService {
   @Value("${oauth2.google.client-secret}")
   private String clientSecret;
 
-  @Value("${oauth2.google.redirect-uri}")
-  private String redirectUri;
-
   @Value("${oauth2.google.token-uri}")
   private String tokenUri;
 

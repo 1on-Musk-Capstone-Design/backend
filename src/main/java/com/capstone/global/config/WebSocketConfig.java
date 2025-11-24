@@ -10,6 +10,12 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 @EnableWebSocketMessageBroker
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
+  private final AppProperties appProperties;
+
+  public WebSocketConfig(AppProperties appProperties) {
+    this.appProperties = appProperties;
+  }
+
   @Override
   public void configureMessageBroker(MessageBrokerRegistry config) {
     // 클라이언트가 구독할 수 있는 destination prefix
@@ -23,11 +29,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     // WebSocket 연결 엔드포인트
     // 로컬 개발 환경과 프로덕션 환경 모두 허용
     registry.addEndpoint("/ws")
-        .setAllowedOriginPatterns(
-            "http://localhost:*",
-            "http://127.0.0.1:*",
-            "https://mingjaam.github.io"
-        )
+        .setAllowedOriginPatterns(appProperties.getAllowedOrigins().toArray(new String[0]))
         .withSockJS();
   }
 }

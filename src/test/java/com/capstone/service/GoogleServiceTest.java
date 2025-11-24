@@ -45,7 +45,6 @@ class GoogleServiceTest {
   void setUp() {
     ReflectionTestUtils.setField(googleService, "clientId", "capstone-id");
     ReflectionTestUtils.setField(googleService, "clientSecret", "capstone-secret");
-    ReflectionTestUtils.setField(googleService, "redirectUri", "http://localhost/capstone");
     ReflectionTestUtils.setField(googleService, "tokenUri", "http://capstone-token-uri");
     ReflectionTestUtils.setField(googleService, "resourceUri", "http://capstone-resource-uri");
 
