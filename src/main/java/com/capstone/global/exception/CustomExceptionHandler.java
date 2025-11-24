@@ -24,4 +24,9 @@ public class CustomExceptionHandler {
 
     return ResponseEntity.badRequest().body(errorMessage);
   }
+
+  @ExceptionHandler(RuntimeException.class)
+  public ResponseEntity<String> runtimeExceptionHandler(final RuntimeException e) {
+    return ResponseEntity.status(500).body("서버 오류가 발생했습니다.");
+  }
 }

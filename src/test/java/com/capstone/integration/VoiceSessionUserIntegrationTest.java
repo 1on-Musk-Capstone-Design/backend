@@ -44,16 +44,32 @@ class VoiceSessionUserIntegrationTest {
 
   // ----------- Helper Methods -----------
 
+  private User createOwner(String emailSuffix) {
+    String uniqueEmail = "vsowner-" + emailSuffix + "-" + 
+        java.util.UUID.randomUUID().toString().substring(0, 8) + "@example.com";
+    User owner = User.builder()
+        .email(uniqueEmail)
+        .name("Owner " + emailSuffix)
+        .build();
+    entityManager.persistAndFlush(owner);
+    return owner;
+  }
+
   private Workspace createWorkspace(String name) {
+    User owner = createOwner(name.replaceAll("\\s+", ""));
     Workspace workspace = new Workspace();
     workspace.setName(name);
+    workspace.setOwner(owner);
     workspace.setCreatedAt(java.time.Instant.now());
     entityManager.persistAndFlush(workspace);
     return workspace;
   }
 
   private User createUser(String userName) {
+    String uniqueEmail = "vsuser-" + userName.replaceAll("\\s+", "") + "-" + 
+        java.util.UUID.randomUUID().toString().substring(0, 8) + "@example.com";
     User user = User.builder()
+        .email(uniqueEmail)
         .name(userName)
         .build();
     entityManager.persistAndFlush(user);

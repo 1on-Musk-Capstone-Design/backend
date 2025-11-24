@@ -11,6 +11,7 @@ import com.capstone.domain.workspace.Workspace;
 import com.capstone.domain.workspace.WorkspaceRepository;
 import com.capstone.domain.workspaceUser.WorkspaceUser;
 import com.capstone.domain.workspaceUser.WorkspaceUserRepository;
+import com.capstone.global.service.WebSocketService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -38,6 +39,9 @@ class CanvasServiceTest {
 
   @Mock
   private UserRepository userRepository;
+
+  @Mock
+  private WebSocketService webSocketService;
 
   @InjectMocks
   private CanvasService canvasService;
@@ -92,6 +96,7 @@ class CanvasServiceTest {
     when(workspaceUserRepository.findByWorkspaceAndUser(workspace, user))
         .thenReturn(Optional.of(workspaceUser));
     when(canvasRepository.save(any(Canvas.class))).thenReturn(canvas);
+    doNothing().when(webSocketService).broadcastCanvasChange(any(), any(), any());
 
     CanvasResponse response = canvasService.createCanvas(1L, 1L, request);
 
@@ -133,6 +138,7 @@ class CanvasServiceTest {
     when(userRepository.findById(1L)).thenReturn(Optional.of(user));
     when(workspaceUserRepository.findByWorkspaceAndUser(workspace, user))
         .thenReturn(Optional.of(workspaceUser));
+    doNothing().when(webSocketService).broadcastCanvasChange(any(), any(), any());
 
     CanvasResponse response = canvasService.updateCanvas(1L, 1L, request);
 
@@ -146,6 +152,7 @@ class CanvasServiceTest {
     when(userRepository.findById(1L)).thenReturn(Optional.of(user));
     when(workspaceUserRepository.findByWorkspaceAndUser(workspace, user))
         .thenReturn(Optional.of(workspaceUser));
+    doNothing().when(webSocketService).broadcastCanvasChange(any(), any(), any());
 
     canvasService.deleteCanvas(1L, 1L);
 

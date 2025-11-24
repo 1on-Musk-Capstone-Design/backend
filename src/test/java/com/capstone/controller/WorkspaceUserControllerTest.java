@@ -44,7 +44,7 @@ class WorkspaceUserControllerTest {
     when(jwtProvider.getUserIdFromAccessToken("fake")).thenReturn(userId);
     doNothing().when(workspaceUserService).joinWorkspace(workspaceId, userId);
 
-    mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/join", workspaceId)
+    mockMvc.perform(post("/v1/workspaces/{workspaceId}/join", workspaceId)
             .header(HttpHeaders.AUTHORIZATION, token)
             .contentType(MediaType.APPLICATION_JSON)
             .with(
@@ -67,7 +67,7 @@ class WorkspaceUserControllerTest {
 
     when(workspaceUserService.getWorkspaceUsers(workspaceId)).thenReturn(List.of(user1));
 
-    mockMvc.perform(get("/api/v1/workspaces/{workspaceId}/users", workspaceId))
+    mockMvc.perform(get("/v1/workspaces/{workspaceId}/users", workspaceId))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$[0].id").value(10))
         .andExpect(jsonPath("$[0].name").value("캡스톤 유저"));
@@ -85,7 +85,7 @@ class WorkspaceUserControllerTest {
     doNothing().when(workspaceUserService).removeUser(workspaceId, targetUserId, requesterId);
 
     mockMvc.perform(
-            delete("/api/v1/workspaces/{workspaceId}/users/{userId}", workspaceId, targetUserId)
+            delete("/v1/workspaces/{workspaceId}/users/{userId}", workspaceId, targetUserId)
                 .header(HttpHeaders.AUTHORIZATION, token)
                 .with(
                     org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf()))

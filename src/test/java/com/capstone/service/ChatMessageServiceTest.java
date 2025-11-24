@@ -3,6 +3,8 @@ package com.capstone.service;
 import com.capstone.domain.chat.ChatMessage;
 import com.capstone.domain.chat.ChatMessageRepository;
 import com.capstone.domain.chat.ChatMessageService;
+import com.capstone.domain.user.entity.User;
+import com.capstone.domain.user.repository.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -12,6 +14,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -23,20 +26,34 @@ class ChatMessageServiceTest {
   @Mock
   private ChatMessageRepository chatMessageRepository;
 
+  @Mock
+  private UserRepository userRepository;
+
   @InjectMocks
   private ChatMessageService chatMessageService;
+
+  private User createMockUser(Long userId) {
+    return User.builder()
+        .id(userId)
+        .email("test@example.com")
+        .name("Test User")
+        .build();
+  }
 
   @Test
   void saveMessage_shouldReturnSavedMessage() {
     // Given
     Long workspaceId = 1L;
-    String userId = "user-456";
+    Long userId = 456L;
     String content = "안녕하세요!";
+
+    User user = createMockUser(userId);
+    when(userRepository.findById(userId)).thenReturn(Optional.of(user));
 
     ChatMessage mockMessage = new ChatMessage();
     mockMessage.setMessageId(1L);
     mockMessage.setWorkspaceId(workspaceId);
-    mockMessage.setUserId(userId);
+    mockMessage.setUser(user);
     mockMessage.setContent(content);
     mockMessage.setCreatedAt(Instant.now());
 
@@ -49,7 +66,7 @@ class ChatMessageServiceTest {
     assertThat(result).isNotNull();
     assertThat(result.getMessageId()).isEqualTo(1L);
     assertThat(result.getWorkspaceId()).isEqualTo(workspaceId);
-    assertThat(result.getUserId()).isEqualTo(userId);
+    assertThat(result.getUser().getId()).isEqualTo(userId);
     assertThat(result.getContent()).isEqualTo(content);
   }
 

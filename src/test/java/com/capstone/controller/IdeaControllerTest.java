@@ -98,7 +98,7 @@ public class IdeaControllerTest {
   void successGetAllIdeas() throws Exception {
     given(ideaService.getAllIdeas(workspaceId)).willReturn(List.of(ideaResponse));
 
-    mockMvc.perform(get("/v1/ideas/workspace/{workspaceId}", workspaceId))
+    mockMvc.perform(get("/v1/ideas/workspaces/{workspaceId}", workspaceId))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$[0].id").value(ideaId))
         .andExpect(jsonPath("$[0].content").value("NEW 아이디어"));

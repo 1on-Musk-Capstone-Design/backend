@@ -2,6 +2,7 @@ package com.capstone.integration;
 
 import com.capstone.domain.chat.ChatMessage;
 import com.capstone.domain.chat.ChatMessageRepository;
+import com.capstone.domain.user.entity.User;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
@@ -22,12 +23,22 @@ class ChatMessageIntegrationTest {
   @Autowired
   private ChatMessageRepository chatMessageRepository;
 
+  private User createUser(String emailSuffix) {
+    return User.builder()
+        .email("test" + emailSuffix + "@example.com")
+        .name("Test User " + emailSuffix)
+        .build();
+  }
+
   @Test
   void saveChatMessage_shouldPersistAndRetrieve() {
     // Given
+    User user = createUser("456");
+    User savedUser = entityManager.persistFlushFind(user);
+    
     ChatMessage message = new ChatMessage();
     message.setWorkspaceId(1L);
-    message.setUserId("user-456");
+    message.setUser(savedUser);
     message.setContent("통합 테스트 메시지");
     message.setCreatedAt(Instant.now());
 
@@ -39,7 +50,7 @@ class ChatMessageIntegrationTest {
     // Then
     assertThat(savedMessage.getMessageId()).isNotNull();
     assertThat(savedMessage.getWorkspaceId()).isEqualTo(1L);
-    assertThat(savedMessage.getUserId()).isEqualTo("user-456");
+    assertThat(savedMessage.getUser().getId()).isNotNull();
     assertThat(savedMessage.getContent()).isEqualTo("통합 테스트 메시지");
     assertThat(savedMessage.getCreatedAt()).isNotNull();
   }
@@ -47,15 +58,20 @@ class ChatMessageIntegrationTest {
   @Test
   void findByWorkspaceId_shouldReturnMessagesInOrder() {
     // Given
+    User user1 = createUser("1");
+    User user2 = createUser("2");
+    User savedUser1 = entityManager.persistFlushFind(user1);
+    User savedUser2 = entityManager.persistFlushFind(user2);
+    
     ChatMessage message1 = new ChatMessage();
     message1.setWorkspaceId(1L);
-    message1.setUserId("user-1");
+    message1.setUser(savedUser1);
     message1.setContent("첫 번째 메시지");
     message1.setCreatedAt(Instant.now().minusSeconds(10));
 
     ChatMessage message2 = new ChatMessage();
     message2.setWorkspaceId(1L);
-    message2.setUserId("user-2");
+    message2.setUser(savedUser2);
     message2.setContent("두 번째 메시지");
     message2.setCreatedAt(Instant.now());
 

@@ -76,7 +76,7 @@ public class CanvasControllerTest {
     given(canvasService.createCanvas(any(Long.class), any(Long.class), any(CanvasRequest.class)))
         .willReturn(canvasResponse);
 
-    mockMvc.perform(post("/api/v1/{workspaceId}/canvas", workspaceId)
+    mockMvc.perform(post("/v1/{workspaceId}/canvas", workspaceId)
             .with(csrf())
             .header("Authorization", token)
             .contentType(MediaType.APPLICATION_JSON)
@@ -92,7 +92,7 @@ public class CanvasControllerTest {
   void successGetAllCanvas() throws Exception {
     given(canvasService.getAllCanvas(workspaceId)).willReturn(List.of(canvasResponse));
 
-    mockMvc.perform(get("/api/v1/{workspaceId}/canvas", workspaceId))
+    mockMvc.perform(get("/v1/{workspaceId}/canvas", workspaceId))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$[0].id").value(canvasId))
         .andExpect(jsonPath("$[0].title").value("새로운 캔버스"));
@@ -103,7 +103,7 @@ public class CanvasControllerTest {
   void successGetCanvas() throws Exception {
     given(canvasService.getCanvas(canvasId)).willReturn(canvasResponse);
 
-    mockMvc.perform(get("/api/v1/canvas/{canvasId}", canvasId))
+    mockMvc.perform(get("/v1/canvas/{canvasId}", canvasId))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.id").value(canvasId))
         .andExpect(jsonPath("$.title").value("새로운 캔버스"));
@@ -127,7 +127,7 @@ public class CanvasControllerTest {
     given(canvasService.updateCanvas(any(Long.class), eq(canvasId), any(CanvasRequest.class)))
         .willReturn(updatedResponse);
 
-    mockMvc.perform(put("/api/v1/canvas/{canvasId}", canvasId)
+    mockMvc.perform(put("/v1/canvas/{canvasId}", canvasId)
             .contentType(MediaType.APPLICATION_JSON)
             .content(objectMapper.writeValueAsString(updateRequest))
             .header("Authorization", "Bearer wrong token"))
@@ -143,7 +143,7 @@ public class CanvasControllerTest {
     given(jwtProvider.getUserIdFromAccessToken("wrong token")).willReturn(userId);
     doNothing().when(canvasService).deleteCanvas(userId, canvasId);
 
-    mockMvc.perform(delete("/api/v1/canvas/{canvasId}", canvasId)
+    mockMvc.perform(delete("/v1/canvas/{canvasId}", canvasId)
             .with(csrf())
             .header("Authorization", token))
         .andExpect(status().isOk());

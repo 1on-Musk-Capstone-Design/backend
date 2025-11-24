@@ -5,6 +5,7 @@ import com.capstone.domain.workspace.Workspace;
 import com.capstone.domain.workspace.WorkspaceController;
 import com.capstone.domain.workspace.WorkspaceDtos;
 import com.capstone.domain.workspace.WorkspaceService;
+import com.capstone.domain.workspaceInvite.WorkspaceInviteService;
 import com.capstone.global.oauth.JwtProvider;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -35,6 +36,9 @@ class WorkspaceControllerTest {
   private WorkspaceService workspaceService;
 
   @MockBean
+  private WorkspaceInviteService workspaceInviteService;
+
+  @MockBean
   private JwtProvider jwtProvider;
 
   @Test
@@ -53,7 +57,7 @@ class WorkspaceControllerTest {
     String requestBody = "{\"name\": \"캡스톤 워크스페이스\"}";
 
     // When & Then
-    mockMvc.perform(post("/api/v1/workspaces")
+    mockMvc.perform(post("/v1/workspaces")
             .contentType(MediaType.APPLICATION_JSON)
             .content(requestBody)
             .header(HttpHeaders.AUTHORIZATION, "Bearer fake")
@@ -78,7 +82,7 @@ class WorkspaceControllerTest {
 
     String requestBody = "{\"name\": \"캡스톤\"}";
 
-    mockMvc.perform(put("/api/v1/workspaces/1")
+    mockMvc.perform(put("/v1/workspaces/1")
             .contentType(MediaType.APPLICATION_JSON)
             .content(requestBody)
             .header(HttpHeaders.AUTHORIZATION, "Bearer fake")
@@ -95,7 +99,7 @@ class WorkspaceControllerTest {
     doNothing().when(workspaceService).deleteWorkspace(1L, 10L);
     when(jwtProvider.getUserIdFromAccessToken("fake")).thenReturn(10L);
 
-    mockMvc.perform(delete("/api/v1/workspaces/1")
+    mockMvc.perform(delete("/v1/workspaces/1")
             .header(HttpHeaders.AUTHORIZATION, "Bearer fake")
             .with(
                 org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf()))

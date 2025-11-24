@@ -12,6 +12,7 @@ import com.capstone.domain.workspaceUser.WorkspaceUser;
 import com.capstone.domain.workspaceUser.WorkspaceUserRepository;
 import com.capstone.domain.user.entity.User;
 import com.capstone.domain.user.repository.UserRepository;
+import com.capstone.global.service.WebSocketService;
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.Optional;
@@ -38,6 +39,9 @@ class IdeaServiceTest {
 
   @Mock
   private WorkspaceUserRepository workspaceUserRepository;
+
+  @Mock
+  private WebSocketService webSocketService;
 
   @InjectMocks
   private IdeaService ideaService;
@@ -115,8 +119,10 @@ class IdeaServiceTest {
         .build();
 
     when(ideaRepository.save(any(Idea.class))).thenReturn(savedIdea);
+    doNothing().when(webSocketService).broadcastIdeaChange(any(), any(), any());
 
-    assertEquals(request.getContent(), savedIdea.getContent());
+    IdeaResponse response = ideaService.createIdea(user.getId(), request);
+    assertEquals(request.getContent(), response.getContent());
     assertEquals(request.getPatchSizeX(), savedIdea.getPatchSizeX());
     assertEquals(request.getPatchSizeY(), savedIdea.getPatchSizeY());
     assertEquals(request.getPositionX(), savedIdea.getPositionX());
@@ -217,6 +223,7 @@ class IdeaServiceTest {
     when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
     when(workspaceUserRepository.findByWorkspaceAndUser(workspace, user)).thenReturn(
         Optional.of(workspaceUser));
+    doNothing().when(webSocketService).broadcastIdeaChange(any(), any(), any());
 
     assertDoesNotThrow(() -> ideaService.deleteIdea(user.getId(), idea.getId()));
     verify(ideaRepository, times(1)).delete(idea);

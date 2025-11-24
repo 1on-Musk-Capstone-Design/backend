@@ -52,14 +52,14 @@ class VoiceSessionControllerTest {
       when(voiceSessionService.startSession(WORKSPACE_ID)).thenReturn(session);
 
       // When
-      var result = mockMvc.perform(post("/api/v1/workspaces/{workspaceId}/voice", WORKSPACE_ID)
+      var result = mockMvc.perform(post("/v1/workspaces/{workspaceId}/voice", WORKSPACE_ID)
           .with(csrf()));
 
       // Then
       result.andDo(print())
           .andExpect(status().isCreated())
           .andExpect(
-              header().string(HttpHeaders.LOCATION, "/api/v1/workspaces/1/voice/" + SESSION_ID))
+              header().string(HttpHeaders.LOCATION, "/v1/workspaces/1/voice/" + SESSION_ID))
           .andExpect(jsonPath("$.id").value(SESSION_ID))
           .andExpect(jsonPath("$.workspaceId").value(WORKSPACE_ID))
           .andExpect(jsonPath("$.startedAt").exists())
@@ -83,7 +83,7 @@ class VoiceSessionControllerTest {
 
       // When
       var result = mockMvc.perform(
-          patch("/api/v1/workspaces/{workspaceId}/voice/{sessionId}", WORKSPACE_ID, SESSION_ID)
+          patch("/v1/workspaces/{workspaceId}/voice/{sessionId}", WORKSPACE_ID, SESSION_ID)
               .with(csrf()));
 
       // Then
@@ -105,7 +105,7 @@ class VoiceSessionControllerTest {
 
       // When
       var result = mockMvc.perform(
-          patch("/api/v1/workspaces/{workspaceId}/voice/{sessionId}", WORKSPACE_ID, SESSION_ID)
+          patch("/v1/workspaces/{workspaceId}/voice/{sessionId}", WORKSPACE_ID, SESSION_ID)
               .with(csrf()));
 
       // Then

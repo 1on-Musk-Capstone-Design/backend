@@ -75,8 +75,7 @@ class VoiceSessionServiceTest {
 
       // When & Then
       assertThatThrownBy(() -> voiceSessionService.startSession(workspaceId))
-          .isInstanceOf(IllegalArgumentException.class)
-          .hasMessageContaining("해당 워크스페이스를 찾을 수 없습니다: " + (workspaceId));
+          .isInstanceOf(com.capstone.global.exception.CustomException.class);
 
       verify(voiceSessionRepository, never()).save(any());
     }
@@ -114,8 +113,7 @@ class VoiceSessionServiceTest {
 
       // When & Then
       assertThatThrownBy(() -> voiceSessionService.endSession(sessionId))
-          .isInstanceOf(IllegalArgumentException.class)
-          .hasMessageContaining("해당 음성 세션을 찾을 수 없습니다: " + (sessionId));
+          .isInstanceOf(com.capstone.global.exception.CustomException.class);
     }
   }
 

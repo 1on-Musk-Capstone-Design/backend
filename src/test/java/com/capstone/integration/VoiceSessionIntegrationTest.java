@@ -1,5 +1,6 @@
 package com.capstone.integration;
 
+import com.capstone.domain.user.entity.User;
 import com.capstone.domain.voicesession.VoiceSession;
 import com.capstone.domain.voicesession.VoiceSessionRepository;
 import com.capstone.domain.workspace.Workspace;
@@ -31,20 +32,32 @@ class VoiceSessionIntegrationTest {
   @Autowired
   private WorkspaceRepository workspaceRepository;
 
+  private User createUser(String emailSuffix) {
+    String uniqueEmail = "vstest-" + emailSuffix + "-" + 
+        java.util.UUID.randomUUID().toString().substring(0, 8) + "@example.com";
+    return User.builder()
+        .email(uniqueEmail)
+        .name("Test User " + emailSuffix)
+        .build();
+  }
+
   @Test
   @DisplayName("세션 저장 및 조회 테스트")
   void saveVoiceSession_shouldPersistAndRetrieve() {
     // Given
+    User owner = createUser("1");
+    User savedOwner = entityManager.persistFlushFind(owner);
+    
     Workspace workspace = new Workspace();
     workspace.setName("테스트 워크스페이스");
+    workspace.setOwner(savedOwner);
     workspace.setCreatedAt(Instant.now());
     entityManager.persistAndFlush(workspace);
 
     VoiceSession session = new VoiceSession(workspace, LocalDateTime.now());
 
     // When
-    VoiceSession savedSession = voiceSessionRepository.save(session);
-    entityManager.flush();
+    VoiceSession savedSession = entityManager.persistFlushFind(session);
     entityManager.clear();
 
     // Then
@@ -59,8 +72,12 @@ class VoiceSessionIntegrationTest {
   @DisplayName("워크스페이스별 세션 조회 테스트")
   void findByWorkspaceId_shouldReturnSessionsInOrder() {
     // Given
+    User owner = createUser("2");
+    User savedOwner = entityManager.persistFlushFind(owner);
+    
     Workspace workspace = new Workspace();
     workspace.setName("테스트 워크스페이스");
+    workspace.setOwner(savedOwner);
     workspace.setCreatedAt(Instant.now());
     entityManager.persistAndFlush(workspace);
 
@@ -68,9 +85,10 @@ class VoiceSessionIntegrationTest {
     VoiceSession session2 = new VoiceSession(workspace, LocalDateTime.now().minusHours(1));
     VoiceSession session3 = new VoiceSession(workspace, LocalDateTime.now());
 
-    entityManager.persistAndFlush(session1);
-    entityManager.persistAndFlush(session2);
-    entityManager.persistAndFlush(session3);
+    entityManager.persist(session1);
+    entityManager.persist(session2);
+    entityManager.persist(session3);
+    entityManager.flush();
     entityManager.clear();
 
     // When
@@ -87,13 +105,18 @@ class VoiceSessionIntegrationTest {
   @DisplayName("세션 종료 테스트")
   void endSession_shouldUpdateEndedAt() {
     // Given
+    User owner = createUser("3");
+    User savedOwner = entityManager.persistFlushFind(owner);
+    
     Workspace workspace = new Workspace();
     workspace.setName("테스트 워크스페이스");
+    workspace.setOwner(savedOwner);
     workspace.setCreatedAt(Instant.now());
     entityManager.persistAndFlush(workspace);
 
     VoiceSession session = new VoiceSession(workspace, LocalDateTime.now().minusMinutes(10));
-    entityManager.persistAndFlush(session);
+    entityManager.persist(session);
+    entityManager.flush();
     Long sessionId = session.getId();
     entityManager.clear();
 
@@ -114,21 +137,29 @@ class VoiceSessionIntegrationTest {
   @DisplayName("특정 워크스페이스 세션 조회")
   void findByWorkspaceId_shouldNotReturnOtherWorkspaceSessions() {
     // Given - 두 개의 워크스페이스와 세션 생성
+    User owner1 = createUser("4");
+    User owner2 = createUser("5");
+    User savedOwner1 = entityManager.persistFlushFind(owner1);
+    User savedOwner2 = entityManager.persistFlushFind(owner2);
+    
     Workspace workspace1 = new Workspace();
     workspace1.setName("워크스페이스 1");
+    workspace1.setOwner(savedOwner1);
     workspace1.setCreatedAt(Instant.now());
     entityManager.persistAndFlush(workspace1);
 
     Workspace workspace2 = new Workspace();
     workspace2.setName("워크스페이스 2");
+    workspace2.setOwner(savedOwner2);
     workspace2.setCreatedAt(Instant.now());
     entityManager.persistAndFlush(workspace2);
 
     VoiceSession session1 = new VoiceSession(workspace1, LocalDateTime.now());
     VoiceSession session2 = new VoiceSession(workspace2, LocalDateTime.now());
 
-    entityManager.persistAndFlush(session1);
-    entityManager.persistAndFlush(session2);
+    entityManager.persist(session1);
+    entityManager.persist(session2);
+    entityManager.flush();
     entityManager.clear();
 
     // When - workspace1의 세션만 조회

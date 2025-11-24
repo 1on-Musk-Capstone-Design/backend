@@ -41,7 +41,7 @@ class GoogleControllerTest {
 
     given(googleService.loginOrJoin("Wrong Code")).willReturn(tokenDto);
 
-    mockMvc.perform(post("/api/v1/auth-google")
+    mockMvc.perform(post("/v1/auth-google")
             .param("code", "Wrong Code")
             .contentType(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())
@@ -52,16 +52,13 @@ class GoogleControllerTest {
 
   @Test
   @DisplayName("로그인 & 회원가입 실패 테스트")
-  void failLoginOrJoin() {
+  void failLoginOrJoin() throws Exception {
     when(googleService.loginOrJoin(anyString()))
         .thenThrow(new RuntimeException("구글 인증 실패"));
 
-    Throwable exception = assertThrows(Exception.class,
-        () -> mockMvc.perform(post("/api/v1/auth-google")
-                .param("code", "Wrong Code"))
-            .andReturn());
-
-    assertEquals("구글 인증 실패", exception.getCause().getMessage());
-
+    mockMvc.perform(post("/v1/auth-google")
+            .param("code", "Wrong Code")
+            .contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().is5xxServerError());
   }
 }

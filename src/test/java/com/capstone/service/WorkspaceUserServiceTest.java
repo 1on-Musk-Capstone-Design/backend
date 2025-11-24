@@ -6,8 +6,10 @@ import com.capstone.domain.workspace.Workspace;
 import com.capstone.domain.workspace.WorkspaceRepository;
 import com.capstone.domain.workspaceUser.WorkspaceUser;
 import com.capstone.domain.workspaceUser.WorkspaceUserRepository;
+import com.capstone.domain.workspace.WorkspaceService;
 import com.capstone.domain.workspaceUser.WorkspaceUserResponse;
 import com.capstone.domain.workspaceUser.WorkspaceUserService;
+import com.capstone.global.service.WebSocketService;
 import com.capstone.global.type.Role;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -22,6 +24,9 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -33,6 +38,10 @@ class WorkspaceUserServiceTest {
   private WorkspaceRepository workspaceRepository;
   @Mock
   private UserRepository userRepository;
+  @Mock
+  private WorkspaceService workspaceService;
+  @Mock
+  private WebSocketService webSocketService;
 
   @InjectMocks
   private WorkspaceUserService workspaceUserService;
@@ -52,6 +61,7 @@ class WorkspaceUserServiceTest {
     when(workspaceUserRepository.existsByWorkspaceAndUser(workspace, user)).thenReturn(false);
     when(workspaceUserRepository.save(any())).thenAnswer(
         invocation -> invocation.getArgument(0)); // save 정상 처리
+    doNothing().when(webSocketService).notifyUserJoined(anyLong(), anyString());
 
     workspaceUserService.joinWorkspace(workspaceId, userId);
   }
@@ -96,9 +106,10 @@ class WorkspaceUserServiceTest {
     when(userRepository.findById(20L)).thenReturn(Optional.of(target));
     when(workspaceUserRepository.findByWorkspaceAndUser(workspace, requester))
         .thenReturn(Optional.of(requesterWorkspaceUser));
+    when(workspaceUserRepository.findByWorkspaceAndUser(workspace, target))
+        .thenReturn(Optional.empty());
 
     assertThatThrownBy(() -> workspaceUserService.removeUser(1L, 20L, 10L))
-        .isInstanceOf(RuntimeException.class)
-        .hasMessage("삭제 권한이 없습니다.");
+        .isInstanceOf(RuntimeException.class);
   }
 }

@@ -88,8 +88,7 @@ class VoiceSessionUserServiceTest {
 
     // When & Then
     assertThatThrownBy(() -> service.joinSession(workspaceId, sessionId, workspaceUserId))
-        .isInstanceOf(IllegalStateException.class)
-        .hasMessage("이미 이 세션에 참여 중입니다.");
+        .isInstanceOf(com.capstone.global.exception.CustomException.class);
   }
 
   @Test

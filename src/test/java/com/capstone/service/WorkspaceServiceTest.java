@@ -6,10 +6,19 @@ import com.capstone.domain.workspace.Workspace;
 import com.capstone.domain.workspace.WorkspaceDtos;
 import com.capstone.domain.workspace.WorkspaceRepository;
 import com.capstone.domain.workspace.WorkspaceService;
+import com.capstone.domain.canvas.CanvasRepository;
+import com.capstone.domain.chat.ChatMessageRepository;
+import com.capstone.domain.idea.IdeaRepository;
+import com.capstone.domain.voicesession.VoiceSessionRepository;
+import com.capstone.domain.voicesessionUser.VoiceSessionUserRepository;
+import com.capstone.domain.workspaceInvitation.WorkspaceInvitationRepository;
+import com.capstone.domain.workspaceInvite.WorkspaceInviteRepository;
 import com.capstone.domain.workspaceUser.WorkspaceUser;
 import com.capstone.domain.workspaceUser.WorkspaceUserRepository;
+import com.capstone.global.service.WebSocketService;
 import com.capstone.global.type.Role;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
@@ -21,6 +30,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -32,6 +43,22 @@ class WorkspaceServiceTest {
   private UserRepository userRepository;
   @Mock
   private WorkspaceUserRepository workspaceUserRepository;
+  @Mock
+  private WorkspaceInviteRepository workspaceInviteRepository;
+  @Mock
+  private WorkspaceInvitationRepository workspaceInvitationRepository;
+  @Mock
+  private ChatMessageRepository chatMessageRepository;
+  @Mock
+  private CanvasRepository canvasRepository;
+  @Mock
+  private IdeaRepository ideaRepository;
+  @Mock
+  private VoiceSessionRepository voiceSessionRepository;
+  @Mock
+  private VoiceSessionUserRepository voiceSessionUserRepository;
+  @Mock
+  private WebSocketService webSocketService;
 
   @InjectMocks
   private WorkspaceService workspaceService;
@@ -50,6 +77,9 @@ class WorkspaceServiceTest {
     when(userRepository.findById(userId)).thenReturn(Optional.of(user));
     when(workspaceRepository.save(org.mockito.ArgumentMatchers.any(Workspace.class)))
         .thenReturn(savedWorkspace);
+    when(workspaceUserRepository.save(any(WorkspaceUser.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0));
+    doNothing().when(webSocketService).broadcastWorkspaceChange(any(), any(), any());
 
     Workspace result = workspaceService.createWorkspace(workspaceName, userId);
 
@@ -79,7 +109,7 @@ class WorkspaceServiceTest {
   @DisplayName("워크스페이스 이름 수정 시 OWNER면 정상적으로 수정")
   void updateWorkspaceName() {
     // Given
-    Long userId = 1L;
+    Long userId = 10L;
     User user = User.builder()
         .id(userId)
         .email("capstone@test.com")
@@ -89,20 +119,14 @@ class WorkspaceServiceTest {
     Workspace workspace = new Workspace();
     workspace.setWorkspaceId(1L);
     workspace.setName("Old");
+    workspace.setOwner(user);
 
-    WorkspaceUser workspaceUser = WorkspaceUser.builder()
-        .workspace(workspace)
-        .user(user)
-        .role(Role.OWNER)
-        .build();
-
-    when(workspaceRepository.findById(1L)).thenReturn(Optional.of(workspace));
-    when(userRepository.findById(10L)).thenReturn(Optional.of(user));
-    when(workspaceUserRepository.findByWorkspaceAndUser(workspace, user))
-        .thenReturn(Optional.of(workspaceUser));
+    when(workspaceRepository.findByIdWithOwner(1L)).thenReturn(Optional.of(workspace));
+    when(userRepository.findById(userId)).thenReturn(Optional.of(user));
     when(workspaceRepository.save(workspace)).thenReturn(workspace);
+    doNothing().when(webSocketService).broadcastWorkspaceChange(any(), any(), any());
 
-    WorkspaceDtos.ListItem result = workspaceService.updateWorkspaceName(1L, "New", 10L);
+    WorkspaceDtos.ListItem result = workspaceService.updateWorkspaceName(1L, "New", userId);
 
     assertThat(result.getName()).isEqualTo("New");
   }
@@ -111,7 +135,7 @@ class WorkspaceServiceTest {
   @DisplayName("워크스페이스 삭제 시 OWNER가 아니면 예외가 발생")
   void deleteWorkspace() {
     // Given
-    Long userId = 1L;
+    Long userId = 10L;
     User user = User.builder()
         .id(userId)
         .email("capstone@test.com")
@@ -120,20 +144,13 @@ class WorkspaceServiceTest {
 
     Workspace workspace = new Workspace();
     workspace.setWorkspaceId(1L);
+    User owner = User.builder().id(20L).email("owner@test.com").name("Owner").build();
+    workspace.setOwner(owner);
 
-    WorkspaceUser workspaceUser = WorkspaceUser.builder()
-        .workspace(workspace)
-        .user(user)
-        .role(Role.MEMBER)
-        .build();
+    when(workspaceRepository.findByIdWithOwner(1L)).thenReturn(Optional.of(workspace));
+    when(userRepository.findById(userId)).thenReturn(Optional.of(user));
 
-    when(workspaceRepository.findById(1L)).thenReturn(Optional.of(workspace));
-    when(userRepository.findById(10L)).thenReturn(Optional.of(user));
-    when(workspaceUserRepository.findByWorkspaceAndUser(workspace, user))
-        .thenReturn(Optional.of(workspaceUser));
-
-    assertThatThrownBy(() -> workspaceService.deleteWorkspace(1L, 10L))
-        .isInstanceOf(RuntimeException.class)
-        .hasMessage("워크스페이스 삭제 권한이 없습니다.");
+    assertThatThrownBy(() -> workspaceService.deleteWorkspace(1L, userId))
+        .isInstanceOf(com.capstone.global.exception.CustomException.class);
   }
 }

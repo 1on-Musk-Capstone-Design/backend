@@ -1,5 +1,6 @@
 package com.capstone.integration;
 
+import com.capstone.domain.user.entity.User;
 import com.capstone.domain.workspace.Workspace;
 import com.capstone.domain.workspace.WorkspaceRepository;
 import org.junit.jupiter.api.Test;
@@ -22,11 +23,22 @@ class WorkspaceIntegrationTest {
   @Autowired
   private WorkspaceRepository workspaceRepository;
 
+  private User createUser(String emailSuffix) {
+    return User.builder()
+        .email("test" + emailSuffix + "@example.com")
+        .name("Test User " + emailSuffix)
+        .build();
+  }
+
   @Test
   void saveWorkspace_shouldPersistToDatabase() {
     // Given
+    User owner = createUser("1");
+    User savedOwner = entityManager.persistFlushFind(owner);
+    
     Workspace workspace = new Workspace();
     workspace.setName("통합 테스트 워크스페이스");
+    workspace.setOwner(savedOwner);
     workspace.setCreatedAt(Instant.now());
 
     // When
@@ -42,8 +54,12 @@ class WorkspaceIntegrationTest {
   @Test
   void findWorkspaceById_shouldReturnWorkspace() {
     // Given
+    User owner = createUser("2");
+    User savedOwner = entityManager.persistFlushFind(owner);
+    
     Workspace workspace = new Workspace();
     workspace.setName("조회 테스트 워크스페이스");
+    workspace.setOwner(savedOwner);
     workspace.setCreatedAt(Instant.now());
 
     Workspace savedWorkspace = entityManager.persistAndFlush(workspace);
