@@ -218,7 +218,7 @@ class IdeaServiceTest {
     when(workspaceUserRepository.findByWorkspaceAndUser(workspace, user)).thenReturn(
         Optional.of(workspaceUser));
 
-    assertDoesNotThrow(() -> ideaService.deleteIdea(user.getId(), idea.getId()));
+    assertDoesNotThrow(() -> ideaService.deleteIdea(idea.getId()));
     verify(ideaRepository, times(1)).delete(idea);
   }
 }

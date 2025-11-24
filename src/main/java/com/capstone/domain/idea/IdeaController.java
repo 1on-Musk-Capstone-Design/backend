@@ -45,11 +45,9 @@ public class IdeaController {
 
   @DeleteMapping("/{ideaId}")
   public ResponseEntity<String> deleteIdea(
-      @RequestHeader("Authorization") String token,
       @PathVariable Long ideaId) {
 
-    Long userId = jwtProvider.getUserIdFromAccessToken(token.replace("Bearer ", "").trim());
-    ideaService.deleteIdea(userId, ideaId);
+    ideaService.deleteIdea( ideaId);
     return ResponseEntity.ok("아이디어가 삭제되었습니다.");
   }
 }

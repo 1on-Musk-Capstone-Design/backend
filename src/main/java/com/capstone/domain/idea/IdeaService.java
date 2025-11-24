@@ -109,7 +109,7 @@ public class IdeaService {
   }
 
   @Transactional
-  public void deleteIdea(Long userId, Long ideaId) {
+  public void deleteIdea(Long ideaId) {
     Idea idea = ideaRepository.findById(ideaId)
         .orElseThrow(() -> new CustomException(NOT_FOUND_IDEA));
 
