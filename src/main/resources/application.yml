@@ -45,7 +45,8 @@ oauth2:
     client-secret: ${GOOGLE_CLIENT_SECRET:your-google-client-secret}
     # 배포 시 환경변수 GOOGLE_REDIRECT_URI로 설정 필요
     # 로컬: http://localhost:3000/auth/callback
-    # 프로덕션: https://mingjaam.github.io/auth/callback
+    # 프로덕션1: https://mingjaam.github.io/auth/callback
+    # 프로덕션2: https://on-it.kro.kr/auth/callback
     redirect-uri: ${GOOGLE_REDIRECT_URI:http://localhost:3000/auth/callback}
     token-uri: https://oauth2.googleapis.com/token
     resource-uri: https://www.googleapis.com/oauth2/v2/userinfo
@@ -89,3 +90,16 @@ workspace:
   invite:
     base-url: ${WORKSPACE_INVITE_BASE_URL:http://localhost:3000/invite}
     expire-hours: ${WORKSPACE_INVITE_EXPIRE_HOURS:168}
+
+app:
+  allowed-origins:
+    - ${APP_ALLOWED_ORIGINS_0:http://localhost:*}
+    - ${APP_ALLOWED_ORIGINS_1:http://127.0.0.1:*}
+    - ${APP_ALLOWED_ORIGINS_2:https://mingjaam.github.io}
+    - ${APP_ALLOWED_ORIGINS_3:https://on-it.kro.kr}
+  default-redirect-uri: ${APP_DEFAULT_REDIRECT_URI:http://localhost:3000/auth/callback}
+  oauth-redirect-map:
+    localhost: ${APP_OAUTH_REDIRECT_LOCALHOST:http://localhost:3000/auth/callback}
+    127.0.0.1: ${APP_OAUTH_REDIRECT_LOOPBACK:http://localhost:3000/auth/callback}
+    mingjaam.github.io: ${APP_OAUTH_REDIRECT_MINGJAAM:https://mingjaam.github.io/auth/callback}
+    on-it.kro.kr: ${APP_OAUTH_REDIRECT_ONIT:https://on-it.kro.kr/auth/callback}

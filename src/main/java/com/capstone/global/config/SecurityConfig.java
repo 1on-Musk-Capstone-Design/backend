@@ -16,6 +16,12 @@ import java.util.Arrays;
 @EnableWebSecurity
 public class SecurityConfig {
 
+  private final AppProperties appProperties;
+
+  public SecurityConfig(AppProperties appProperties) {
+    this.appProperties = appProperties;
+  }
+
   @Bean
   public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
     http
@@ -80,12 +86,8 @@ public class SecurityConfig {
   @Bean
   public CorsConfigurationSource corsConfigurationSource() {
     CorsConfiguration configuration = new CorsConfiguration();
-    // 로컬 개발 환경과 프로덕션 환경 모두 허용
-    configuration.setAllowedOriginPatterns(Arrays.asList(
-        "http://localhost:*",
-        "http://127.0.0.1:*",
-        "https://mingjaam.github.io"
-    ));
+    // 구성 파일 기반 허용 Origin 적용
+    configuration.setAllowedOriginPatterns(appProperties.getAllowedOrigins());
     configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
     configuration.setAllowedHeaders(Arrays.asList("*"));
     configuration.setAllowCredentials(true);
