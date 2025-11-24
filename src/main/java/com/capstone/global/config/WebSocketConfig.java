@@ -21,8 +21,13 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
   @Override
   public void registerStompEndpoints(StompEndpointRegistry registry) {
     // WebSocket 연결 엔드포인트
+    // 로컬 개발 환경과 프로덕션 환경 모두 허용
     registry.addEndpoint("/ws")
-        .setAllowedOriginPatterns("*")
+        .setAllowedOriginPatterns(
+            "http://localhost:*",
+            "http://127.0.0.1:*",
+            "https://mingjaam.github.io"
+        )
         .withSockJS();
   }
 }

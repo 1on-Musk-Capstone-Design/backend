@@ -80,8 +80,13 @@ public class SecurityConfig {
   @Bean
   public CorsConfigurationSource corsConfigurationSource() {
     CorsConfiguration configuration = new CorsConfiguration();
-    configuration.setAllowedOriginPatterns(Arrays.asList("*"));
-    configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+    // 로컬 개발 환경과 프로덕션 환경 모두 허용
+    configuration.setAllowedOriginPatterns(Arrays.asList(
+        "http://localhost:*",
+        "http://127.0.0.1:*",
+        "https://mingjaam.github.io"
+    ));
+    configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
     configuration.setAllowedHeaders(Arrays.asList("*"));
     configuration.setAllowCredentials(true);
     configuration.setMaxAge(3600L);
