@@ -30,12 +30,7 @@ spring:
       name: admin
       password: admin
 
-# Socket.IO 설정
-socketio:
-  host: 0.0.0.0  # 모든 네트워크 인터페이스에 바인딩 (외부 접속 허용)
-  port: 9092
-  cors:
-    origins: "*"  # 프로덕션에서는 실제 프론트엔드 도메인으로 변경 권장
+# WebSocket 설정은 WebSocketConfig에서 관리
 
 # OpenAI API 설정 (AI 클러스터링용)
 openai:
@@ -82,7 +77,8 @@ logging:
   level:
     com.capstone: DEBUG
     org.springframework.security: INFO
-    com.corundumstudio.socketio: DEBUG
+    org.springframework.web.socket: DEBUG
+    org.springframework.messaging: DEBUG
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
 

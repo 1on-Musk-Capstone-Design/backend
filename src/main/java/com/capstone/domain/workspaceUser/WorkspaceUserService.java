@@ -12,6 +12,7 @@ import com.capstone.domain.workspace.Workspace;
 import com.capstone.domain.workspace.WorkspaceRepository;
 import com.capstone.domain.workspace.WorkspaceService;
 import com.capstone.global.exception.CustomException;
+import com.capstone.global.service.WebSocketService;
 import com.capstone.global.type.Role;
 import jakarta.transaction.Transactional;
 import java.util.List;
@@ -29,6 +30,7 @@ public class WorkspaceUserService {
   private final WorkspaceRepository workspaceRepository;
   private final UserRepository userRepository;
   private final WorkspaceService workspaceService;
+  private final WebSocketService webSocketService;
 
   @Transactional
   public void joinWorkspace(Long workspaceId, Long userId) {
@@ -50,6 +52,10 @@ public class WorkspaceUserService {
 
     try {
       workspaceUserRepository.save(workspaceUser);
+      
+      // WebSocket 브로드캐스트
+      webSocketService.notifyUserJoined(workspaceId, 
+          String.format("사용자 %s가 워크스페이스에 참여했습니다.", user.getName()));
     } catch (DataIntegrityViolationException e) {
       log.warn("중복 워크스페이스 참여 시도 감지 - workspaceId: {}, userId: {}", workspaceId, userId);
       throw new CustomException(ALREADY_JOINED_WORKSPACE);
@@ -109,6 +115,10 @@ public class WorkspaceUserService {
     }
 
     workspaceUserRepository.delete(targetWorkspaceUser);
+
+    // WebSocket 브로드캐스트
+    webSocketService.notifyUserLeft(workspaceId,
+        String.format("사용자 %s가 워크스페이스에서 제거되었습니다.", target.getName()));
   }
 
   @Transactional
@@ -132,6 +142,10 @@ public class WorkspaceUserService {
     }
 
     workspaceUserRepository.delete(workspaceUser);
+
+    // WebSocket 브로드캐스트
+    webSocketService.notifyUserLeft(workspaceId,
+        String.format("사용자 %s가 워크스페이스를 떠났습니다.", user.getName()));
   }
 
   private boolean handleOwnerLeaving(Workspace workspace, WorkspaceUser leavingUser, boolean isSelf,

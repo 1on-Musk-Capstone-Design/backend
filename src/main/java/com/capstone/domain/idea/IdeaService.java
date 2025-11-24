@@ -13,6 +13,7 @@ import com.capstone.domain.workspace.WorkspaceRepository;
 import com.capstone.domain.workspaceUser.WorkspaceUserRepository;
 import com.capstone.domain.user.repository.UserRepository;
 import com.capstone.global.exception.CustomException;
+import com.capstone.global.service.WebSocketService;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +29,7 @@ public class IdeaService {
   private final CanvasRepository canvasRepository;
   private final UserRepository userRepository;
   private final WorkspaceUserRepository workspaceUserRepository;
+  private final WebSocketService webSocketService;
 
   @Transactional
   public IdeaResponse createIdea(Long userId, IdeaRequest request) {
@@ -54,7 +56,12 @@ public class IdeaService {
       idea.setCanvas(canvas);
     }
 
-    return IdeaResponse.from(ideaRepository.save(idea));
+    IdeaResponse response = IdeaResponse.from(ideaRepository.save(idea));
+
+    // WebSocket 브로드캐스트
+    webSocketService.broadcastIdeaChange(request.getWorkspaceId(), "created", response);
+
+    return response;
   }
 
 
@@ -93,7 +100,12 @@ public class IdeaService {
     idea.setPositionX(request.getPositionX());
     idea.setPositionY(request.getPositionY());
 
-    return IdeaResponse.from(idea);
+    IdeaResponse response = IdeaResponse.from(idea);
+
+    // WebSocket 브로드캐스트
+    webSocketService.broadcastIdeaChange(idea.getWorkspace().getWorkspaceId(), "updated", response);
+
+    return response;
   }
 
   @Transactional
@@ -106,6 +118,12 @@ public class IdeaService {
                 .orElseThrow(() -> new CustomException(NOT_FOUND_USER)))
         .orElseThrow(() -> new CustomException(FORBIDDEN_WORKSPACE_ACCESS));
 
+    Long workspaceId = idea.getWorkspace().getWorkspaceId();
+    Long deletedIdeaId = idea.getId();
+
     ideaRepository.delete(idea);
+
+    // WebSocket 브로드캐스트
+    webSocketService.broadcastIdeaChange(workspaceId, "deleted", java.util.Map.of("id", deletedIdeaId));
   }
 }

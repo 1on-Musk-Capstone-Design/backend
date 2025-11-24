@@ -18,6 +18,7 @@ import com.capstone.domain.workspaceInvite.WorkspaceInviteRepository;
 import com.capstone.domain.workspaceUser.WorkspaceUser;
 import com.capstone.domain.workspaceUser.WorkspaceUserRepository;
 import com.capstone.global.exception.CustomException;
+import com.capstone.global.service.WebSocketService;
 import com.capstone.global.type.Role;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +26,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Service
@@ -41,6 +43,7 @@ public class WorkspaceService {
   private final IdeaRepository ideaRepository;
   private final VoiceSessionRepository voiceSessionRepository;
   private final VoiceSessionUserRepository voiceSessionUserRepository;
+  private final WebSocketService webSocketService;
 
   @Transactional
   public Workspace createWorkspace(String name, Long userId) {
@@ -60,6 +63,10 @@ public class WorkspaceService {
         .build();
 
     workspaceUserRepository.save(workspaceUser);
+
+    // WebSocket 브로드캐스트 (생성자에게만)
+    webSocketService.broadcastWorkspaceChange(savedWorkspace.getWorkspaceId(), "created", 
+        Map.of("workspaceId", savedWorkspace.getWorkspaceId(), "name", savedWorkspace.getName()));
 
     return savedWorkspace;
   }
@@ -106,6 +113,11 @@ public class WorkspaceService {
     WorkspaceDtos.ListItem dto = new WorkspaceDtos.ListItem();
     dto.setWorkspaceId(updated.getWorkspaceId());
     dto.setName(updated.getName());
+
+    // WebSocket 브로드캐스트
+    webSocketService.broadcastWorkspaceChange(workspaceId, "updated", 
+        Map.of("workspaceId", updated.getWorkspaceId(), "name", updated.getName()));
+
     return dto;
   }
 
@@ -231,5 +243,9 @@ public class WorkspaceService {
     // 9. 마지막으로 Workspace 삭제
     workspaceRepository.delete(workspace);
     log.info("워크스페이스 삭제 완료 - workspaceId: {}, userId: {}", workspaceId, userId);
+
+    // WebSocket 브로드캐스트 (삭제 전에 알림)
+    webSocketService.broadcastWorkspaceChange(workspaceId, "deleted", 
+        Map.of("workspaceId", workspaceId));
   }
 }

@@ -29,8 +29,8 @@ public class SecurityConfig {
             // Swagger/OpenAPI 문서
             .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
 
-            // Socket.IO
-            .requestMatchers("/socket.io/**").permitAll()
+            // WebSocket
+            .requestMatchers("/ws/**", "/app/**", "/topic/**", "/queue/**").permitAll()
 
             // Google OAuth (인증 필요 없음)
             .requestMatchers("/v1/auth-google/**").permitAll()

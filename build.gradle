@@ -34,8 +34,8 @@ dependencies {
     // CORS/WebFlux (프로젝트에 이미 사용 중)
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
 
-    // Socket.IO
-    implementation 'com.corundumstudio.socketio:netty-socketio:2.0.7'
+    // WebSocket + STOMP
+    implementation 'org.springframework.boot:spring-boot-starter-websocket'
 
     // OpenAI API
     implementation 'com.theokanning.openai-gpt3-java:service:0.18.2'

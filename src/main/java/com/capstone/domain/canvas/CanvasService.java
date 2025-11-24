@@ -12,7 +12,9 @@ import com.capstone.domain.workspace.WorkspaceRepository;
 import com.capstone.domain.workspaceUser.WorkspaceUser;
 import com.capstone.domain.workspaceUser.WorkspaceUserRepository;
 import com.capstone.global.exception.CustomException;
+import com.capstone.global.service.WebSocketService;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -26,6 +28,7 @@ public class CanvasService {
   private final WorkspaceRepository workspaceRepository;
   private final WorkspaceUserRepository workspaceUserRepository;
   private final UserRepository userRepository;
+  private final WebSocketService webSocketService;
 
   public CanvasResponse createCanvas(Long userId, Long workspaceId, CanvasRequest request) {
     Workspace workspace = workspaceRepository.findById(workspaceId)
@@ -44,12 +47,17 @@ public class CanvasService {
         .build();
     Canvas newCanvas = canvasRepository.save(canvas);
 
-    return CanvasResponse.builder()
+    CanvasResponse response = CanvasResponse.builder()
         .id(newCanvas.getId())
         .title(newCanvas.getTitle())
         .createdAt(newCanvas.getCreatedAt().toString())
         .updatedAt(newCanvas.getUpdatedAt().toString())
         .build();
+
+    // WebSocket 브로드캐스트
+    webSocketService.broadcastCanvasChange(workspaceId, "created", response);
+
+    return response;
   }
 
   public List<CanvasResponse> getAllCanvas(Long workspaceId) {
@@ -88,12 +96,17 @@ public class CanvasService {
     ).orElseThrow(() -> new CustomException(FORBIDDEN_WORKSPACE_ACCESS));
 
     canvas.setTitle(request.getTitle());
-    return CanvasResponse.builder()
+    CanvasResponse response = CanvasResponse.builder()
         .id(canvas.getId())
         .title(canvas.getTitle())
         .createdAt(canvas.getCreatedAt().toString())
         .updatedAt(canvas.getUpdatedAt().toString())
         .build();
+
+    // WebSocket 브로드캐스트
+    webSocketService.broadcastCanvasChange(canvas.getWorkspace().getWorkspaceId(), "updated", response);
+
+    return response;
   }
 
   public void deleteCanvas(Long userId, Long canvasId) {
@@ -106,6 +119,12 @@ public class CanvasService {
             .orElseThrow(() -> new CustomException(NOT_FOUND_USER))
     ).orElseThrow(() -> new CustomException(FORBIDDEN_WORKSPACE_ACCESS));
 
+    Long workspaceId = deleteCanvas.getWorkspace().getWorkspaceId();
+    Long deletedCanvasId = deleteCanvas.getId();
+
     canvasRepository.delete(deleteCanvas);
+
+    // WebSocket 브로드캐스트
+    webSocketService.broadcastCanvasChange(workspaceId, "deleted", Map.of("id", deletedCanvasId));
   }
 }

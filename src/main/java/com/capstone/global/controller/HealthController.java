@@ -10,8 +10,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.corundumstudio.socketio.SocketIOServer;
-
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
@@ -21,10 +19,7 @@ import java.util.Map;
 @RequestMapping("/v1/health")
 public class HealthController {
 
-  @Autowired
-  private SocketIOServer socketIOServer;
-
-  @Operation(summary = "헬스 체크", description = "서버 및 Socket.IO 서버의 상태를 확인합니다.")
+  @Operation(summary = "헬스 체크", description = "서버 및 WebSocket 서버의 상태를 확인합니다.")
   @ApiResponses(value = {
       @ApiResponse(responseCode = "200", description = "서버 정상 동작")
   })
@@ -35,12 +30,12 @@ public class HealthController {
     response.put("timestamp", LocalDateTime.now());
     response.put("message", "Spring Boot 애플리케이션이 정상적으로 실행 중입니다.");
 
-    // Socket.IO 서버 상태 확인
-    Map<String, Object> socketStatus = new HashMap<>();
-    socketStatus.put("running", socketIOServer != null);
-    socketStatus.put("port", socketIOServer.getConfiguration().getPort());
-    socketStatus.put("connectedClients", socketIOServer.getAllClients().size());
-    response.put("socketIO", socketStatus);
+    // WebSocket 서버 상태 확인
+    Map<String, Object> websocketStatus = new HashMap<>();
+    websocketStatus.put("enabled", true);
+    websocketStatus.put("endpoint", "/ws");
+    websocketStatus.put("protocol", "STOMP");
+    response.put("websocket", websocketStatus);
 
     return ResponseEntity.ok(response);
   }
