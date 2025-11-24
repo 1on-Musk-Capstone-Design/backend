@@ -81,7 +81,7 @@ class GoogleServiceTest {
     when(userRepository.findByEmail("capstone@test.com")).thenReturn(Optional.of(existingUser));
     when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-    TokenDto tokenDto = googleService.loginOrJoin("auth-code");
+    TokenDto tokenDto = googleService.loginOrJoin("auth-code", "http://localhost/capstone");
 
     assertNotNull(tokenDto);
     assertEquals("access", tokenDto.getAccessToken());
@@ -102,7 +102,7 @@ class GoogleServiceTest {
     )).thenThrow(new RuntimeException("capstone-token-uri 실패"));
 
     RuntimeException exception = assertThrows(RuntimeException.class,
-        () -> googleService.loginOrJoin("code"));
+        () -> googleService.loginOrJoin("code", "http://localhost/capstone"));
     assertEquals("capstone-token-uri 실패", exception.getMessage());
   }
 }

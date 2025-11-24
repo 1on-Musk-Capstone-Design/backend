@@ -43,7 +43,10 @@ oauth2:
   google:
     client-id: ${GOOGLE_CLIENT_ID:your-google-client-id}
     client-secret: ${GOOGLE_CLIENT_SECRET:your-google-client-secret}
-    redirect-uri: ${GOOGLE_REDIRECT_URI:http://localhost:3000/auth/callback}  # 배포 시 환경변수로 도메인 설정 필요 (예: https://yourdomain.com/auth/callback)
+    # 배포 시 환경변수 GOOGLE_REDIRECT_URI로 설정 필요
+    # 로컬: http://localhost:3000/auth/callback
+    # 프로덕션: https://mingjaam.github.io/auth/callback
+    redirect-uri: ${GOOGLE_REDIRECT_URI:http://localhost:3000/auth/callback}
     token-uri: https://oauth2.googleapis.com/token
     resource-uri: https://www.googleapis.com/oauth2/v2/userinfo
     login-uri: ${GOOGLE_LOGIN_URI:https://accounts.google.com/o/oauth2/v2/auth}

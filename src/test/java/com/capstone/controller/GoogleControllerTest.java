@@ -39,7 +39,7 @@ class GoogleControllerTest {
         .refreshToken("refresh")
         .build();
 
-    given(googleService.loginOrJoin("Wrong Code")).willReturn(tokenDto);
+    given(googleService.loginOrJoin(anyString(), anyString())).willReturn(tokenDto);
 
     mockMvc.perform(post("/v1/auth-google")
             .param("code", "Wrong Code")
@@ -53,7 +53,7 @@ class GoogleControllerTest {
   @Test
   @DisplayName("로그인 & 회원가입 실패 테스트")
   void failLoginOrJoin() throws Exception {
-    when(googleService.loginOrJoin(anyString()))
+    when(googleService.loginOrJoin(anyString(), anyString()))
         .thenThrow(new RuntimeException("구글 인증 실패"));
 
     mockMvc.perform(post("/v1/auth-google")

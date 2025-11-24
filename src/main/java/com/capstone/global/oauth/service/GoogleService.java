@@ -43,11 +43,13 @@ public class GoogleService {
   private String resourceUri;
 
   @Transactional
-  public TokenDto loginOrJoin(String code) {
-    log.info("OAuth 로그인 시작 - code: {}", code != null ? code.substring(0, Math.min(10, code.length())) + "..." : "null");
+  public TokenDto loginOrJoin(String code, String redirectUri) {
+    log.info("OAuth 로그인 시작 - code: {}, redirectUri: {}", 
+        code != null ? code.substring(0, Math.min(10, code.length())) + "..." : "null",
+        redirectUri);
     
     try {
-    String accessToken = getAccessToken(code);
+    String accessToken = getAccessToken(code, redirectUri);
       log.info("Access token 획득 성공");
       
     JsonNode userInfo = getUserInfo(accessToken);
@@ -101,12 +103,12 @@ public class GoogleService {
     }
   }
 
-  private String getAccessToken(String code) {
+  private String getAccessToken(String code, String dynamicRedirectUri) {
     MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
     params.add("code", code);
     params.add("client_id", clientId);
     params.add("client_secret", clientSecret);
-    params.add("redirect_uri", redirectUri);
+    params.add("redirect_uri", dynamicRedirectUri);
     params.add("grant_type", "authorization_code");
 
     HttpHeaders headers = new HttpHeaders();
