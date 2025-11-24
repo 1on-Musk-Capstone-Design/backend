@@ -23,36 +23,65 @@ public class WebSocketService {
   // 채팅 메시지 수신 및 브로드캐스트
   @MessageMapping("/chat/message")
   public void handleChatMessage(@Payload ChatMessageDtos.SendRequest request) {
+    log.info("=== 채팅 메시지 수신 시작 ===");
+    log.info("요청 데이터: workspaceId={}, userId={}, content={}", 
+        request != null ? request.getWorkspaceId() : "null",
+        request != null ? request.getUserId() : "null",
+        request != null ? request.getContent() : "null");
+    
     try {
-      if (request.getWorkspaceId() != null) {
-        // 메시지를 데이터베이스에 저장
-        ChatMessage savedMessage = chatMessageService.saveMessage(
-            request.getWorkspaceId(),
-            request.getUserId(),
-            request.getContent()
-        );
-
-        // 응답 DTO 생성
-        ChatMessageDtos.Response response = new ChatMessageDtos.Response();
-        response.setMessageId(savedMessage.getMessageId());
-        response.setWorkspaceId(savedMessage.getWorkspaceId());
-        response.setUserId(savedMessage.getUser().getId());
-        response.setContent(savedMessage.getContent());
-        response.setMessageType(savedMessage.getMessageType());
-        response.setFileUrl(savedMessage.getFileUrl());
-        response.setFileName(savedMessage.getFileName());
-        response.setMimeType(savedMessage.getMimeType());
-        response.setFileSize(savedMessage.getFileSize());
-        response.setCreatedAt(savedMessage.getCreatedAt());
-
-        // 해당 워크스페이스의 모든 클라이언트에게 브로드캐스트
-        messagingTemplate.convertAndSend(
-            "/topic/workspace/" + request.getWorkspaceId() + "/messages",
-            response
-        );
+      if (request == null) {
+        log.error("요청 데이터가 null입니다.");
+        return;
       }
+      
+      if (request.getWorkspaceId() == null) {
+        log.error("workspaceId가 null입니다.");
+        return;
+      }
+      
+      if (request.getUserId() == null) {
+        log.error("userId가 null입니다.");
+        return;
+      }
+      
+      log.info("메시지 저장 시작 - workspaceId: {}, userId: {}", 
+          request.getWorkspaceId(), request.getUserId());
+      
+      // 메시지를 데이터베이스에 저장
+      ChatMessage savedMessage = chatMessageService.saveMessage(
+          request.getWorkspaceId(),
+          request.getUserId(),
+          request.getContent()
+      );
+
+      log.info("메시지 저장 완료 - messageId: {}", savedMessage.getMessageId());
+
+      // 응답 DTO 생성
+      ChatMessageDtos.Response response = new ChatMessageDtos.Response();
+      response.setMessageId(savedMessage.getMessageId());
+      response.setWorkspaceId(savedMessage.getWorkspaceId());
+      response.setUserId(savedMessage.getUser().getId());
+      response.setContent(savedMessage.getContent());
+      response.setMessageType(savedMessage.getMessageType());
+      response.setFileUrl(savedMessage.getFileUrl());
+      response.setFileName(savedMessage.getFileName());
+      response.setMimeType(savedMessage.getMimeType());
+      response.setFileSize(savedMessage.getFileSize());
+      response.setCreatedAt(savedMessage.getCreatedAt());
+
+      String broadcastPath = "/topic/workspace/" + request.getWorkspaceId() + "/messages";
+      log.info("브로드캐스트 시작 - 경로: {}", broadcastPath);
+      log.info("브로드캐스트 데이터: {}", response);
+
+      // 해당 워크스페이스의 모든 클라이언트에게 브로드캐스트
+      messagingTemplate.convertAndSend(broadcastPath, response);
+      
+      log.info("브로드캐스트 완료 - 경로: {}", broadcastPath);
+      log.info("=== 채팅 메시지 처리 완료 ===");
     } catch (Exception e) {
       log.error("채팅 메시지 처리 중 오류 발생: {}", e.getMessage(), e);
+      log.error("스택 트레이스:", e);
     }
   }
 
