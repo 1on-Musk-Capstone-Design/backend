@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 import java.util.Map;
 
 @Slf4j
-@Service
+@org.springframework.stereotype.Component
 @RequiredArgsConstructor
 public class WebSocketService {
 
