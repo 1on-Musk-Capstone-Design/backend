@@ -14,6 +14,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -100,13 +101,24 @@ public class WorkspaceController {
           description = "초대 링크 수락 요청 (Authorization 없을 경우 userId 필수)", required = false)
       @RequestBody(required = false) WorkspaceDtos.InviteAcceptRequest request
   ) {
+    log.info("초대 수락 요청 수신 - token: {}, authHeader 존재: {}, request 존재: {}", 
+        token, authHeader != null, request != null);
+    
     Long userId = null;
 
-    if (authHeader != null && !authHeader.trim().isEmpty()) {
-      String jwt = authHeader.replace("Bearer ", "").trim();
-      userId = jwtProvider.getUserIdFromAccessToken(jwt);
-    } else if (request != null && request.getUserId() != null) {
-      userId = request.getUserId();
+    try {
+      if (authHeader != null && !authHeader.trim().isEmpty()) {
+        String jwt = authHeader.replace("Bearer ", "").trim();
+        log.info("JWT 토큰에서 userId 추출 시도 - jwt 길이: {}", jwt.length());
+        userId = jwtProvider.getUserIdFromAccessToken(jwt);
+        log.info("JWT에서 추출한 userId: {}", userId);
+      } else if (request != null && request.getUserId() != null) {
+        userId = request.getUserId();
+        log.info("RequestBody에서 추출한 userId: {}", userId);
+      }
+    } catch (Exception e) {
+      log.error("userId 추출 중 오류 발생: {}", e.getMessage(), e);
+      return ResponseEntity.badRequest().body("유효하지 않은 토큰입니다: " + e.getMessage());
     }
 
     if (userId == null) {
@@ -114,8 +126,18 @@ public class WorkspaceController {
       return ResponseEntity.badRequest().body("userId 또는 Authorization 헤더가 필요합니다.");
     }
 
-    workspaceInviteService.acceptInvite(token, userId);
-    return ResponseEntity.ok("워크스페이스 참여 성공");
+    try {
+      log.info("초대 수락 처리 시작 - token: {}, userId: {}", token, userId);
+      workspaceInviteService.acceptInvite(token, userId);
+      log.info("초대 수락 처리 완료 - token: {}, userId: {}", token, userId);
+      return ResponseEntity.ok("워크스페이스 참여 성공");
+    } catch (CustomException e) {
+      log.error("초대 수락 처리 실패 - token: {}, userId: {}, error: {}", token, userId, e.getMessage());
+      return ResponseEntity.status(e.getErrorCode().getHttpStatus()).body(e.getMessage());
+    } catch (Exception e) {
+      log.error("초대 수락 처리 중 예상치 못한 오류 - token: {}, userId: {}", token, userId, e);
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("서버 오류가 발생했습니다.");
+    }
   }
 
   @Operation(summary = "워크스페이스 상세 조회", description = "특정 워크스페이스의 상세 정보를 조회합니다.")
