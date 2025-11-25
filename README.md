@@ -67,14 +67,15 @@
 - **Java 21**
 - **Spring Boot 3.2.0**
 - **PostgreSQL** - 데이터베이스
-- **Socket.IO** - 실시간 통신
+- **STOMP WebSocket** - 실시간 통신 (Socket.IO에서 마이그레이션)
 - **OpenAI API** - AI 클러스터링
 - **Spring Security** - 보안
 - **Spring Data JPA** - ORM
+- **Swagger/OpenAPI** - API 문서화
 
 ### Frontend
 - **React** (CSR)
-- **Socket.IO Client** - 실시간 통신
+- **STOMP Client** - 실시간 통신 (@stomp/stompjs, sockjs-client)
 
 ## 📦 설치 및 실행
 
@@ -130,7 +131,7 @@ lsof -ti:8080 | xargs -r kill -9; lsof -ti:9092 | xargs -r kill -9; ./gradlew bo
 ### 4. 접속 정보
 
 - **REST API**: `http://localhost:8080/api`
-- **Socket.IO**: `http://localhost:9092`
+- **WebSocket (STOMP)**: `ws://localhost:8080/api/ws`
 - **헬스체크**: `http://localhost:8080/api/v1/health`
 - **Swagger UI**: `http://localhost:8080/api/swagger-ui.html`
 - **OpenAPI Spec**: `http://localhost:8080/api/v3/api-docs`
@@ -151,17 +152,20 @@ lsof -ti:8080 | xargs -r kill -9; lsof -ti:9092 | xargs -r kill -9; ./gradlew bo
 #### Health Check (1개)
 - `GET /api/v1/health` - 서버 상태 확인
 
-#### Workspace API (5개)
+#### Workspace API (7개)
 - `GET /api/v1/workspaces` - 워크스페이스 목록 조회
 - `POST /api/v1/workspaces` - 워크스페이스 생성
 - `GET /api/v1/workspaces/{id}` - 워크스페이스 상세 조회
 - `PUT /api/v1/workspaces/{id}` - 워크스페이스 이름 변경
 - `DELETE /api/v1/workspaces/{id}` - 워크스페이스 삭제
+- `POST /api/v1/workspaces/{id}/invite-link` - 초대 링크 생성
+- `POST /api/v1/workspaces/invite/{token}/accept` - 초대 링크 수락
 
-#### Workspace Member API (3개)
+#### Workspace Member API (4개)
 - `POST /api/v1/workspaces/{workspaceId}/join` - 워크스페이스 참여
 - `GET /api/v1/workspaces/{workspaceId}/users` - 멤버 목록 조회
 - `DELETE /api/v1/workspaces/{workspaceId}/users/{userId}` - 멤버 제거
+- `POST /api/v1/workspaces/{workspaceId}/leave` - 워크스페이스 나가기
 
 #### Idea API (5개)
 - `POST /api/v1/ideas` - 아이디어 생성
@@ -199,8 +203,8 @@ lsof -ti:8080 | xargs -r kill -9; lsof -ti:9092 | xargs -r kill -9; ./gradlew bo
 - `DELETE /api/v1/canvas/{canvasId}` - 캔버스 삭제
 
 #### Google OAuth API (2개)
-- `GET /api/v1/auth-google/login-uri` - Google 로그인 URI 조회
-- `POST /api/v1/auth-google?code={code}` - Google 로그인/회원가입
+- `GET /api/v1/auth-google/login-uri?redirect_uri={uri}` - Google 로그인 URI 조회 (redirect_uri 파라미터 지원)
+- `POST /api/v1/auth-google?code={code}&redirect_uri={uri}` - Google 로그인/회원가입 (redirect_uri 파라미터 지원)
 
 > **참고:** 개발/테스트 환경에서는 Authorization 헤더가 기본적으로 비활성화되어 있습니다. 
 > JWT 토큰을 받은 후 사용하려면 Postman의 Variables 탭에서 `authToken` 변수를 설정하고, 
@@ -229,12 +233,11 @@ spring:
       ddl-auto: create-drop  # 개발용 (프로덕션에서는 validate로 변경)
     show-sql: true
 
-# Socket.IO 설정
-socketio:
-  host: localhost
-  port: 9092
-  cors:
-    origins: "http://localhost:3000,http://127.0.0.1:3000"
+# WebSocket (STOMP) 설정
+# WebSocketConfig에서 관리
+# 연결 엔드포인트: /api/ws
+# 메시지 브로드캐스트: /topic/workspace/{workspaceId}/*
+# 클라이언트 전송: /app/*
 
 # OpenAI API 설정 (AI 클러스터링용)
 openai:
@@ -255,7 +258,7 @@ oauth2:
 
 **허용된 엔드포인트:**
 - Health Check, Actuator
-- Socket.IO
+- WebSocket (/api/ws)
 - Google OAuth
 - Workspace API (GET, POST, PUT, DELETE)
 - Chat Message API
@@ -265,24 +268,59 @@ oauth2:
 - `SecurityConfig.java`의 TODO 주석 참고
 - POST, PUT, DELETE 메서드는 `.authenticated()`로 변경 필요
 
-## 📡 Socket.IO 이벤트
+## 📡 STOMP WebSocket 통신
 
-### 클라이언트 → 서버
-- `join_session`: 세션 참여
-- `leave_session`: 세션 나가기
-- `chat_message`: 채팅 메시지 전송
-- `idea_update`: 아이디어 박스 업데이트
-- `voice_join`: 음성 채팅 참여
-- `voice_leave`: 음성 채팅 나가기
+### 연결
+- **엔드포인트**: `ws://localhost:8080/api/ws`
+- **프로토콜**: STOMP over SockJS
 
-### 서버 → 클라이언트
-- `connected`: 연결 확인
-- `joined_session`: 세션 참여 완료
-- `left_session`: 세션 나가기 완료
-- `new_message`: 새 채팅 메시지
-- `idea_updated`: 아이디어 박스 업데이트
-- `user_joined`: 사용자 참여 알림
-- `user_left`: 사용자 나가기 알림
+### 클라이언트 → 서버 (메시지 전송)
+- `/app/chat/message` - 채팅 메시지 전송
+- `/app/chat/file` - 파일/이미지 메시지 전송
+- `/app/workspace/join` - 워크스페이스 참여 알림
+- `/app/workspace/leave` - 워크스페이스 나가기 알림
+- `/app/idea/update` - 아이디어 업데이트
+- `/app/voice/join` - 음성 채팅 참여
+- `/app/voice/leave` - 음성 채팅 나가기
+
+### 서버 → 클라이언트 (메시지 구독)
+- `/topic/workspace/{workspaceId}/messages` - 채팅 메시지 수신
+- `/topic/workspace/{workspaceId}/users` - 워크스페이스 사용자 변경 알림
+- `/topic/workspace/{workspaceId}/ideas` - 아이디어 업데이트 알림
+- `/topic/workspace/{workspaceId}/canvas` - 캔버스 변경 알림
+- `/topic/workspace/{workspaceId}/voice` - 음성 채팅 알림
+- `/topic/workspace/{workspaceId}/workspace` - 워크스페이스 변경 알림
+
+### 프론트엔드 연결 예제
+```typescript
+import { Client } from '@stomp/stompjs';
+import SockJS from 'sockjs-client';
+
+const client = new Client({
+  webSocketFactory: () => new SockJS('http://localhost:8080/api/ws'),
+  reconnectDelay: 5000,
+});
+
+client.activate();
+
+client.onConnect = () => {
+  // 채팅 메시지 구독
+  client.subscribe('/topic/workspace/1/messages', (message) => {
+    const data = JSON.parse(message.body);
+    console.log('메시지 수신:', data);
+  });
+  
+  // 메시지 전송
+  client.publish({
+    destination: '/app/chat/message',
+    body: JSON.stringify({
+      workspaceId: 1,
+      userId: 1,
+      content: '안녕하세요'
+    })
+  });
+};
+```
 
 ## 🏗 프로젝트 구조
 
@@ -323,7 +361,8 @@ src/main/java/com/capstone/
 └── global/                          # 공통 컴포넌트
     ├── config/                       # 설정 클래스들
     │   ├── SecurityConfig.java      # 보안 설정 (HTTP 메서드별 권한 구분)
-    │   └── SocketIOConfig.java      # Socket.IO 설정
+    │   ├── WebSocketConfig.java     # STOMP WebSocket 설정
+    │   └── AppProperties.java       # 애플리케이션 설정 (CORS, OAuth 등)
     ├── controller/                   # 공통 컨트롤러
     │   ├── HealthController.java    # 헬스체크 API
     │   └── OpenAIController.java    # OpenAI API (비활성화)
@@ -335,7 +374,7 @@ src/main/java/com/capstone/
     │   └── service/
     │       └── GoogleService.java    # Google OAuth 서비스
     ├── service/                      # 공통 서비스
-    │   └── SocketIOService.java     # Socket.IO 이벤트 처리
+    │   └── WebSocketService.java    # STOMP WebSocket 메시지 처리
     └── type/
         └── Role.java                # 사용자 권한 (OWNER, MEMBER)
 ```
@@ -344,26 +383,32 @@ src/main/java/com/capstone/
 
 ### ✅ 완료된 기능
 - [x] **기본 설정**
-  - [x] Socket.IO 서버 설정 및 이벤트 핸들러
+  - [x] STOMP WebSocket 서버 설정 및 메시지 핸들러
   - [x] CORS 설정 및 보안 구성 (HTTP 메서드별 권한 구분)
   - [x] PostgreSQL 연결 설정
   - [x] Context-path 설정 (`/api`)
   - [x] 헬스체크 API
+  - [x] 환경변수 기반 동적 설정 (CORS, OAuth redirect URI)
 
 - [x] **인증/인가**
   - [x] Google OAuth 2.0 통합
-  - [x] JWT 토큰 생성/검증
+  - [x] JWT 토큰 생성/검증 (Access Token: 24시간, Refresh Token: 7일)
   - [x] Spring Security 설정 (개발/프로덕션 구분)
   - [x] Authorization 헤더 optional 처리 (개발용)
+  - [x] OAuth redirect_uri 파라미터 지원 (프론트엔드 동적 설정 연동)
 
-- [x] **Workspace API (5개)**
+- [x] **Workspace API (7개)**
   - [x] 워크스페이스 생성/조회/수정/삭제
+  - [x] 초대 링크 생성/수락
   - [x] 자동 User 생성 (개발용)
+  - [x] 초대 수락 API 상세 로깅 및 예외 처리
 
-- [x] **Workspace Member API (3개)**
+- [x] **Workspace Member API (4개)**
   - [x] 워크스페이스 참여
   - [x] 멤버 목록 조회
-  - [x] 멤버 제거 (OWNER 권한)
+  - [x] 멤버 제거 (OWNER 권한 또는 본인)
+  - [x] 워크스페이스 나가기
+  - [x] OWNER 나가기 시 자동 소유권 이전 또는 워크스페이스 삭제
 
 - [x] **Idea API (5개)**
   - [x] 워크스페이스 생성/조회/수정/삭제
@@ -390,23 +435,37 @@ src/main/java/com/capstone/
   - [x] 모든 사용자 조회
   - [x] 참여자 수 조회
 
+- [x] **실시간 통신 (STOMP WebSocket)**
+  - [x] 채팅 메시지 실시간 전송/수신
+  - [x] 파일/이미지 메시지 실시간 전송/수신
+  - [x] 워크스페이스 사용자 변경 알림
+  - [x] 아이디어 업데이트 실시간 동기화
+  - [x] 캔버스 변경 실시간 동기화
+  - [x] 워크스페이스 변경 실시간 알림
+  - [x] 음성 채팅 참여/나가기 알림
+
 - [x] **API 문서화**
   - [x] Swagger/OpenAPI 통합
-  - [x] 32개 API 전체 문서화
+  - [x] 34개 API 전체 문서화
   - [x] JWT 인증 테스트 지원
   
 - [x] **Postman 컬렉션**
-  - [x] 32개 API 전체 포함
+  - [x] 34개 API 전체 포함
   - [x] Authorization 헤더 설정
   - [x] 샘플 응답 포함
 
+- [x] **CI/CD**
+  - [x] GitHub Actions 워크플로우
+  - [x] 자동 빌드 및 테스트
+  - [x] AWS 서버 자동 배포
+  - [x] 수동 워크플로우 실행 지원 (workflow_dispatch)
+  - [x] 환경변수 자동 설정
+
 ### 🔄 진행 예정
-- [ ] 아이디어 박스 CRUD API
 - [ ] AI 클러스터링 서비스 (OpenAI 통합)
-- [ ] WebSocket/Socket.IO 실시간 이벤트 구현
-- [ ] 무한 컨버스 백엔드 로직
 - [ ] 프로덕션용 보안 강화
 - [ ] 테스트 코드 확대
+- [ ] 성능 최적화
 
 ## 🤝 기여 방법
 
