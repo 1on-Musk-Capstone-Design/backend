@@ -19,7 +19,7 @@ public class JwtProvider {
   @Value("${spring.jwt.secret}")
   private String secretKey;
 
-  private static final long ACCESS_TOKEN_EXPIRE_TIME = 1000L * 60 * 60;
+  private static final long ACCESS_TOKEN_EXPIRE_TIME = 1000L * 60 * 60 * 24;
   private static final long REFRESH_TOKEN_EXPIRE_TIME = 1000L * 60 * 60 * 24 * 7;
 
   public String createAccessToken(Long userId, String email) {
