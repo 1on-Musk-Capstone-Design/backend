@@ -293,5 +293,50 @@ public class WebSocketService {
         data
     );
   }
+
+  // 커서 위치 업데이트 이벤트 (클라이언트에서 직접 전송)
+  @MessageMapping("/cursor/move")
+  public void handleCursorMove(@Payload Map<String, Object> payload) {
+    try {
+      Long workspaceId = payload.get("workspaceId") == null ? null
+          : Long.valueOf(payload.get("workspaceId").toString());
+      Long userId = payload.get("userId") == null ? null
+          : Long.valueOf(payload.get("userId").toString());
+      Double x = payload.get("x") == null ? null
+          : Double.valueOf(payload.get("x").toString());
+      Double y = payload.get("y") == null ? null
+          : Double.valueOf(payload.get("y").toString());
+      String userName = (String) payload.get("userName");
+      Long timestamp = payload.get("timestamp") == null ? null
+          : Long.valueOf(payload.get("timestamp").toString());
+
+      if (workspaceId != null && userId != null && x != null && y != null) {
+        CursorPositionDto cursorPosition = CursorPositionDto.builder()
+            .userId(userId)
+            .workspaceId(workspaceId)
+            .x(x)
+            .y(y)
+            .userName(userName)
+            .timestamp(timestamp != null ? timestamp : System.currentTimeMillis())
+            .build();
+
+        // 해당 워크스페이스의 모든 클라이언트에게 커서 위치 브로드캐스트
+        messagingTemplate.convertAndSend(
+            "/topic/workspace/" + workspaceId + "/cursor",
+            cursorPosition
+        );
+      }
+    } catch (Exception e) {
+      log.error("커서 위치 업데이트 처리 중 오류 발생: {}", e.getMessage(), e);
+    }
+  }
+
+  // 커서 위치 브로드캐스트 헬퍼 메서드
+  public void broadcastCursorPosition(Long workspaceId, CursorPositionDto cursorPosition) {
+    messagingTemplate.convertAndSend(
+        "/topic/workspace/" + workspaceId + "/cursor",
+        cursorPosition
+    );
+  }
 }
 
