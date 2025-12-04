@@ -145,11 +145,43 @@ public class WebSocketService {
     );
   }
 
+  // 워크스페이스 참여 알림 (사용자 정보 포함)
+  public void notifyUserJoined(Long workspaceId, Long userId, String userName) {
+    String safeUserName = userName != null && !userName.trim().isEmpty() ? userName : "알 수 없는 사용자";
+    Map<String, Object> notification = new java.util.HashMap<>();
+    notification.put("type", "user_joined");
+    notification.put("userId", userId);
+    notification.put("userName", safeUserName);
+    notification.put("message", String.format("사용자 %s가 워크스페이스에 참여했습니다.", safeUserName));
+    messagingTemplate.convertAndSend(
+        "/topic/workspace/" + workspaceId + "/users",
+        notification
+    );
+  }
+
   // 워크스페이스 나가기 알림
   public void notifyUserLeft(Long workspaceId, String message) {
     messagingTemplate.convertAndSend(
         "/topic/workspace/" + workspaceId + "/users",
         message
+    );
+  }
+
+  // 워크스페이스 나가기 알림 (사용자 정보 포함)
+  public void notifyUserLeft(Long workspaceId, Long userId, String userName, boolean isRemoved) {
+    String safeUserName = userName != null && !userName.trim().isEmpty() ? userName : "알 수 없는 사용자";
+    String actionMessage = isRemoved 
+        ? String.format("사용자 %s가 워크스페이스에서 제거되었습니다.", safeUserName)
+        : String.format("사용자 %s가 워크스페이스를 떠났습니다.", safeUserName);
+    
+    Map<String, Object> notification = new java.util.HashMap<>();
+    notification.put("type", "user_left");
+    notification.put("userId", userId);
+    notification.put("userName", safeUserName);
+    notification.put("message", actionMessage);
+    messagingTemplate.convertAndSend(
+        "/topic/workspace/" + workspaceId + "/users",
+        notification
     );
   }
 

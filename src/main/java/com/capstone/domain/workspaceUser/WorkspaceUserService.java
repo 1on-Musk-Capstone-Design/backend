@@ -53,9 +53,8 @@ public class WorkspaceUserService {
     try {
       workspaceUserRepository.save(workspaceUser);
       
-      // WebSocket 브로드캐스트
-      webSocketService.notifyUserJoined(workspaceId, 
-          String.format("사용자 %s가 워크스페이스에 참여했습니다.", user.getName()));
+      // WebSocket 브로드캐스트 (사용자 정보 포함)
+      webSocketService.notifyUserJoined(workspaceId, userId, user.getName());
     } catch (DataIntegrityViolationException e) {
       log.warn("중복 워크스페이스 참여 시도 감지 - workspaceId: {}, userId: {}", workspaceId, userId);
       throw new CustomException(ALREADY_JOINED_WORKSPACE);
@@ -116,9 +115,8 @@ public class WorkspaceUserService {
 
     workspaceUserRepository.delete(targetWorkspaceUser);
 
-    // WebSocket 브로드캐스트
-    webSocketService.notifyUserLeft(workspaceId,
-        String.format("사용자 %s가 워크스페이스에서 제거되었습니다.", target.getName()));
+    // WebSocket 브로드캐스트 (사용자 정보 포함, 제거됨)
+    webSocketService.notifyUserLeft(workspaceId, userId, target.getName(), true);
   }
 
   @Transactional
@@ -143,9 +141,8 @@ public class WorkspaceUserService {
 
     workspaceUserRepository.delete(workspaceUser);
 
-    // WebSocket 브로드캐스트
-    webSocketService.notifyUserLeft(workspaceId,
-        String.format("사용자 %s가 워크스페이스를 떠났습니다.", user.getName()));
+    // WebSocket 브로드캐스트 (사용자 정보 포함, 나감)
+    webSocketService.notifyUserLeft(workspaceId, userId, user.getName(), false);
   }
 
   private boolean handleOwnerLeaving(Workspace workspace, WorkspaceUser leavingUser, boolean isSelf,
