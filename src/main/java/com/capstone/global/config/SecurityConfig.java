@@ -76,6 +76,9 @@ public class SecurityConfig {
             // OpenAI (개발용)
             .requestMatchers("/v1/openai/**").permitAll()  // TODO: 프로덕션에서는 authenticated()로 변경
 
+            // 정적 파일 (업로드된 이미지 등)
+            .requestMatchers("/uploads/**").permitAll()
+
             // 나머지는 인증 필요
             .anyRequest().authenticated()
         );

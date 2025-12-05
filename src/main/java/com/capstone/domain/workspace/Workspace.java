@@ -26,4 +26,7 @@ public class Workspace {
 
   @Column(name = "created_at", nullable = false, updatable = false)
   private Instant createdAt = Instant.now();
+
+  @Column(name = "thumbnail_url", length = 500)
+  private String thumbnailUrl;
 }

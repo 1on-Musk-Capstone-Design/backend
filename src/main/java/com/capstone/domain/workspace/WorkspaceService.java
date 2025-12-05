@@ -18,8 +18,10 @@ import com.capstone.domain.workspaceInvite.WorkspaceInviteRepository;
 import com.capstone.domain.workspaceUser.WorkspaceUser;
 import com.capstone.domain.workspaceUser.WorkspaceUserRepository;
 import com.capstone.global.exception.CustomException;
+import com.capstone.global.service.FileStorageService;
 import com.capstone.global.service.WebSocketService;
 import com.capstone.global.type.Role;
+import org.springframework.web.multipart.MultipartFile;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -44,6 +46,7 @@ public class WorkspaceService {
   private final VoiceSessionRepository voiceSessionRepository;
   private final VoiceSessionUserRepository voiceSessionUserRepository;
   private final WebSocketService webSocketService;
+  private final FileStorageService fileStorageService;
 
   @Transactional
   public Workspace createWorkspace(String name, Long userId) {
@@ -114,6 +117,7 @@ public class WorkspaceService {
     dto.setWorkspaceId(updated.getWorkspaceId());
     dto.setName(updated.getName());
     dto.setCreatedAt(updated.getCreatedAt());
+    dto.setThumbnailUrl(updated.getThumbnailUrl());
 
     // WebSocket 브로드캐스트
     webSocketService.broadcastWorkspaceChange(workspaceId, "updated", 
@@ -248,5 +252,36 @@ public class WorkspaceService {
     // WebSocket 브로드캐스트 (삭제 전에 알림)
     webSocketService.broadcastWorkspaceChange(workspaceId, "deleted", 
         Map.of("workspaceId", workspaceId));
+  }
+
+  @Transactional
+  public String updateThumbnail(Long workspaceId, MultipartFile file, Long userId) throws java.io.IOException {
+    // owner를 함께 로드하여 조회
+    Workspace workspace = workspaceRepository.findByIdWithOwner(workspaceId)
+        .orElseThrow(() -> new CustomException(NOT_FOUND_WORKSPACE));
+
+    User user = userRepository.findById(userId)
+        .orElseThrow(() -> new CustomException(NOT_FOUND_USER));
+
+    // OWNER만 수정 가능
+    if (workspace.getOwner() == null || !workspace.getOwner().getId().equals(userId)) {
+      throw new CustomException(FORBIDDEN_WORKSPACE);
+    }
+
+    // 기존 썸네일 삭제
+    if (workspace.getThumbnailUrl() != null) {
+      fileStorageService.deleteThumbnail(workspace.getThumbnailUrl());
+    }
+
+    // 새 썸네일 저장
+    String thumbnailUrl = fileStorageService.saveThumbnail(file, workspaceId);
+    workspace.setThumbnailUrl(thumbnailUrl);
+    workspaceRepository.save(workspace);
+
+    // WebSocket 브로드캐스트
+    webSocketService.broadcastWorkspaceChange(workspaceId, "thumbnail_updated", 
+        Map.of("workspaceId", workspaceId, "thumbnailUrl", thumbnailUrl));
+
+    return thumbnailUrl;
   }
 }
