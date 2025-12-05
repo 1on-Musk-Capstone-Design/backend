@@ -173,8 +173,8 @@ public class WorkspaceUserService {
 
     nextOwner.updateRole(Role.OWNER);
     workspace.setOwner(nextOwner.getUser());
-    workspaceRepository.save(workspace);
-    workspaceUserRepository.save(nextOwner);
+    workspaceRepository.saveAndFlush(workspace);
+    workspaceUserRepository.saveAndFlush(nextOwner);
 
     log.info("워크스페이스 OWNER 변경 - workspaceId: {}, newOwnerId: {}", workspace.getWorkspaceId(),
         nextOwner.getUser().getId());

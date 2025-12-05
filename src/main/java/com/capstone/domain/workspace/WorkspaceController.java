@@ -320,4 +320,122 @@ public class WorkspaceController {
       return ResponseEntity.status(500).body(Map.of("error", "서버 오류가 발생했습니다."));
     }
   }
+
+  @Operation(summary = "삭제된 워크스페이스 목록 조회", description = "본인이 속한 삭제된 워크스페이스 목록을 조회합니다.")
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "200", description = "조회 성공",
+          content = @Content(schema = @Schema(implementation = WorkspaceDtos.ListItem.class)))
+  })
+  @SecurityRequirement(name = "Bearer Authentication")
+  @GetMapping("/deleted")
+  public ResponseEntity<List<WorkspaceDtos.ListItem>> getDeletedWorkspaces(
+      @Parameter(description = "JWT 토큰", required = true)
+      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String token) {
+    
+    if (token == null || token.trim().isEmpty()) {
+      return ResponseEntity.status(401).build();
+    }
+    
+    String jwt = token.replace("Bearer ", "").trim();
+    Long userId = jwtProvider.getUserIdFromAccessToken(jwt);
+    
+    List<Workspace> workspaces = workspaceService.getDeletedWorkspacesByUserId(userId);
+
+    List<WorkspaceDtos.ListItem> response = workspaces.stream()
+        .map(workspace -> {
+          WorkspaceDtos.ListItem item = new WorkspaceDtos.ListItem();
+          item.setWorkspaceId(workspace.getWorkspaceId());
+          item.setName(workspace.getName());
+          item.setCreatedAt(workspace.getCreatedAt());
+          item.setThumbnailUrl(workspace.getThumbnailUrl());
+          return item;
+        })
+        .collect(Collectors.toList());
+
+    return ResponseEntity.ok(response);
+  }
+
+  @Operation(summary = "워크스페이스 복원", description = "삭제된 워크스페이스를 복원합니다. (OWNER만 가능)")
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "200", description = "복원 성공"),
+      @ApiResponse(responseCode = "401", description = "인증 토큰이 필요하거나 유효하지 않음"),
+      @ApiResponse(responseCode = "403", description = "워크스페이스 OWNER 권한이 없음"),
+      @ApiResponse(responseCode = "404", description = "워크스페이스를 찾을 수 없음")
+  })
+  @SecurityRequirement(name = "Bearer Authentication")
+  @PostMapping("/{id}/restore")
+  public ResponseEntity<String> restoreWorkspace(
+      @Parameter(description = "워크스페이스 ID", required = true) @PathVariable Long id,
+      @Parameter(description = "JWT 토큰", required = false)
+      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String token
+  ) {
+    if (token == null || token.trim().isEmpty()) {
+      return ResponseEntity.status(401).body("인증 토큰이 필요합니다.");
+    }
+    
+    Long userId;
+    try {
+      String jwt = token.replace("Bearer ", "").trim();
+      userId = jwtProvider.getUserIdFromAccessToken(jwt);
+    } catch (Exception e) {
+      log.error("JWT 파싱 실패: {}", e.getMessage(), e);
+      return ResponseEntity.status(401).body("유효하지 않은 토큰입니다.");
+    }
+
+    try {
+      workspaceService.restoreWorkspace(id, userId);
+      log.info("워크스페이스 복원 성공 - workspaceId: {}, userId: {}", id, userId);
+      return ResponseEntity.ok("워크스페이스가 복원되었습니다.");
+    } catch (CustomException e) {
+      log.error("워크스페이스 복원 실패 - workspaceId: {}, userId: {}, error: {}", 
+          id, userId, e.getMessage());
+      return ResponseEntity.status(e.getErrorCode().getHttpStatus()).body(e.getMessage());
+    } catch (Exception e) {
+      log.error("워크스페이스 복원 중 예상치 못한 오류 - workspaceId: {}, userId: {}", 
+          id, userId, e.getMessage(), e);
+      return ResponseEntity.status(500).body("서버 오류가 발생했습니다.");
+    }
+  }
+
+  @Operation(summary = "워크스페이스 영구 삭제", description = "삭제된 워크스페이스를 영구적으로 삭제합니다. (OWNER만 가능, 복원 불가)")
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "200", description = "영구 삭제 성공"),
+      @ApiResponse(responseCode = "401", description = "인증 토큰이 필요하거나 유효하지 않음"),
+      @ApiResponse(responseCode = "403", description = "워크스페이스 OWNER 권한이 없음"),
+      @ApiResponse(responseCode = "404", description = "워크스페이스를 찾을 수 없음")
+  })
+  @SecurityRequirement(name = "Bearer Authentication")
+  @DeleteMapping("/{id}/permanent")
+  public ResponseEntity<String> permanentDeleteWorkspace(
+      @Parameter(description = "워크스페이스 ID", required = true) @PathVariable Long id,
+      @Parameter(description = "JWT 토큰", required = false)
+      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String token
+  ) {
+    if (token == null || token.trim().isEmpty()) {
+      return ResponseEntity.status(401).body("인증 토큰이 필요합니다.");
+    }
+    
+    Long userId;
+    try {
+      String jwt = token.replace("Bearer ", "").trim();
+      userId = jwtProvider.getUserIdFromAccessToken(jwt);
+    } catch (Exception e) {
+      log.error("JWT 파싱 실패: {}", e.getMessage(), e);
+      return ResponseEntity.status(401).body("유효하지 않은 토큰입니다.");
+    }
+
+    try {
+      workspaceService.permanentDeleteWorkspace(id, userId);
+      log.info("워크스페이스 영구 삭제 성공 - workspaceId: {}, userId: {}", id, userId);
+      return ResponseEntity.ok("워크스페이스가 영구적으로 삭제되었습니다.");
+    } catch (CustomException e) {
+      log.error("워크스페이스 영구 삭제 실패 - workspaceId: {}, userId: {}, error: {}", 
+          id, userId, e.getMessage());
+      return ResponseEntity.status(e.getErrorCode().getHttpStatus()).body(e.getMessage());
+    } catch (Exception e) {
+      log.error("워크스페이스 영구 삭제 중 예상치 못한 오류 - workspaceId: {}, userId: {}", 
+          id, userId, e.getMessage(), e);
+      return ResponseEntity.status(500).body("서버 오류가 발생했습니다.");
+    }
+  }
 }

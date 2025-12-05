@@ -48,7 +48,7 @@ public class UserService {
         user.setProfileImage(request.getProfileImage());
       }
 
-      User updatedUser = userRepository.save(user);
+      User updatedUser = userRepository.saveAndFlush(user);
       return UserResponse.from(updatedUser);
     } catch (JwtException | IllegalArgumentException e) {
       throw new CustomException(ErrorCode.INVALID_TOKEN);

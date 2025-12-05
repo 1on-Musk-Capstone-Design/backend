@@ -28,6 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
@@ -63,12 +64,12 @@ public class WorkspaceService {
     try {
       String thumbnailUrl = fileStorageService.generateDefaultThumbnail(name, savedWorkspace.getWorkspaceId());
       savedWorkspace.setThumbnailUrl(thumbnailUrl);
-      savedWorkspace = workspaceRepository.save(savedWorkspace);
+      savedWorkspace = workspaceRepository.saveAndFlush(savedWorkspace);
       log.info("워크스페이스 생성 시 기본 썸네일 자동 생성 완료 - workspaceId: {}, thumbnailUrl: {}", 
           savedWorkspace.getWorkspaceId(), thumbnailUrl);
     } catch (Exception e) {
-      log.warn("워크스페이스 생성 시 기본 썸네일 생성 실패 - workspaceId: {}, error: {}", 
-          savedWorkspace.getWorkspaceId(), e.getMessage());
+      log.error("워크스페이스 생성 시 기본 썸네일 생성 실패 - workspaceId: {}, error: {}", 
+          savedWorkspace.getWorkspaceId(), e.getMessage(), e);
       // 썸네일 생성 실패해도 워크스페이스 생성은 계속 진행
     }
 
@@ -101,6 +102,7 @@ public class WorkspaceService {
     List<WorkspaceUser> workspaceUsers = workspaceUserRepository.findByUser(user);
     List<Workspace> workspaces = workspaceUsers.stream()
         .map(WorkspaceUser::getWorkspace)
+        .filter(w -> w.getDeletedAt() == null) // 삭제되지 않은 워크스페이스만
         .toList();
     
     // 썸네일이 없거나 기본 썸네일인 경우 내용 기반 썸네일로 업데이트
@@ -126,13 +128,20 @@ public class WorkspaceService {
                 workspace.getName(), workspace.getWorkspaceId());
           }
           
+          // 영속성 컨텍스트에 연결된 엔티티로 다시 조회하여 저장
+          Workspace managedWorkspace = workspaceRepository.findById(workspace.getWorkspaceId())
+              .orElse(workspace);
+          managedWorkspace.setThumbnailUrl(thumbnailUrl);
+          workspaceRepository.saveAndFlush(managedWorkspace);
+          
+          // 반환 리스트의 엔티티도 업데이트
           workspace.setThumbnailUrl(thumbnailUrl);
-          workspaceRepository.save(workspace);
+          
           log.info("워크스페이스 썸네일 업데이트 완료 - workspaceId: {}, thumbnailUrl: {}, 아이디어 수: {}", 
               workspace.getWorkspaceId(), thumbnailUrl, ideas != null ? ideas.size() : 0);
         } catch (Exception e) {
-          log.warn("워크스페이스 썸네일 생성 실패 - workspaceId: {}, error: {}", 
-              workspace.getWorkspaceId(), e.getMessage());
+          log.error("워크스페이스 썸네일 생성 실패 - workspaceId: {}, error: {}", 
+              workspace.getWorkspaceId(), e.getMessage(), e);
           // 썸네일 생성 실패해도 계속 진행
         }
       }
@@ -143,7 +152,7 @@ public class WorkspaceService {
 
   @Transactional(readOnly = true)
   public Workspace getWorkspaceById(Long id) {
-    return workspaceRepository.findById(id)
+    return workspaceRepository.findByIdWithOwnerAndNotDeleted(id)
         .orElseThrow(() -> new CustomException(NOT_FOUND_WORKSPACE));
   }
 
@@ -162,7 +171,7 @@ public class WorkspaceService {
     }
 
     workspace.setName(name);
-    Workspace updated = workspaceRepository.save(workspace);
+    Workspace updated = workspaceRepository.saveAndFlush(workspace);
 
     WorkspaceDtos.ListItem dto = new WorkspaceDtos.ListItem();
     dto.setWorkspaceId(updated.getWorkspaceId());
@@ -179,12 +188,12 @@ public class WorkspaceService {
 
   @Transactional
   public void deleteWorkspace(Long workspaceId, Long userId) {
-    log.info("=== 워크스페이스 삭제 시도 시작 ===");
+    log.info("=== 워크스페이스 Soft Delete 시도 시작 ===");
     log.info("workspaceId: {} (타입: {})", workspaceId, workspaceId.getClass().getSimpleName());
     log.info("userId: {} (타입: {})", userId, userId.getClass().getSimpleName());
     
-    // owner를 함께 로드하여 조회
-    Workspace workspace = workspaceRepository.findByIdWithOwner(workspaceId)
+    // owner를 함께 로드하여 조회 (삭제되지 않은 것만)
+    Workspace workspace = workspaceRepository.findByIdWithOwnerAndNotDeleted(workspaceId)
         .orElseThrow(() -> {
           log.error("워크스페이스를 찾을 수 없음 - workspaceId: {}", workspaceId);
           return new CustomException(NOT_FOUND_WORKSPACE);
@@ -236,7 +245,82 @@ public class WorkspaceService {
       throw new CustomException(FORBIDDEN_WORKSPACE);
     }
 
-    log.info("=== OWNER 권한 확인 완료, 삭제 진행 ===");
+    log.info("=== OWNER 권한 확인 완료, Soft Delete 진행 ===");
+    
+    // Soft Delete: deletedAt 필드만 설정
+    workspace.setDeletedAt(Instant.now());
+    workspaceRepository.saveAndFlush(workspace);
+    log.info("워크스페이스 Soft Delete 완료 - workspaceId: {}, userId: {}, deletedAt: {}", 
+        workspaceId, userId, workspace.getDeletedAt());
+
+    // WebSocket 브로드캐스트
+    webSocketService.broadcastWorkspaceChange(workspaceId, "deleted", 
+        Map.of("workspaceId", workspaceId));
+  }
+
+  @Transactional
+  public void restoreWorkspace(Long workspaceId, Long userId) {
+    log.info("=== 워크스페이스 복원 시도 시작 ===");
+    log.info("workspaceId: {}, userId: {}", workspaceId, userId);
+    
+    // 삭제된 워크스페이스 조회 (deletedAt이 있는 것)
+    Workspace workspace = workspaceRepository.findByIdWithOwner(workspaceId)
+        .orElseThrow(() -> {
+          log.error("워크스페이스를 찾을 수 없음 - workspaceId: {}", workspaceId);
+          return new CustomException(NOT_FOUND_WORKSPACE);
+        });
+
+    if (workspace.getDeletedAt() == null) {
+      log.warn("워크스페이스가 이미 복원되어 있음 - workspaceId: {}", workspaceId);
+      throw new CustomException(com.capstone.global.exception.ErrorCode.BAD_REQUEST);
+    }
+
+    User user = userRepository.findById(userId)
+        .orElseThrow(() -> new CustomException(NOT_FOUND_USER));
+
+    // OWNER 확인
+    if (workspace.getOwner() == null || !java.util.Objects.equals(workspace.getOwner().getId(), userId)) {
+      log.error("OWNER 권한이 아님 - workspaceId: {}, userId: {}", workspaceId, userId);
+      throw new CustomException(FORBIDDEN_WORKSPACE);
+    }
+
+    // 복원: deletedAt을 null로 설정
+    workspace.setDeletedAt(null);
+    workspaceRepository.saveAndFlush(workspace);
+    log.info("워크스페이스 복원 완료 - workspaceId: {}, userId: {}", workspaceId, userId);
+
+    // WebSocket 브로드캐스트
+    webSocketService.broadcastWorkspaceChange(workspaceId, "restored", 
+        Map.of("workspaceId", workspaceId));
+  }
+
+  @Transactional
+  public void permanentDeleteWorkspace(Long workspaceId, Long userId) {
+    log.info("=== 워크스페이스 영구 삭제 시도 시작 ===");
+    log.info("workspaceId: {}, userId: {}", workspaceId, userId);
+    
+    // 삭제된 워크스페이스 조회
+    Workspace workspace = workspaceRepository.findByIdWithOwner(workspaceId)
+        .orElseThrow(() -> {
+          log.error("워크스페이스를 찾을 수 없음 - workspaceId: {}", workspaceId);
+          return new CustomException(NOT_FOUND_WORKSPACE);
+        });
+
+    if (workspace.getDeletedAt() == null) {
+      log.warn("워크스페이스가 삭제되지 않음 - workspaceId: {}", workspaceId);
+      throw new CustomException(com.capstone.global.exception.ErrorCode.BAD_REQUEST);
+    }
+
+    User user = userRepository.findById(userId)
+        .orElseThrow(() -> new CustomException(NOT_FOUND_USER));
+
+    // OWNER 확인
+    if (workspace.getOwner() == null || !java.util.Objects.equals(workspace.getOwner().getId(), userId)) {
+      log.error("OWNER 권한이 아님 - workspaceId: {}, userId: {}", workspaceId, userId);
+      throw new CustomException(FORBIDDEN_WORKSPACE);
+    }
+
+    log.info("=== OWNER 권한 확인 완료, 영구 삭제 진행 ===");
     
     // 워크스페이스 삭제 전 관련 데이터 먼저 삭제
     log.info("워크스페이스 관련 데이터 삭제 시작 - workspaceId: {}", workspaceId);
@@ -244,7 +328,7 @@ public class WorkspaceService {
     // WorkspaceUser를 먼저 조회 (VoiceSessionUser 삭제에 필요)
     List<WorkspaceUser> workspaceUsers = workspaceUserRepository.findByWorkspace(workspace);
     
-    // 1. VoiceSessionUser 삭제 (workspace_user_id를 통해 간접 참조)
+    // 1. VoiceSessionUser 삭제
     for (WorkspaceUser workspaceUser : workspaceUsers) {
       List<com.capstone.domain.voicesessionUser.VoiceSessionUser> voiceSessionUsers = 
           voiceSessionUserRepository.findByWorkspaceUser(workspaceUser);
@@ -296,13 +380,21 @@ public class WorkspaceService {
     workspaceUserRepository.deleteAll(workspaceUsers);
     log.info("WorkspaceUser 삭제 완료 - {}개", workspaceUsers.size());
     
-    // 9. 마지막으로 Workspace 삭제
+    // 9. 마지막으로 Workspace 영구 삭제
     workspaceRepository.delete(workspace);
-    log.info("워크스페이스 삭제 완료 - workspaceId: {}, userId: {}", workspaceId, userId);
+    log.info("워크스페이스 영구 삭제 완료 - workspaceId: {}, userId: {}", workspaceId, userId);
 
-    // WebSocket 브로드캐스트 (삭제 전에 알림)
-    webSocketService.broadcastWorkspaceChange(workspaceId, "deleted", 
+    // WebSocket 브로드캐스트
+    webSocketService.broadcastWorkspaceChange(workspaceId, "permanently_deleted", 
         Map.of("workspaceId", workspaceId));
+  }
+
+  @Transactional(readOnly = true)
+  public List<Workspace> getDeletedWorkspacesByUserId(Long userId) {
+    User user = userRepository.findById(userId)
+        .orElseThrow(() -> new CustomException(NOT_FOUND_USER));
+    
+    return workspaceRepository.findDeletedWorkspacesByUserId(userId);
   }
 
   @Transactional
@@ -327,7 +419,7 @@ public class WorkspaceService {
     // 새 썸네일 저장
     String thumbnailUrl = fileStorageService.saveThumbnail(file, workspaceId);
     workspace.setThumbnailUrl(thumbnailUrl);
-    workspaceRepository.save(workspace);
+    workspaceRepository.saveAndFlush(workspace);
 
     // WebSocket 브로드캐스트
     webSocketService.broadcastWorkspaceChange(workspaceId, "thumbnail_updated", 
