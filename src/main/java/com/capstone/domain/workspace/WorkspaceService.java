@@ -8,6 +8,7 @@ import static com.capstone.global.exception.ErrorCode.NOT_FOUND_WORKSPACE_USER;
 
 import com.capstone.domain.canvas.CanvasRepository;
 import com.capstone.domain.chat.ChatMessageRepository;
+import com.capstone.domain.idea.Idea;
 import com.capstone.domain.idea.IdeaRepository;
 import com.capstone.domain.user.entity.User;
 import com.capstone.domain.user.repository.UserRepository;
@@ -102,16 +103,28 @@ public class WorkspaceService {
         .map(WorkspaceUser::getWorkspace)
         .toList();
     
-    // 썸네일이 없는 워크스페이스에 대해 자동 생성
+    // 썸네일이 없는 워크스페이스에 대해 자동 생성 (워크스페이스 내용 기반)
     for (Workspace workspace : workspaces) {
       if (workspace.getThumbnailUrl() == null || workspace.getThumbnailUrl().trim().isEmpty()) {
         try {
-          String thumbnailUrl = fileStorageService.generateDefaultThumbnail(
-              workspace.getName(), workspace.getWorkspaceId());
+          // 워크스페이스의 아이디어 가져오기
+          List<com.capstone.domain.idea.Idea> ideas = ideaRepository.findByWorkspace(workspace);
+          
+          String thumbnailUrl;
+          if (ideas != null && !ideas.isEmpty()) {
+            // 아이디어가 있으면 내용 기반 썸네일 생성
+            thumbnailUrl = fileStorageService.generateWorkspaceContentThumbnail(
+                workspace.getName(), workspace.getWorkspaceId(), ideas);
+          } else {
+            // 아이디어가 없으면 기본 썸네일 생성
+            thumbnailUrl = fileStorageService.generateDefaultThumbnail(
+                workspace.getName(), workspace.getWorkspaceId());
+          }
+          
           workspace.setThumbnailUrl(thumbnailUrl);
           workspaceRepository.save(workspace);
-          log.info("기존 워크스페이스에 썸네일 자동 생성 완료 - workspaceId: {}, thumbnailUrl: {}", 
-              workspace.getWorkspaceId(), thumbnailUrl);
+          log.info("기존 워크스페이스에 썸네일 자동 생성 완료 - workspaceId: {}, thumbnailUrl: {}, 아이디어 수: {}", 
+              workspace.getWorkspaceId(), thumbnailUrl, ideas != null ? ideas.size() : 0);
         } catch (Exception e) {
           log.warn("기존 워크스페이스 썸네일 생성 실패 - workspaceId: {}, error: {}", 
               workspace.getWorkspaceId(), e.getMessage());

@@ -1,5 +1,6 @@
 package com.capstone.global.service;
 
+import com.capstone.domain.idea.Idea;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -13,6 +14,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.List;
 import java.util.UUID;
 
 @Slf4j
@@ -93,6 +95,164 @@ public class FileStorageService {
     } catch (IOException e) {
       log.warn("썸네일 삭제 실패: {}", thumbnailUrl, e);
     }
+  }
+
+  /**
+   * 워크스페이스의 실제 내용(아이디어들)을 기반으로 썸네일을 생성합니다.
+   * 워크스페이스 내의 아이디어들을 작게 보여주는 미리보기 이미지를 생성합니다.
+   *
+   * @param workspaceName 워크스페이스 이름
+   * @param workspaceId 워크스페이스 ID
+   * @param ideas 워크스페이스의 아이디어 목록
+   * @return 생성된 썸네일 이미지의 URL
+   * @throws IOException 이미지 생성 또는 저장 실패 시
+   */
+  public String generateWorkspaceContentThumbnail(String workspaceName, Long workspaceId, List<Idea> ideas) throws IOException {
+    // 디렉토리 생성
+    Path thumbnailPath = Paths.get(thumbnailDir).toAbsolutePath().normalize();
+    Files.createDirectories(thumbnailPath);
+
+    // 썸네일 크기
+    int thumbnailWidth = 400;
+    int thumbnailHeight = 300;
+
+    // 아이디어가 없으면 기본 썸네일 생성
+    if (ideas == null || ideas.isEmpty()) {
+      return generateDefaultThumbnail(workspaceName, workspaceId);
+    }
+
+    // 아이디어들의 위치와 크기를 기반으로 캔버스 범위 계산
+    double minX = Double.MAX_VALUE;
+    double minY = Double.MAX_VALUE;
+    double maxX = Double.MIN_VALUE;
+    double maxY = Double.MIN_VALUE;
+
+    for (Idea idea : ideas) {
+      if (idea.getPositionX() != null && idea.getPositionY() != null) {
+        double x = idea.getPositionX();
+        double y = idea.getPositionY();
+        double width = idea.getPatchSizeX() != null ? idea.getPatchSizeX() : 200;
+        double height = idea.getPatchSizeY() != null ? idea.getPatchSizeY() : 100;
+
+        minX = Math.min(minX, x);
+        minY = Math.min(minY, y);
+        maxX = Math.max(maxX, x + width);
+        maxY = Math.max(maxY, y + height);
+      }
+    }
+
+    // 캔버스 범위가 없으면 기본 썸네일 생성
+    if (minX == Double.MAX_VALUE || minY == Double.MAX_VALUE) {
+      return generateDefaultThumbnail(workspaceName, workspaceId);
+    }
+
+    // 패딩 추가 (10%)
+    double padding = Math.max(maxX - minX, maxY - minY) * 0.1;
+    double canvasWidth = maxX - minX + padding * 2;
+    double canvasHeight = maxY - minY + padding * 2;
+
+    // 스케일 비율 계산 (썸네일 크기에 맞추기)
+    double scaleX = thumbnailWidth / canvasWidth;
+    double scaleY = thumbnailHeight / canvasHeight;
+    double scale = Math.min(scaleX, scaleY); // 비율 유지
+
+    // 실제 렌더링 크기 계산
+    int renderWidth = (int) (canvasWidth * scale);
+    int renderHeight = (int) (canvasHeight * scale);
+    int offsetX = (thumbnailWidth - renderWidth) / 2;
+    int offsetY = (thumbnailHeight - renderHeight) / 2;
+
+    // 이미지 생성
+    BufferedImage image = new BufferedImage(thumbnailWidth, thumbnailHeight, BufferedImage.TYPE_INT_RGB);
+    Graphics2D g2d = image.createGraphics();
+
+    // 안티앨리어싱 활성화
+    g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+    g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+    g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+
+    // 배경색 (밝은 회색)
+    g2d.setColor(new Color(245, 245, 245));
+    g2d.fillRect(0, 0, thumbnailWidth, thumbnailHeight);
+
+    // 캔버스 영역 배경 (흰색)
+    g2d.setColor(Color.WHITE);
+    g2d.fillRect(offsetX, offsetY, renderWidth, renderHeight);
+
+    // 아이디어들을 박스 형태로 그리기
+    g2d.setFont(new Font("Arial", Font.PLAIN, Math.max(8, (int)(12 * scale))));
+    FontMetrics fm = g2d.getFontMetrics();
+
+    for (Idea idea : ideas) {
+      if (idea.getPositionX() == null || idea.getPositionY() == null || idea.getContent() == null) {
+        continue;
+      }
+
+      // 아이디어 위치와 크기를 썸네일 좌표로 변환
+      double ideaX = idea.getPositionX() - minX + padding;
+      double ideaY = idea.getPositionY() - minY + padding;
+      double ideaWidth = idea.getPatchSizeX() != null ? idea.getPatchSizeX() : 200;
+      double ideaHeight = idea.getPatchSizeY() != null ? idea.getPatchSizeY() : 100;
+
+      int x = offsetX + (int) (ideaX * scale);
+      int y = offsetY + (int) (ideaY * scale);
+      int width = Math.max(20, (int) (ideaWidth * scale));
+      int height = Math.max(20, (int) (ideaHeight * scale));
+
+      // 박스 그리기 (연한 노란색 배경)
+      g2d.setColor(new Color(255, 255, 200));
+      g2d.fillRect(x, y, width, height);
+
+      // 박스 테두리
+      g2d.setColor(new Color(200, 200, 150));
+      g2d.setStroke(new BasicStroke(Math.max(1, (int)(2 * scale))));
+      g2d.drawRect(x, y, width, height);
+
+      // 텍스트 내용 (줄바꿈 처리)
+      g2d.setColor(Color.BLACK);
+      String content = idea.getContent();
+      if (content != null && !content.isEmpty()) {
+        // 텍스트가 박스 안에 맞도록 줄바꿈
+        String[] words = content.split("\\s+");
+        int lineHeight = fm.getHeight();
+        int currentY = y + lineHeight;
+        int maxWidth = width - 4;
+        int maxLines = Math.max(1, height / lineHeight - 1);
+
+        StringBuilder line = new StringBuilder();
+        int lineCount = 0;
+        for (String word : words) {
+          String testLine = line.length() > 0 ? line + " " + word : word;
+          int textWidth = fm.stringWidth(testLine);
+          if (textWidth > maxWidth && line.length() > 0) {
+            // 현재 줄 그리기
+            g2d.drawString(line.toString(), x + 2, currentY);
+            line = new StringBuilder(word);
+            currentY += lineHeight;
+            lineCount++;
+            if (lineCount >= maxLines) break;
+          } else {
+            line = new StringBuilder(testLine);
+          }
+        }
+        // 마지막 줄 그리기
+        if (line.length() > 0 && lineCount < maxLines) {
+          g2d.drawString(line.toString(), x + 2, currentY);
+        }
+      }
+    }
+
+    g2d.dispose();
+
+    // 파일 저장
+    String filename = String.format("workspace-%d-content.png", workspaceId);
+    Path targetPath = thumbnailPath.resolve(filename);
+    ImageIO.write(image, "png", targetPath.toFile());
+    log.info("워크스페이스 내용 썸네일 생성 완료: {} (아이디어 {}개)", targetPath, ideas.size());
+
+    // URL 생성
+    String url = baseUrl + "/uploads/thumbnails/" + filename;
+    return url;
   }
 
   /**
