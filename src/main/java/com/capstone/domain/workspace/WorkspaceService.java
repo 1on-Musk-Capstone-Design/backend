@@ -113,6 +113,7 @@ public class WorkspaceService {
     WorkspaceDtos.ListItem dto = new WorkspaceDtos.ListItem();
     dto.setWorkspaceId(updated.getWorkspaceId());
     dto.setName(updated.getName());
+    dto.setCreatedAt(updated.getCreatedAt());
 
     // WebSocket 브로드캐스트
     webSocketService.broadcastWorkspaceChange(workspaceId, "updated", 

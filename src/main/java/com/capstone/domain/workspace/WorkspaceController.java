@@ -59,6 +59,7 @@ public class WorkspaceController {
           WorkspaceDtos.ListItem item = new WorkspaceDtos.ListItem();
           item.setWorkspaceId(workspace.getWorkspaceId());
           item.setName(workspace.getName());
+          item.setCreatedAt(workspace.getCreatedAt());
           return item;
         })
         .collect(Collectors.toList());
@@ -154,6 +155,7 @@ public class WorkspaceController {
       WorkspaceDtos.ListItem response = new WorkspaceDtos.ListItem();
       response.setWorkspaceId(workspace.getWorkspaceId());
       response.setName(workspace.getName());
+      response.setCreatedAt(workspace.getCreatedAt());
 
       return ResponseEntity.ok(response);
     } catch (RuntimeException e) {
