@@ -15,10 +15,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Tag(name = "Workspace", description = "워크스페이스 관리 API")
@@ -60,6 +63,7 @@ public class WorkspaceController {
           item.setWorkspaceId(workspace.getWorkspaceId());
           item.setName(workspace.getName());
           item.setCreatedAt(workspace.getCreatedAt());
+          item.setThumbnailUrl(workspace.getThumbnailUrl());
           return item;
         })
         .collect(Collectors.toList());
@@ -156,6 +160,7 @@ public class WorkspaceController {
       response.setWorkspaceId(workspace.getWorkspaceId());
       response.setName(workspace.getName());
       response.setCreatedAt(workspace.getCreatedAt());
+      response.setThumbnailUrl(workspace.getThumbnailUrl());
 
       return ResponseEntity.ok(response);
     } catch (RuntimeException e) {
@@ -219,6 +224,7 @@ public class WorkspaceController {
     resp.setWorkspaceId(saved.getWorkspaceId());
     resp.setName(saved.getName());
     resp.setCreatedAt(saved.getCreatedAt());
+    resp.setThumbnailUrl(saved.getThumbnailUrl());
 
     return ResponseEntity.ok(resp);
   }
@@ -268,6 +274,50 @@ public class WorkspaceController {
       log.error("워크스페이스 삭제 중 예상치 못한 오류 - workspaceId: {}, userId: {}", 
           id, userId, e.getMessage(), e);
       return ResponseEntity.status(500).body("서버 오류가 발생했습니다.");
+    }
+  }
+
+  @Operation(summary = "워크스페이스 썸네일 업로드", description = "워크스페이스의 썸네일 이미지를 업로드합니다. (OWNER만 가능)")
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "200", description = "업로드 성공"),
+      @ApiResponse(responseCode = "400", description = "잘못된 요청 (파일이 없거나 이미지가 아님)"),
+      @ApiResponse(responseCode = "401", description = "인증 토큰이 필요하거나 유효하지 않음"),
+      @ApiResponse(responseCode = "403", description = "워크스페이스 OWNER 권한이 없음"),
+      @ApiResponse(responseCode = "404", description = "워크스페이스를 찾을 수 없음")
+  })
+  @SecurityRequirement(name = "Bearer Authentication")
+  @PostMapping(value = "/{id}/thumbnail", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+  public ResponseEntity<Map<String, String>> uploadThumbnail(
+      @Parameter(description = "워크스페이스 ID", required = true) @PathVariable Long id,
+      @Parameter(description = "JWT 토큰", required = true)
+      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String token,
+      @Parameter(description = "썸네일 이미지 파일", required = true)
+      @RequestParam("file") MultipartFile file) {
+    
+    if (token == null || token.trim().isEmpty()) {
+      return ResponseEntity.status(401).body(Map.of("error", "인증 토큰이 필요합니다."));
+    }
+
+    if (file == null || file.isEmpty()) {
+      return ResponseEntity.badRequest().body(Map.of("error", "파일이 비어있습니다."));
+    }
+
+    try {
+      String jwt = token.replace("Bearer ", "").trim();
+      Long userId = jwtProvider.getUserIdFromAccessToken(jwt);
+      
+      String thumbnailUrl = workspaceService.updateThumbnail(id, file, userId);
+      return ResponseEntity.ok(Map.of("thumbnailUrl", thumbnailUrl));
+    } catch (CustomException e) {
+      log.error("썸네일 업로드 실패 - workspaceId: {}, error: {}", id, e.getMessage());
+      return ResponseEntity.status(e.getErrorCode().getHttpStatus())
+          .body(Map.of("error", e.getMessage()));
+    } catch (IllegalArgumentException e) {
+      log.error("썸네일 업로드 실패 - 잘못된 요청: {}", e.getMessage());
+      return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+    } catch (Exception e) {
+      log.error("썸네일 업로드 중 예상치 못한 오류 - workspaceId: {}", id, e);
+      return ResponseEntity.status(500).body(Map.of("error", "서버 오류가 발생했습니다."));
     }
   }
 }

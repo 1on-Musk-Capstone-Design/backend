@@ -61,7 +61,7 @@ class WorkspaceUserServiceTest {
     when(workspaceUserRepository.existsByWorkspaceAndUser(workspace, user)).thenReturn(false);
     when(workspaceUserRepository.save(any())).thenAnswer(
         invocation -> invocation.getArgument(0)); // save 정상 처리
-    doNothing().when(webSocketService).notifyUserJoined(anyLong(), anyString());
+    doNothing().when(webSocketService).notifyUserJoined(anyLong(), anyLong(), anyString());
 
     workspaceUserService.joinWorkspace(workspaceId, userId);
   }

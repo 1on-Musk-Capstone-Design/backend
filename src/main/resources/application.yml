@@ -95,11 +95,13 @@ app:
   allowed-origins:
     - ${APP_ALLOWED_ORIGINS_0:http://localhost:*}
     - ${APP_ALLOWED_ORIGINS_1:http://127.0.0.1:*}
-    - ${APP_ALLOWED_ORIGINS_2:https://mingjaam.github.io}
     - ${APP_ALLOWED_ORIGINS_3:https://on-it.kro.kr}
   default-redirect-uri: ${APP_DEFAULT_REDIRECT_URI:http://localhost:3000/auth/callback}
   oauth-redirect-map:
     localhost: ${APP_OAUTH_REDIRECT_LOCALHOST:http://localhost:3000/auth/callback}
     127.0.0.1: ${APP_OAUTH_REDIRECT_LOOPBACK:http://localhost:3000/auth/callback}
-    mingjaam.github.io: ${APP_OAUTH_REDIRECT_MINGJAAM:https://mingjaam.github.io/auth/callback}
     on-it.kro.kr: ${APP_OAUTH_REDIRECT_ONIT:https://on-it.kro.kr/auth/callback}
+  file:
+    upload-dir: ${APP_FILE_UPLOAD_DIR:./uploads}
+    thumbnail-dir: ${APP_FILE_THUMBNAIL_DIR:./uploads/thumbnails}
+    base-url: ${APP_FILE_BASE_URL:http://localhost:8080/api}

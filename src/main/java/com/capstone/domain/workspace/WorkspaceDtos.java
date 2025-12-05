@@ -21,6 +21,7 @@ public class WorkspaceDtos {
     private Long workspaceId;
     private String name;
     private Instant createdAt;
+    private String thumbnailUrl;
 
   }
 
@@ -31,6 +32,7 @@ public class WorkspaceDtos {
     private Long workspaceId;
     private String name;
     private Instant createdAt;
+    private String thumbnailUrl;
 
   }
 
