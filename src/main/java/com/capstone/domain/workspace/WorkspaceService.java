@@ -103,12 +103,17 @@ public class WorkspaceService {
         .map(WorkspaceUser::getWorkspace)
         .toList();
     
-    // 썸네일이 없는 워크스페이스에 대해 자동 생성 (워크스페이스 내용 기반)
+    // 썸네일이 없거나 기본 썸네일인 경우 내용 기반 썸네일로 업데이트
     for (Workspace workspace : workspaces) {
-      if (workspace.getThumbnailUrl() == null || workspace.getThumbnailUrl().trim().isEmpty()) {
+      String currentThumbnailUrl = workspace.getThumbnailUrl();
+      boolean needsUpdate = currentThumbnailUrl == null || 
+                           currentThumbnailUrl.trim().isEmpty() ||
+                           currentThumbnailUrl.contains("-default.png");
+      
+      if (needsUpdate) {
         try {
           // 워크스페이스의 아이디어 가져오기
-          List<com.capstone.domain.idea.Idea> ideas = ideaRepository.findByWorkspace(workspace);
+          List<Idea> ideas = ideaRepository.findByWorkspace(workspace);
           
           String thumbnailUrl;
           if (ideas != null && !ideas.isEmpty()) {
@@ -123,10 +128,10 @@ public class WorkspaceService {
           
           workspace.setThumbnailUrl(thumbnailUrl);
           workspaceRepository.save(workspace);
-          log.info("기존 워크스페이스에 썸네일 자동 생성 완료 - workspaceId: {}, thumbnailUrl: {}, 아이디어 수: {}", 
+          log.info("워크스페이스 썸네일 업데이트 완료 - workspaceId: {}, thumbnailUrl: {}, 아이디어 수: {}", 
               workspace.getWorkspaceId(), thumbnailUrl, ideas != null ? ideas.size() : 0);
         } catch (Exception e) {
-          log.warn("기존 워크스페이스 썸네일 생성 실패 - workspaceId: {}, error: {}", 
+          log.warn("워크스페이스 썸네일 생성 실패 - workspaceId: {}, error: {}", 
               workspace.getWorkspaceId(), e.getMessage());
           // 썸네일 생성 실패해도 계속 진행
         }
