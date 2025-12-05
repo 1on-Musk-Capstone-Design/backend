@@ -58,6 +58,19 @@ public class WorkspaceService {
     workspace.setOwner(owner);
     Workspace savedWorkspace = workspaceRepository.save(workspace);
 
+    // 기본 썸네일 자동 생성
+    try {
+      String thumbnailUrl = fileStorageService.generateDefaultThumbnail(name, savedWorkspace.getWorkspaceId());
+      savedWorkspace.setThumbnailUrl(thumbnailUrl);
+      savedWorkspace = workspaceRepository.save(savedWorkspace);
+      log.info("워크스페이스 생성 시 기본 썸네일 자동 생성 완료 - workspaceId: {}, thumbnailUrl: {}", 
+          savedWorkspace.getWorkspaceId(), thumbnailUrl);
+    } catch (Exception e) {
+      log.warn("워크스페이스 생성 시 기본 썸네일 생성 실패 - workspaceId: {}, error: {}", 
+          savedWorkspace.getWorkspaceId(), e.getMessage());
+      // 썸네일 생성 실패해도 워크스페이스 생성은 계속 진행
+    }
+
     // OWNER도 workspace_users에 추가 (멤버십 관리)
     WorkspaceUser workspaceUser = WorkspaceUser.builder()
         .workspace(savedWorkspace)
@@ -79,15 +92,35 @@ public class WorkspaceService {
     return workspaceRepository.findAll();
   }
 
-  @Transactional(readOnly = true)
+  @Transactional
   public List<Workspace> getWorkspacesByUserId(Long userId) {
     User user = userRepository.findById(userId)
         .orElseThrow(() -> new CustomException(com.capstone.global.exception.ErrorCode.NOT_FOUND_USER));
     
     List<WorkspaceUser> workspaceUsers = workspaceUserRepository.findByUser(user);
-    return workspaceUsers.stream()
+    List<Workspace> workspaces = workspaceUsers.stream()
         .map(WorkspaceUser::getWorkspace)
         .toList();
+    
+    // 썸네일이 없는 워크스페이스에 대해 자동 생성
+    for (Workspace workspace : workspaces) {
+      if (workspace.getThumbnailUrl() == null || workspace.getThumbnailUrl().trim().isEmpty()) {
+        try {
+          String thumbnailUrl = fileStorageService.generateDefaultThumbnail(
+              workspace.getName(), workspace.getWorkspaceId());
+          workspace.setThumbnailUrl(thumbnailUrl);
+          workspaceRepository.save(workspace);
+          log.info("기존 워크스페이스에 썸네일 자동 생성 완료 - workspaceId: {}, thumbnailUrl: {}", 
+              workspace.getWorkspaceId(), thumbnailUrl);
+        } catch (Exception e) {
+          log.warn("기존 워크스페이스 썸네일 생성 실패 - workspaceId: {}, error: {}", 
+              workspace.getWorkspaceId(), e.getMessage());
+          // 썸네일 생성 실패해도 계속 진행
+        }
+      }
+    }
+    
+    return workspaces;
   }
 
   @Transactional(readOnly = true)
