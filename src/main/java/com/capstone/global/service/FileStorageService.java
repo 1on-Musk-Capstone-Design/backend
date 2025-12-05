@@ -112,9 +112,9 @@ public class FileStorageService {
     Path thumbnailPath = Paths.get(thumbnailDir).toAbsolutePath().normalize();
     Files.createDirectories(thumbnailPath);
 
-    // 썸네일 크기
-    int thumbnailWidth = 400;
-    int thumbnailHeight = 300;
+    // 썸네일 크기 (프론트엔드 표시에 맞게 작게 조정)
+    int thumbnailWidth = 280;
+    int thumbnailHeight = 210;
 
     // 아이디어가 없으면 기본 썸네일 생성
     if (ideas == null || ideas.isEmpty()) {
@@ -276,9 +276,9 @@ public class FileStorageService {
     Color backgroundColor = generateColorFromId(workspaceId);
     Color textColor = getContrastColor(backgroundColor);
 
-    // 이미지 생성 (400x300)
-    int width = 400;
-    int height = 300;
+    // 이미지 생성 (280x210 - 프론트엔드 표시에 맞게 작게 조정)
+    int width = 280;
+    int height = 210;
     BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
     Graphics2D g2d = image.createGraphics();
 
