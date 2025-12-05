@@ -225,6 +225,7 @@ jobs:
           GOOGLE_REDIRECT_URI: ${{ secrets.GOOGLE_REDIRECT_URI }}
           GOOGLE_LOGIN_URI: ${{ secrets.GOOGLE_LOGIN_URI }}
           WORKSPACE_INVITE_BASE_URL: ${{ secrets.WORKSPACE_INVITE_BASE_URL }}
+          APP_FILE_BASE_URL: ${{ secrets.APP_FILE_BASE_URL }}
         run: |
           ssh -o StrictHostKeyChecking=no ec2-user@${{ secrets.AWS_SERVER_HOST }} "cat > ~/capstone-app/.env << 'ENVEOF'
           GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
@@ -232,6 +233,7 @@ jobs:
           GOOGLE_REDIRECT_URI=${{ secrets.GOOGLE_REDIRECT_URI }}
           GOOGLE_LOGIN_URI=${{ secrets.GOOGLE_LOGIN_URI }}
           WORKSPACE_INVITE_BASE_URL=${{ secrets.WORKSPACE_INVITE_BASE_URL }}
+          APP_FILE_BASE_URL=${{ secrets.APP_FILE_BASE_URL }}
           ENVEOF
           chmod 600 ~/capstone-app/.env && echo '✅ Environment variables file created'"
 
