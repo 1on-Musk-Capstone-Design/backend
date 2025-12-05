@@ -248,10 +248,20 @@ public class FileStorageService {
     String filename = String.format("workspace-%d-content.png", workspaceId);
     Path targetPath = thumbnailPath.resolve(filename);
     ImageIO.write(image, "png", targetPath.toFile());
-    log.info("워크스페이스 내용 썸네일 생성 완료: {} (아이디어 {}개)", targetPath, ideas.size());
+    
+    // 파일이 실제로 생성되었는지 확인
+    boolean fileExists = Files.exists(targetPath);
+    log.info("워크스페이스 내용 썸네일 생성 완료: {} (아이디어 {}개, 파일 존재: {})", 
+        targetPath, ideas.size(), fileExists);
+    
+    if (!fileExists) {
+      log.error("썸네일 파일 생성 실패 - 경로: {}", targetPath);
+      throw new IOException("썸네일 파일 생성 실패: " + targetPath);
+    }
 
     // URL 생성
     String url = baseUrl + "/uploads/thumbnails/" + filename;
+    log.info("생성된 썸네일 URL: {}", url);
     return url;
   }
 
