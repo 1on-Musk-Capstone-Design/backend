@@ -16,6 +16,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 @Entity
 @Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
