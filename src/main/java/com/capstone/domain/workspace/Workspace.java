@@ -29,4 +29,7 @@ public class Workspace {
 
   @Column(name = "thumbnail_url", length = 500)
   private String thumbnailUrl;
+
+  @Column(name = "deleted_at")
+  private Instant deletedAt;
 }

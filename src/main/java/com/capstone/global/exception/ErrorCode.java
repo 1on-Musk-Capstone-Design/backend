@@ -28,7 +28,8 @@ public enum ErrorCode {
   INVALID_TOKEN("유효하지 않은 토큰입니다.", HttpStatus.UNAUTHORIZED),
 
   INVALID_INVITE_TOKEN("유효하지 않은 초대 토큰입니다.", HttpStatus.BAD_REQUEST),
-  EXPIRED_INVITE_TOKEN("만료된 초대 토큰입니다.", HttpStatus.BAD_REQUEST);
+  EXPIRED_INVITE_TOKEN("만료된 초대 토큰입니다.", HttpStatus.BAD_REQUEST),
+  BAD_REQUEST("잘못된 요청입니다.", HttpStatus.BAD_REQUEST);
 
   private final String message;
   private final HttpStatus httpStatus;
