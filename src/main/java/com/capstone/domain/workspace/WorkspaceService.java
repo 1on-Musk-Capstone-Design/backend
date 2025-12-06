@@ -397,6 +397,51 @@ public class WorkspaceService {
     return workspaceRepository.findDeletedWorkspacesByUserId(userId);
   }
 
+  /**
+   * 워크스페이스 내용이 변경되었을 때 썸네일을 자동으로 갱신합니다.
+   * 아이디어 생성/수정/삭제 시 호출됩니다.
+   */
+  @Transactional
+  public void updateWorkspaceThumbnailIfNeeded(Long workspaceId) {
+    try {
+      Workspace workspace = workspaceRepository.findById(workspaceId)
+          .orElse(null);
+      
+      if (workspace == null) {
+        return;
+      }
+
+      // 워크스페이스의 아이디어 가져오기
+      List<Idea> ideas = ideaRepository.findByWorkspace(workspace);
+      
+      String thumbnailUrl;
+      if (ideas != null && !ideas.isEmpty()) {
+        // 아이디어가 있으면 내용 기반 썸네일 생성
+        thumbnailUrl = fileStorageService.generateWorkspaceContentThumbnail(
+            workspace.getName(), workspace.getWorkspaceId(), ideas);
+      } else {
+        // 아이디어가 없으면 기본 썸네일 생성
+        thumbnailUrl = fileStorageService.generateDefaultThumbnail(
+            workspace.getName(), workspace.getWorkspaceId());
+      }
+      
+      // 썸네일 URL 업데이트
+      workspace.setThumbnailUrl(thumbnailUrl);
+      workspaceRepository.saveAndFlush(workspace);
+      
+      log.info("워크스페이스 썸네일 자동 갱신 완료 - workspaceId: {}, thumbnailUrl: {}, 아이디어 수: {}", 
+          workspaceId, thumbnailUrl, ideas != null ? ideas.size() : 0);
+      
+      // WebSocket 브로드캐스트
+      webSocketService.broadcastWorkspaceChange(workspaceId, "thumbnail_updated", 
+          java.util.Map.of("workspaceId", workspaceId, "thumbnailUrl", thumbnailUrl));
+    } catch (Exception e) {
+      log.error("워크스페이스 썸네일 자동 갱신 실패 - workspaceId: {}, error: {}", 
+          workspaceId, e.getMessage(), e);
+      // 썸네일 갱신 실패해도 아이디어 작업은 계속 진행
+    }
+  }
+
   @Transactional
   public String updateThumbnail(Long workspaceId, MultipartFile file, Long userId) throws java.io.IOException {
     // owner를 함께 로드하여 조회

@@ -10,6 +10,7 @@ import com.capstone.domain.canvas.Canvas;
 import com.capstone.domain.canvas.CanvasRepository;
 import com.capstone.domain.workspace.Workspace;
 import com.capstone.domain.workspace.WorkspaceRepository;
+import com.capstone.domain.workspace.WorkspaceService;
 import com.capstone.domain.workspaceUser.WorkspaceUserRepository;
 import com.capstone.domain.user.repository.UserRepository;
 import com.capstone.global.exception.CustomException;
@@ -17,9 +18,11 @@ import com.capstone.global.service.WebSocketService;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class IdeaService {
@@ -30,6 +33,7 @@ public class IdeaService {
   private final UserRepository userRepository;
   private final WorkspaceUserRepository workspaceUserRepository;
   private final WebSocketService webSocketService;
+  private final WorkspaceService workspaceService;
 
   @Transactional
   public IdeaResponse createIdea(Long userId, IdeaRequest request) {
@@ -60,6 +64,14 @@ public class IdeaService {
 
     // WebSocket 브로드캐스트
     webSocketService.broadcastIdeaChange(request.getWorkspaceId(), "created", response);
+
+    // 썸네일 자동 갱신 (비동기)
+    try {
+      workspaceService.updateWorkspaceThumbnailIfNeeded(request.getWorkspaceId());
+    } catch (Exception e) {
+      log.warn("아이디어 생성 후 썸네일 갱신 실패 - workspaceId: {}, error: {}", 
+          request.getWorkspaceId(), e.getMessage());
+    }
 
     return response;
   }
@@ -105,6 +117,14 @@ public class IdeaService {
     // WebSocket 브로드캐스트
     webSocketService.broadcastIdeaChange(idea.getWorkspace().getWorkspaceId(), "updated", response);
 
+    // 썸네일 자동 갱신 (비동기)
+    try {
+      workspaceService.updateWorkspaceThumbnailIfNeeded(idea.getWorkspace().getWorkspaceId());
+    } catch (Exception e) {
+      log.warn("아이디어 수정 후 썸네일 갱신 실패 - workspaceId: {}, error: {}", 
+          idea.getWorkspace().getWorkspaceId(), e.getMessage());
+    }
+
     return response;
   }
 
@@ -125,5 +145,13 @@ public class IdeaService {
 
     // WebSocket 브로드캐스트
     webSocketService.broadcastIdeaChange(workspaceId, "deleted", java.util.Map.of("id", deletedIdeaId));
+
+    // 썸네일 자동 갱신 (비동기)
+    try {
+      workspaceService.updateWorkspaceThumbnailIfNeeded(workspaceId);
+    } catch (Exception e) {
+      log.warn("아이디어 삭제 후 썸네일 갱신 실패 - workspaceId: {}, error: {}", 
+          workspaceId, e.getMessage());
+    }
   }
 }
