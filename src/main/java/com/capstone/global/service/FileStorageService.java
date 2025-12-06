@@ -8,6 +8,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
+import java.awt.geom.RoundRectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -166,23 +167,65 @@ public class FileStorageService {
     BufferedImage image = new BufferedImage(thumbnailWidth, thumbnailHeight, BufferedImage.TYPE_INT_RGB);
     Graphics2D g2d = image.createGraphics();
 
-    // 안티앨리어싱 활성화
+    // 고품질 렌더링 설정
     g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
     g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
     g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+    g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
 
-    // 배경색 (밝은 회색)
-    g2d.setColor(new Color(245, 245, 245));
+    // 세련된 그라데이션 배경 (부드러운 파스텔 톤)
+    GradientPaint bgGradient = new GradientPaint(
+        0, 0, new Color(250, 251, 252),
+        thumbnailWidth, thumbnailHeight, new Color(243, 244, 246)
+    );
+    g2d.setPaint(bgGradient);
     g2d.fillRect(0, 0, thumbnailWidth, thumbnailHeight);
 
-    // 캔버스 영역 배경 (흰색)
-    g2d.setColor(Color.WHITE);
-    g2d.fillRect(offsetX, offsetY, renderWidth, renderHeight);
+    // 캔버스 영역 배경 (미묘한 그림자 효과 포함)
+    int canvasPadding = 8;
+    int canvasX = offsetX - canvasPadding;
+    int canvasY = offsetY - canvasPadding;
+    int canvasW = renderWidth + canvasPadding * 2;
+    int canvasH = renderHeight + canvasPadding * 2;
+    
+    // 그림자 효과
+    g2d.setColor(new Color(0, 0, 0, 15));
+    g2d.fillRoundRect(canvasX + 2, canvasY + 2, canvasW, canvasH, 12, 12);
+    
+    // 캔버스 배경 (부드러운 흰색)
+    g2d.setColor(new Color(255, 255, 255));
+    g2d.fillRoundRect(canvasX, canvasY, canvasW, canvasH, 12, 12);
+    
+    // 미묘한 테두리
+    g2d.setColor(new Color(229, 231, 235));
+    g2d.setStroke(new BasicStroke(1.5f));
+    g2d.drawRoundRect(canvasX, canvasY, canvasW, canvasH, 12, 12);
 
-    // 아이디어들을 박스 형태로 그리기
-    g2d.setFont(new Font("Arial", Font.PLAIN, Math.max(8, (int)(12 * scale))));
+    // 아이디어들을 현대적인 카드 형태로 그리기
+    Font baseFont = new Font("Segoe UI", Font.PLAIN, Math.max(9, (int)(13 * scale)));
+    g2d.setFont(baseFont);
     FontMetrics fm = g2d.getFontMetrics();
 
+    // 아이디어별 색상 팔레트 (부드러운 파스텔 톤)
+    Color[] ideaColors = {
+        new Color(219, 234, 254), // 연한 파랑
+        new Color(254, 243, 199), // 연한 노랑
+        new Color(221, 214, 254), // 연한 보라
+        new Color(209, 250, 229), // 연한 초록
+        new Color(254, 226, 226), // 연한 빨강
+        new Color(255, 237, 213), // 연한 주황
+    };
+    
+    Color[] borderColors = {
+        new Color(147, 197, 253), // 파랑 테두리
+        new Color(253, 224, 71),  // 노랑 테두리
+        new Color(196, 181, 253), // 보라 테두리
+        new Color(134, 239, 172), // 초록 테두리
+        new Color(252, 165, 165), // 빨강 테두리
+        new Color(251, 191, 36),  // 주황 테두리
+    };
+
+    int ideaIndex = 0;
     for (Idea idea : ideas) {
       if (idea.getPositionX() == null || idea.getPositionY() == null || idea.getContent() == null) {
         continue;
@@ -196,28 +239,49 @@ public class FileStorageService {
 
       int x = offsetX + (int) (ideaX * scale);
       int y = offsetY + (int) (ideaY * scale);
-      int width = Math.max(20, (int) (ideaWidth * scale));
-      int height = Math.max(20, (int) (ideaHeight * scale));
+      int width = Math.max(24, (int) (ideaWidth * scale));
+      int height = Math.max(24, (int) (ideaHeight * scale));
+      
+      // 둥근 모서리 반경
+      int cornerRadius = Math.max(6, (int)(8 * scale));
 
-      // 박스 그리기 (연한 노란색 배경)
-      g2d.setColor(new Color(255, 255, 200));
-      g2d.fillRect(x, y, width, height);
+      // 색상 선택 (순환)
+      Color cardColor = ideaColors[ideaIndex % ideaColors.length];
+      Color borderColor = borderColors[ideaIndex % borderColors.length];
+      ideaIndex++;
 
-      // 박스 테두리
-      g2d.setColor(new Color(200, 200, 150));
-      g2d.setStroke(new BasicStroke(Math.max(1, (int)(2 * scale))));
-      g2d.drawRect(x, y, width, height);
+      // 그림자 효과
+      g2d.setColor(new Color(0, 0, 0, 20));
+      g2d.fillRoundRect(x + 1, y + 2, width, height, cornerRadius, cornerRadius);
+      
+      // 카드 배경 (그라데이션 효과)
+      GradientPaint cardGradient = new GradientPaint(
+          x, y, cardColor,
+          x, y + height, new Color(
+              Math.max(0, cardColor.getRed() - 10),
+              Math.max(0, cardColor.getGreen() - 10),
+              Math.max(0, cardColor.getBlue() - 10)
+          )
+      );
+      g2d.setPaint(cardGradient);
+      g2d.fillRoundRect(x, y, width, height, cornerRadius, cornerRadius);
+
+      // 카드 테두리 (부드러운 색상)
+      g2d.setColor(borderColor);
+      g2d.setStroke(new BasicStroke(Math.max(1.2f, (float)(1.5 * scale))));
+      g2d.drawRoundRect(x, y, width, height, cornerRadius, cornerRadius);
 
       // 텍스트 내용 (줄바꿈 처리)
-      g2d.setColor(Color.BLACK);
+      g2d.setColor(new Color(31, 41, 55)); // 진한 회색 텍스트
       String content = idea.getContent();
       if (content != null && !content.isEmpty()) {
         // 텍스트가 박스 안에 맞도록 줄바꿈
         String[] words = content.split("\\s+");
-        int lineHeight = fm.getHeight();
-        int currentY = y + lineHeight;
-        int maxWidth = width - 4;
-        int maxLines = Math.max(1, height / lineHeight - 1);
+        int lineHeight = (int)(fm.getHeight() * 1.1);
+        int textPadding = Math.max(4, (int)(6 * scale));
+        int currentY = y + textPadding + fm.getAscent();
+        int maxWidth = width - textPadding * 2;
+        int maxLines = Math.max(1, (height - textPadding * 2) / lineHeight);
 
         StringBuilder line = new StringBuilder();
         int lineCount = 0;
@@ -226,7 +290,7 @@ public class FileStorageService {
           int textWidth = fm.stringWidth(testLine);
           if (textWidth > maxWidth && line.length() > 0) {
             // 현재 줄 그리기
-            g2d.drawString(line.toString(), x + 2, currentY);
+            g2d.drawString(line.toString(), x + textPadding, currentY);
             line = new StringBuilder(word);
             currentY += lineHeight;
             lineCount++;
@@ -237,7 +301,7 @@ public class FileStorageService {
         }
         // 마지막 줄 그리기
         if (line.length() > 0 && lineCount < maxLines) {
-          g2d.drawString(line.toString(), x + 2, currentY);
+          g2d.drawString(line.toString(), x + textPadding, currentY);
         }
       }
     }
