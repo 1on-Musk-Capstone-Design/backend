@@ -19,7 +19,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @RequestMapping("/v1/health")
 public class HealthController {
 
-  private static final String APP_VERSION = "1.0.0";
+  private static final String APP_VERSION = "1.0.1";
 
   @Operation(summary = "헬스 체크", description = "서버 및 WebSocket 서버의 상태를 확인합니다.")
   @ApiResponses(value = {
