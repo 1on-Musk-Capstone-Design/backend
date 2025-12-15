@@ -19,6 +19,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @RequestMapping("/v1/health")
 public class HealthController {
 
+  private static final String APP_VERSION = "1.0.0";
+
   @Operation(summary = "헬스 체크", description = "서버 및 WebSocket 서버의 상태를 확인합니다.")
   @ApiResponses(value = {
       @ApiResponse(responseCode = "200", description = "서버 정상 동작")
@@ -36,6 +38,9 @@ public class HealthController {
     websocketStatus.put("endpoint", "/ws");
     websocketStatus.put("protocol", "STOMP");
     response.put("websocket", websocketStatus);
+
+    // 버전 정보 추가
+    response.put("version", APP_VERSION);
 
     return ResponseEntity.ok(response);
   }
