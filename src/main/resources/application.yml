@@ -37,6 +37,8 @@ openai:
   api-key: ${OPENAI_API_KEY:your-openai-api-key-here}
   model: text-embedding-ada-002
   max-tokens: 1000
+  # 프로토타입 PRD/UI 생성용 채팅 모델 (유효한 API 키가 있을 때만 사용)
+  prototype-model: ${OPENAI_PROTOTYPE_MODEL:gpt-4o-mini}
 
 # OAuth2 (Google) 로컬 기본값
 oauth2:
@@ -96,6 +98,11 @@ workspace:
     base-url: ${WORKSPACE_INVITE_BASE_URL:http://localhost:3000/invite}
     expire-hours: ${WORKSPACE_INVITE_EXPIRE_HOURS:168}
 
+socketio:
+  host: ${SOCKETIO_HOST:0.0.0.0}
+  port: ${SOCKETIO_PORT:9092}
+  allow-origin: ${SOCKETIO_ALLOW_ORIGIN:*}
+
 app:
   allowed-origins:
     - ${APP_ALLOWED_ORIGINS_0:http://localhost:*}
@@ -110,3 +117,10 @@ app:
     upload-dir: ${APP_FILE_UPLOAD_DIR:./uploads}
     thumbnail-dir: ${APP_FILE_THUMBNAIL_DIR:./uploads/thumbnails}
     base-url: ${APP_FILE_BASE_URL:http://localhost:8080/api}
+  # 아이디어 프로토타입 파이프라인 (선택). 비어 있으면 GitHub 푸시·실제 배포 URL 대신 시뮬레이션
+  prototype:
+    github-token: ${APP_PROTOTYPE_GITHUB_TOKEN:}
+    github-owner: ${APP_PROTOTYPE_GITHUB_OWNER:}
+    vercel-token: ${APP_PROTOTYPE_VERCEL_TOKEN:}
+    vercel-team-id: ${APP_PROTOTYPE_VERCEL_TEAM_ID:}
+    simulated-base-url: ${APP_PROTOTYPE_SIMULATED_BASE_URL:https://prototype.example.com}

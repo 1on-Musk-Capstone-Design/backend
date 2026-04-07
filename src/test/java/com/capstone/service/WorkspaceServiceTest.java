@@ -121,7 +121,8 @@ class WorkspaceServiceTest {
 
     when(workspaceRepository.findByIdWithOwner(1L)).thenReturn(Optional.of(workspace));
     when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-    when(workspaceRepository.save(workspace)).thenReturn(workspace);
+    when(workspaceRepository.saveAndFlush(any(Workspace.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0));
     doNothing().when(webSocketService).broadcastWorkspaceChange(any(), any(), any());
 
     WorkspaceDtos.ListItem result = workspaceService.updateWorkspaceName(1L, "New", userId);
@@ -145,7 +146,7 @@ class WorkspaceServiceTest {
     User owner = User.builder().id(20L).email("owner@test.com").name("Owner").build();
     workspace.setOwner(owner);
 
-    when(workspaceRepository.findByIdWithOwner(1L)).thenReturn(Optional.of(workspace));
+    when(workspaceRepository.findByIdWithOwnerAndNotDeleted(1L)).thenReturn(Optional.of(workspace));
     when(userRepository.findById(userId)).thenReturn(Optional.of(user));
 
     assertThatThrownBy(() -> workspaceService.deleteWorkspace(1L, userId))

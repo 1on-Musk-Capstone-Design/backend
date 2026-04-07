@@ -30,7 +30,11 @@ public enum ErrorCode {
 
   INVALID_INVITE_TOKEN("유효하지 않은 초대 토큰입니다.", HttpStatus.BAD_REQUEST),
   EXPIRED_INVITE_TOKEN("만료된 초대 토큰입니다.", HttpStatus.BAD_REQUEST),
-  BAD_REQUEST("잘못된 요청입니다.", HttpStatus.BAD_REQUEST);
+  BAD_REQUEST("잘못된 요청입니다.", HttpStatus.BAD_REQUEST),
+
+  NOT_FOUND_PROTOTYPE_JOB("해당 아이디어에 대한 프로토타입 작업이 없습니다.", HttpStatus.NOT_FOUND),
+  NOT_FOUND_PROTOTYPE_JOB_BY_ID("해당 프로토타입 작업을 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
+  PROTOTYPE_PIPELINE_FAILED("프로토타입 파이프라인 처리 중 오류가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR);
 
   private final String message;
   private final HttpStatus httpStatus;
