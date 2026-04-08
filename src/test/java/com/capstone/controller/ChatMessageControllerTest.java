@@ -2,7 +2,7 @@ package com.capstone.controller;
 
 import com.capstone.domain.chat.ChatMessage;
 import com.capstone.domain.chat.ChatMessageService;
-import com.capstone.domain.user.entity.User;
+import com.capstone.domain.user.User;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;

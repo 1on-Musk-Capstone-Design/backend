@@ -6,8 +6,8 @@ import static com.capstone.global.exception.ErrorCode.NOT_FOUND_USER;
 import static com.capstone.global.exception.ErrorCode.NOT_FOUND_WORKSPACE;
 import static com.capstone.global.exception.ErrorCode.NOT_FOUND_WORKSPACE_USER;
 
-import com.capstone.domain.user.entity.User;
-import com.capstone.domain.user.repository.UserRepository;
+import com.capstone.domain.user.User;
+import com.capstone.domain.user.UserRepository;
 import com.capstone.domain.workspace.Workspace;
 import com.capstone.domain.workspace.WorkspaceRepository;
 import com.capstone.domain.workspace.WorkspaceService;

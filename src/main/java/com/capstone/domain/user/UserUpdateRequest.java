@@ -1,4 +1,4 @@
-package com.capstone.domain.user.dto;
+package com.capstone.domain.user;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;

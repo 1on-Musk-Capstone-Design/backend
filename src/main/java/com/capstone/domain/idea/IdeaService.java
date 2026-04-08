@@ -12,7 +12,7 @@ import com.capstone.domain.workspace.Workspace;
 import com.capstone.domain.workspace.WorkspaceRepository;
 import com.capstone.domain.workspace.WorkspaceService;
 import com.capstone.domain.workspaceUser.WorkspaceUserRepository;
-import com.capstone.domain.user.repository.UserRepository;
+import com.capstone.domain.user.UserRepository;
 import com.capstone.global.exception.CustomException;
 import com.capstone.global.service.WebSocketService;
 import java.util.List;

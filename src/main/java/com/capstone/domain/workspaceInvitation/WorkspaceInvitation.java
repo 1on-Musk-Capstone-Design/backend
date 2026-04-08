@@ -1,6 +1,6 @@
 package com.capstone.domain.workspaceInvitation;
 
-import com.capstone.domain.user.entity.User;
+import com.capstone.domain.user.User;
 import com.capstone.domain.workspace.Workspace;
 import jakarta.persistence.*;
 import java.time.Instant;

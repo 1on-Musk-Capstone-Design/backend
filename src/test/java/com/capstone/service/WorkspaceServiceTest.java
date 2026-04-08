@@ -1,7 +1,7 @@
 package com.capstone.service;
 
-import com.capstone.domain.user.entity.User;
-import com.capstone.domain.user.repository.UserRepository;
+import com.capstone.domain.user.User;
+import com.capstone.domain.user.UserRepository;
 import com.capstone.domain.workspace.Workspace;
 import com.capstone.domain.workspace.WorkspaceDtos;
 import com.capstone.domain.workspace.WorkspaceRepository;
@@ -16,9 +16,7 @@ import com.capstone.domain.workspaceInvite.WorkspaceInviteRepository;
 import com.capstone.domain.workspaceUser.WorkspaceUser;
 import com.capstone.domain.workspaceUser.WorkspaceUserRepository;
 import com.capstone.global.service.WebSocketService;
-import com.capstone.global.type.Role;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;

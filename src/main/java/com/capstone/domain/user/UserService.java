@@ -1,9 +1,5 @@
-package com.capstone.domain.user.service;
+package com.capstone.domain.user;
 
-import com.capstone.domain.user.dto.UserResponse;
-import com.capstone.domain.user.dto.UserUpdateRequest;
-import com.capstone.domain.user.entity.User;
-import com.capstone.domain.user.repository.UserRepository;
 import com.capstone.global.exception.CustomException;
 import com.capstone.global.exception.ErrorCode;
 import com.capstone.global.oauth.JwtProvider;

@@ -1,6 +1,6 @@
 package com.capstone.domain.chat;
 
-import com.capstone.domain.user.entity.User;
+import com.capstone.domain.user.User;
 import jakarta.persistence.*;
 import java.time.Instant;
 import lombok.Getter;

@@ -1,6 +1,6 @@
 package com.capstone.integration;
 
-import com.capstone.domain.user.entity.User;
+import com.capstone.domain.user.User;
 import com.capstone.domain.voicesession.VoiceSession;
 import com.capstone.domain.voicesession.VoiceSessionRepository;
 import com.capstone.domain.workspace.Workspace;

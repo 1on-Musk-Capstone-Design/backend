@@ -1,7 +1,7 @@
 package com.capstone.domain.workspaceInvite;
 
-import com.capstone.domain.user.entity.User;
-import com.capstone.domain.user.repository.UserRepository;
+import com.capstone.domain.user.User;
+import com.capstone.domain.user.UserRepository;
 import com.capstone.domain.workspace.Workspace;
 import com.capstone.domain.workspace.WorkspaceRepository;
 import com.capstone.domain.workspace.WorkspaceDtos.InviteLinkResponse;
