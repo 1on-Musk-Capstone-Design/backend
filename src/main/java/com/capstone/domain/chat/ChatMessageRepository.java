@@ -1,5 +1,6 @@
 package com.capstone.domain.chat;
 
+import com.capstone.domain.user.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -25,7 +26,7 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> 
   /**
    * 특정 사용자의 메시지 조회
    */
-  List<ChatMessage> findByUserOrderByCreatedAtDesc(com.capstone.domain.user.entity.User user);
+  List<ChatMessage> findByUserOrderByCreatedAtDesc(User user);
 
   /**
    * 특정 워크스페이스의 메시지 개수 조회

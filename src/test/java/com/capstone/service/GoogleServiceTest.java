@@ -1,7 +1,7 @@
 package com.capstone.service;
 
-import com.capstone.domain.user.entity.User;
-import com.capstone.domain.user.repository.UserRepository;
+import com.capstone.domain.user.User;
+import com.capstone.domain.user.UserRepository;
 import com.capstone.global.oauth.JwtProvider;
 import com.capstone.global.oauth.TokenDto;
 import com.capstone.global.oauth.service.GoogleService;

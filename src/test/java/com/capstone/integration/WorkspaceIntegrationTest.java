@@ -1,6 +1,6 @@
 package com.capstone.integration;
 
-import com.capstone.domain.user.entity.User;
+import com.capstone.domain.user.User;
 import com.capstone.domain.workspace.Workspace;
 import com.capstone.domain.workspace.WorkspaceRepository;
 import org.junit.jupiter.api.Test;

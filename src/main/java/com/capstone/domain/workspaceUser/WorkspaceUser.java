@@ -1,6 +1,6 @@
 package com.capstone.domain.workspaceUser;
 
-import com.capstone.domain.user.entity.User;
+import com.capstone.domain.user.User;
 import com.capstone.domain.workspace.Workspace;
 import com.capstone.global.type.Role;
 import jakarta.persistence.Column;

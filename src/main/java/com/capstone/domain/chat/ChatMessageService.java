@@ -1,7 +1,7 @@
 package com.capstone.domain.chat;
 
-import com.capstone.domain.user.entity.User;
-import com.capstone.domain.user.repository.UserRepository;
+import com.capstone.domain.user.User;
+import com.capstone.domain.user.UserRepository;
 import com.capstone.global.exception.CustomException;
 import com.capstone.global.exception.ErrorCode;
 import org.springframework.data.domain.PageRequest;

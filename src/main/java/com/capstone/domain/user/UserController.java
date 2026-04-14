@@ -1,8 +1,5 @@
-package com.capstone.domain.user.controller;
+package com.capstone.domain.user;
 
-import com.capstone.domain.user.dto.UserResponse;
-import com.capstone.domain.user.dto.UserUpdateRequest;
-import com.capstone.domain.user.service.UserService;
 import com.capstone.global.exception.CustomException;
 import com.capstone.global.exception.ErrorCode;
 import io.swagger.v3.oas.annotations.Operation;

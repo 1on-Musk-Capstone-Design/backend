@@ -1,11 +1,9 @@
 package com.capstone.controller;
 
-import com.capstone.domain.user.entity.User;
+import com.capstone.domain.user.User;
 import com.capstone.domain.voicesessionUser.VoiceSessionUser;
 import com.capstone.domain.voicesessionUser.VoiceSessionUserController;
 import com.capstone.domain.voicesessionUser.VoiceSessionUserService;
-import com.capstone.domain.voicesessionUser.VoiceSessionUserRequest;
-import com.capstone.domain.voicesessionUser.VoiceSessionUserResponse;
 import com.capstone.domain.voicesession.VoiceSession;
 import com.capstone.domain.workspaceUser.WorkspaceUser;
 import com.capstone.domain.workspace.Workspace;

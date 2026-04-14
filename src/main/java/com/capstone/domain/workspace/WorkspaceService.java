@@ -1,17 +1,15 @@
 package com.capstone.domain.workspace;
 
 import static com.capstone.global.exception.ErrorCode.FORBIDDEN_WORKSPACE;
-import static com.capstone.global.exception.ErrorCode.FORBIDDEN_WORKSPACE_ACCESS;
 import static com.capstone.global.exception.ErrorCode.NOT_FOUND_USER;
 import static com.capstone.global.exception.ErrorCode.NOT_FOUND_WORKSPACE;
-import static com.capstone.global.exception.ErrorCode.NOT_FOUND_WORKSPACE_USER;
 
 import com.capstone.domain.canvas.CanvasRepository;
 import com.capstone.domain.chat.ChatMessageRepository;
 import com.capstone.domain.idea.Idea;
 import com.capstone.domain.idea.IdeaRepository;
-import com.capstone.domain.user.entity.User;
-import com.capstone.domain.user.repository.UserRepository;
+import com.capstone.domain.user.User;
+import com.capstone.domain.user.UserRepository;
 import com.capstone.domain.voicesession.VoiceSessionRepository;
 import com.capstone.domain.voicesessionUser.VoiceSessionUserRepository;
 import com.capstone.domain.workspaceInvitation.WorkspaceInvitationRepository;

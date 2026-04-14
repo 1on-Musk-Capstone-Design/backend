@@ -1,6 +1,5 @@
-package com.capstone.domain.user.dto;
+package com.capstone.domain.user;
 
-import com.capstone.domain.user.entity.User;
 import lombok.Builder;
 import lombok.Getter;
 

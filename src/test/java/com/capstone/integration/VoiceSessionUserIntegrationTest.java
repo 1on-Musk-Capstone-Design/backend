@@ -1,6 +1,6 @@
 package com.capstone.integration;
 
-import com.capstone.domain.user.entity.User;
+import com.capstone.domain.user.User;
 import com.capstone.domain.voicesession.VoiceSession;
 import com.capstone.domain.voicesession.VoiceSessionRepository;
 import com.capstone.domain.voicesessionUser.VoiceSessionUser;
@@ -9,7 +9,6 @@ import com.capstone.domain.workspace.Workspace;
 import com.capstone.domain.workspace.WorkspaceRepository;
 import com.capstone.domain.workspaceUser.WorkspaceUser;
 import com.capstone.domain.workspaceUser.WorkspaceUserRepository;
-import com.capstone.global.type.Role;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
