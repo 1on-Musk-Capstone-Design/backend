@@ -1,5 +1,6 @@
 package com.capstone.global.config;
 
+import java.util.List;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -27,7 +28,7 @@ public class SecurityConfig {
     http
         .csrf(csrf -> csrf.disable())
         .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-        .authorizeHttpRequests(authz -> authz
+        .authorizeHttpRequests(auth -> auth
 
             // Health check & Actuator
             .requestMatchers("/v1/health", "/actuator/**").permitAll()
@@ -91,8 +92,11 @@ public class SecurityConfig {
     CorsConfiguration configuration = new CorsConfiguration();
     // 구성 파일 기반 허용 Origin 적용
     configuration.setAllowedOriginPatterns(appProperties.getAllowedOrigins());
-    configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
-    configuration.setAllowedHeaders(Arrays.asList("*"));
+    configuration.setAllowedOriginPatterns(
+        List.of("https://*.ngrok-free.dev", "http://localhost:3000"));
+    configuration.setAllowedMethods(
+        Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
+    configuration.setAllowedMethods(List.of("*"));
     configuration.setAllowCredentials(true);
     configuration.setMaxAge(3600L);
 
