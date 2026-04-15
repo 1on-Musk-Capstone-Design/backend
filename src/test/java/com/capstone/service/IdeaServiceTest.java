@@ -206,12 +206,50 @@ class IdeaServiceTest {
     when(workspaceUserRepository.findByWorkspaceAndUser(workspace, user)).thenReturn(
         Optional.of(workspaceUser));
     when(canvasRepository.findById(canvas.getId())).thenReturn(Optional.of(canvas));
+    when(ideaRepository.save(any(Idea.class))).thenAnswer(invocation -> invocation.getArgument(0));
+    doNothing().when(webSocketService).broadcastIdeaChange(any(), any(), any());
 
     IdeaResponse response = ideaService.updateIdea(user.getId(), idea.getId(), request);
 
     assertEquals("Updated Content", response.getContent());
     assertEquals(10.0, response.getPositionX());
     assertEquals(20.0, response.getPositionY());
+  }
+
+  @Test
+  @DisplayName("본문만 수정 시 패치·좌표 유지 (PRD 통합 PUT)")
+  void updateIdeaContentOnlyPreservesLayout() {
+    Idea idea = Idea.builder()
+        .id(1L)
+        .workspace(workspace)
+        .content("Old")
+        .patchSizeX(5.0)
+        .patchSizeY(6.0)
+        .positionX(1.0)
+        .positionY(2.0)
+        .createdAt(now)
+        .updatedAt(now)
+        .build();
+
+    IdeaRequest request = IdeaRequest.builder()
+        .workspaceId(workspace.getWorkspaceId())
+        .content("통합 PRD 본문")
+        .build();
+
+    when(ideaRepository.findById(idea.getId())).thenReturn(Optional.of(idea));
+    when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+    when(workspaceUserRepository.findByWorkspaceAndUser(workspace, user)).thenReturn(
+        Optional.of(workspaceUser));
+    when(ideaRepository.save(any(Idea.class))).thenAnswer(invocation -> invocation.getArgument(0));
+    doNothing().when(webSocketService).broadcastIdeaChange(any(), any(), any());
+
+    IdeaResponse response = ideaService.updateIdea(user.getId(), idea.getId(), request);
+
+    assertEquals("통합 PRD 본문", response.getContent());
+    assertEquals(5.0, response.getPatchSizeX());
+    assertEquals(6.0, response.getPatchSizeY());
+    assertEquals(1.0, response.getPositionX());
+    assertEquals(2.0, response.getPositionY());
   }
 
   @Test

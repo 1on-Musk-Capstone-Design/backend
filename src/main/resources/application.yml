@@ -5,36 +5,43 @@ server:
     context-path: /api
 
 spring:
+  # OpenAI 키 등 로컬 설정. (1) Capstone 루트 ./local-application.yml (실행 cwd 가 프로젝트 루트일 때)
+  # (2) src/main/resources/application-local.yml — IDE 실행 시 cwd 와 무관하게 classpath 에서 로드(권장)
+  # 예: cp src/main/resources/application-local.yml.example src/main/resources/application-local.yml
+  config:
+    import: optional:file:./local-application.yml,optional:classpath:application-local.yml
   application:
     name: capstone-project
   jwt:
-    secret: ${SPRING_JWT_SECRET:local-dev-secret-please-change-this-is-a-very-long-secret-key-for-jwt-token-generation-minimum-32-characters}
+    # 운영에서는 반드시 SPRING_JWT_SECRET 으로 덮어쓰세요(32자 이상).
+    secret: ${SPRING_JWT_SECRET:development-only-change-with-SPRING_JWT_SECRET-min-32}
   
   datasource:
-    url: jdbc:postgresql://localhost:5432/capstone_db
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/capstone_db}
     driver-class-name: org.postgresql.Driver
-    username: postgres
-    password: musk12!
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:}
   
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
-      ddl-auto: update  # create-drop에서 update로 변경하여 데이터 유지
-    show-sql: true
+      ddl-auto: ${JPA_DDL_AUTO:update}
+    show-sql: ${JPA_SHOW_SQL:false}
     properties:
       hibernate:
         format_sql: true
 
   security:
     user:
-      name: admin
-      password: admin
+      name: ${SPRING_SECURITY_USER_NAME:admin}
+      password: ${SPRING_SECURITY_USER_PASSWORD:}
 
 # WebSocket 설정은 WebSocketConfig에서 관리
 
-# OpenAI API 설정 (AI 클러스터링용)
+# OpenAI API (PRD/프로토타입 LLM). 키는 환경변수 OPENAI_API_KEY 또는 ./local-application.yml 에만 두세요.
+# 저장소에 API 키를 넣지 마세요.
 openai:
-  api-key: ${OPENAI_API_KEY:your-openai-api-key-here}
+  api-key: ${OPENAI_API_KEY:}
   model: text-embedding-ada-002
   max-tokens: 1000
   # 프로토타입 PRD/UI 생성용 채팅 모델 (유효한 API 키가 있을 때만 사용)
@@ -86,10 +93,10 @@ springdoc:
 
 logging:
   level:
-    com.capstone: DEBUG
+    com.capstone: ${LOG_LEVEL_COM_CAPSTONE:INFO}
     org.springframework.security: INFO
-    org.springframework.web.socket: DEBUG
-    org.springframework.messaging: DEBUG
+    org.springframework.web.socket: ${LOG_LEVEL_WEBSOCKET:WARN}
+    org.springframework.messaging: ${LOG_LEVEL_MESSAGING:WARN}
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
 
@@ -117,10 +124,13 @@ app:
     upload-dir: ${APP_FILE_UPLOAD_DIR:./uploads}
     thumbnail-dir: ${APP_FILE_THUMBNAIL_DIR:./uploads/thumbnails}
     base-url: ${APP_FILE_BASE_URL:http://localhost:8080/api}
-  # 아이디어 프로토타입 파이프라인 (선택). 비어 있으면 GitHub 푸시·실제 배포 URL 대신 시뮬레이션
+  # 로컬 자동 로그인: POST /v1/auth/dev/bootstrap (프론트 Vite dev + localhost에서 호출)
+  # 운영 배포 시 반드시 APP_DEV_BOOTSTRAP_AUTH=false
+  dev-bootstrap-auth:
+    enabled: ${APP_DEV_BOOTSTRAP_AUTH:false}
+
+  # 아이디어 프로토타입 파이프라인 (선택). Vercel 토큰이 있으면 생성 파일 직접 배포
   prototype:
-    github-token: ${APP_PROTOTYPE_GITHUB_TOKEN:}
-    github-owner: ${APP_PROTOTYPE_GITHUB_OWNER:}
     vercel-token: ${APP_PROTOTYPE_VERCEL_TOKEN:}
     vercel-team-id: ${APP_PROTOTYPE_VERCEL_TEAM_ID:}
     simulated-base-url: ${APP_PROTOTYPE_SIMULATED_BASE_URL:https://prototype.example.com}

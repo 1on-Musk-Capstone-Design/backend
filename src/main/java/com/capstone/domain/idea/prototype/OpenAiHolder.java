@@ -1,32 +1,22 @@
 package com.capstone.domain.idea.prototype;
 
-import com.theokanning.openai.service.OpenAiService;
-import java.time.Duration;
 import lombok.Getter;
-import org.springframework.beans.factory.annotation.Value;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 /**
- * {@code openai.api-key}가 유효할 때만 {@link OpenAiService}를 생성합니다.
+ * OpenAI 연동 진입점(하위 호환). 실제 호출은 {@link OpenAiChatService} 가 수행합니다.
+ *
+ * <p>이전 theokanning 기반 {@code OpenAiService} 는 제거되었으며, REST 직접 호출로 대체되었습니다.
  */
 @Component
 @Getter
+@RequiredArgsConstructor
 public class OpenAiHolder {
 
-  private final OpenAiService openAiService;
-
-  public OpenAiHolder(@Value("${openai.api-key:}") String apiKey) {
-    if (apiKey == null
-        || apiKey.isBlank()
-        || apiKey.contains("your-openai-api-key")
-        || apiKey.equals("your-openai-api-key-here")) {
-      this.openAiService = null;
-    } else {
-      this.openAiService = new OpenAiService(apiKey.trim(), Duration.ofSeconds(120));
-    }
-  }
+  private final OpenAiChatService openAiChatService;
 
   public boolean isEnabled() {
-    return openAiService != null;
+    return openAiChatService.isEnabled();
   }
 }

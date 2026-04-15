@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -16,70 +17,79 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class PrototypePipelineExecutionService {
 
+  /** 동일 아이디어에 대한 파이프라인은 순차 실행 (재생성·동시 실행 충돌 방지) */
+  private static final ConcurrentHashMap<Long, Object> PIPELINE_LOCK_BY_IDEA_ID =
+      new ConcurrentHashMap<>();
+
   private final IdeaRepository ideaRepository;
   private final IdeaPrototypeJobRepository jobRepository;
   private final PrototypeAiContentService prototypeAiContentService;
   private final ReactPrototypeGenerator reactPrototypeGenerator;
-  private final GithubPrototypePushService githubPrototypePushService;
   private final VercelPrototypeDeployService vercelPrototypeDeployService;
   private final ObjectMapper objectMapper;
 
   @Transactional
   public void executePipeline(Long jobId) {
-    IdeaPrototypeJob job =
+    IdeaPrototypeJob jobSnapshot =
         jobRepository.findById(jobId).orElseThrow(() -> new IllegalStateException("job not found"));
-    if (job.getIdea() == null) {
-      fail(job, "idea reference missing");
+    if (jobSnapshot.getIdea() == null) {
+      fail(jobSnapshot, "idea reference missing");
       return;
     }
-    Idea idea = ideaRepository.findById(job.getIdea().getId()).orElse(null);
-    if (idea == null) {
-      fail(job, "idea not found for job");
-      return;
-    }
-
-    try {
-      job.setStatus(PrototypeJobStatus.RUNNING);
-      jobRepository.saveAndFlush(job);
-
-      String prd = prototypeAiContentService.generatePrd(idea);
-      job.setPrdMarkdown(prd);
-      job.setStatus(PrototypeJobStatus.PRD_GENERATED);
-      jobRepository.saveAndFlush(job);
-
-      String ui = prototypeAiContentService.generateUiJson(idea, prd);
-      job.setUiStructureJson(ui);
-      job.setStatus(PrototypeJobStatus.UI_GENERATED);
-      jobRepository.saveAndFlush(job);
-
-      Map<String, String> files = reactPrototypeGenerator.generateFiles(idea);
-      job.setGeneratedFilesSummaryJson(buildFilesSummary(files));
-      job.setStatus(PrototypeJobStatus.CODE_GENERATED);
-      jobRepository.saveAndFlush(job);
-
-      Long ideaId = idea.getId();
-      String repoName = "idea-prototype-" + ideaId + "-" + job.getId();
-      String githubUrl = githubPrototypePushService.pushFiles(repoName, files);
-      boolean simulatedGithub = githubUrl == null;
-      if (githubUrl != null) {
-        job.setGithubRepoUrl(githubUrl);
-        job.setStatus(PrototypeJobStatus.GITHUB_PUSHED);
-        jobRepository.saveAndFlush(job);
+    Long ideaId = jobSnapshot.getIdea().getId();
+    Object lock = PIPELINE_LOCK_BY_IDEA_ID.computeIfAbsent(ideaId, k -> new Object());
+    synchronized (lock) {
+      IdeaPrototypeJob job =
+          jobRepository.findById(jobId).orElseThrow(() -> new IllegalStateException("job not found"));
+      if (job.getIdea() == null) {
+        fail(job, "idea reference missing");
+        return;
+      }
+      if (job.getStatus() == PrototypeJobStatus.FAILED) {
+        log.info("prototype skip already failed jobId={}", jobId);
+        return;
+      }
+      Idea idea = ideaRepository.findById(job.getIdea().getId()).orElse(null);
+      if (idea == null) {
+        fail(job, "idea not found for job");
+        return;
       }
 
-      String projectSlug = sanitizeProjectSlug(repoName);
-      VercelPrototypeDeployService.VercelResolution urls =
-          vercelPrototypeDeployService.resolveUrls(githubUrl, job.getId(), projectSlug);
+      try {
+        job.setStatus(PrototypeJobStatus.RUNNING);
+        jobRepository.saveAndFlush(job);
 
-      job.setVercelPreviewUrl(urls.previewUrl());
-      job.setVercelProductionUrl(urls.productionUrl());
-      job.setSimulated(urls.simulated() || simulatedGithub);
-      job.setVercelDeploymentApiUsed(urls.deploymentApiUsed());
-      job.setStatus(PrototypeJobStatus.DEPLOYED);
-      jobRepository.saveAndFlush(job);
-    } catch (Exception e) {
-      log.error("executePipeline failed jobId={}", jobId, e);
-      fail(job, e.getMessage());
+        String prd = prototypeAiContentService.generatePrd(idea);
+        job.setPrdMarkdown(prd);
+        job.setStatus(PrototypeJobStatus.PRD_GENERATED);
+        jobRepository.saveAndFlush(job);
+
+        String ui = prototypeAiContentService.generateUiJson(idea, prd);
+        job.setUiStructureJson(ui);
+        job.setStatus(PrototypeJobStatus.UI_GENERATED);
+        jobRepository.saveAndFlush(job);
+
+        Map<String, String> files = reactPrototypeGenerator.generateFiles(idea);
+        job.setGeneratedFilesSummaryJson(buildFilesSummary(files));
+        job.setStatus(PrototypeJobStatus.CODE_GENERATED);
+        jobRepository.saveAndFlush(job);
+
+        Long iid = idea.getId();
+        String repoName = "idea-prototype-" + iid + "-" + job.getId();
+        String projectSlug = sanitizeProjectSlug(repoName);
+        VercelPrototypeDeployService.VercelResolution urls =
+            vercelPrototypeDeployService.resolveUrls(files, job.getId(), projectSlug);
+
+        job.setVercelPreviewUrl(urls.previewUrl());
+        job.setVercelProductionUrl(urls.productionUrl());
+        job.setSimulated(urls.simulated());
+        job.setVercelDeploymentApiUsed(urls.deploymentApiUsed());
+        job.setStatus(PrototypeJobStatus.DEPLOYED);
+        jobRepository.saveAndFlush(job);
+      } catch (Exception e) {
+        log.error("executePipeline failed jobId={}", jobId, e);
+        fail(job, e.getMessage());
+      }
     }
   }
 

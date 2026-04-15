@@ -4,20 +4,17 @@ import com.capstone.global.config.AppProperties;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.net.URI;
-import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.Map;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-/**
- * Vercel REST API로 GitHub 연동 배포를 시도하고, 실패 시 Import URL 또는 시뮬 URL로 폴백합니다.
- */
+/** Vercel REST API로 생성 파일을 직접 배포하고, 실패 시 시뮬 URL로 폴백합니다. */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -33,71 +30,57 @@ public class VercelPrototypeDeployService {
       String previewUrl, String productionUrl, boolean simulated, boolean deploymentApiUsed) {}
 
   /**
-   * @param githubRepoUrl GitHub 저장소 HTTPS URL (없으면 시뮬)
+   * @param files 생성된 파일 맵 (경로 -> 내용)
    * @param jobId 작업 ID (시뮬 URL 경로용)
    * @param projectSlug Vercel 프로젝트/배포 이름 (소문자·하이픈)
    */
-  public VercelResolution resolveUrls(String githubRepoUrl, long jobId, String projectSlug) {
+  public VercelResolution resolveUrls(Map<String, String> files, long jobId, String projectSlug) {
     String token = appProperties.getPrototype().getVercelToken();
     String teamId = appProperties.getPrototype().getVercelTeamId();
     String base = appProperties.getPrototype().getSimulatedBaseUrl();
 
-    if (githubRepoUrl != null
-        && !githubRepoUrl.isBlank()
-        && token != null
-        && !token.isBlank()) {
+    if (token != null && !token.isBlank()) {
       Optional<VercelResolution> fromApi =
-          tryCreateDeployment(token, teamId, githubRepoUrl.trim(), projectSlug);
+          tryCreateDeploymentFromFiles(token, teamId, files, projectSlug);
       if (fromApi.isPresent()) {
+        log.info("Vercel API 배포 성공: {}", fromApi.get().previewUrl());
         return fromApi.get();
       }
-    }
-
-    if (githubRepoUrl != null && !githubRepoUrl.isBlank()) {
-      String repo = githubRepoUrl.trim();
-      String importUrl =
-          "https://vercel.com/new/clone?repository-url="
-              + URLEncoder.encode(repo, StandardCharsets.UTF_8);
-      return new VercelResolution(importUrl, importUrl, false, false);
-    }
-
-    if (token != null && !token.isBlank()) {
-      String simulated = base.replaceAll("/$", "") + "/job/" + jobId;
-      return new VercelResolution(simulated + "/preview", simulated + "/production", true, false);
+      log.warn("Vercel API 직접 배포 실패로 시뮬레이션 URL 폴백 (jobId={})", jobId);
     }
 
     String simulated = base.replaceAll("/$", "") + "/job/" + jobId;
+    log.warn("Vercel 토큰/계정 연결이 없어 시뮬레이션 URL 반환 (jobId={})", jobId);
     return new VercelResolution(simulated + "/preview", simulated + "/production", true, false);
   }
 
-  private Optional<VercelResolution> tryCreateDeployment(
-      String token, String teamId, String githubRepoUrl, String projectSlug) {
-    Optional<GithubRepoRef.Record> ref = GithubRepoRef.parse(githubRepoUrl);
-    if (ref.isEmpty()) {
+  private Optional<VercelResolution> tryCreateDeploymentFromFiles(
+      String token, String teamId, Map<String, String> files, String projectSlug) {
+    if (files == null || files.isEmpty()) {
+      log.warn("Vercel direct deploy skipped: files empty");
       return Optional.empty();
     }
-    GithubRepoRef.Record r = ref.get();
-    String name = projectSlug != null && !projectSlug.isBlank() ? projectSlug : r.repo();
+    String name = projectSlug != null && !projectSlug.isBlank() ? projectSlug : "idea-prototype";
 
     try {
-      var body =
-          objectMapper
-              .createObjectNode()
-              .put("name", name)
-              .put("project", name)
-              .put("target", "production")
-              .set(
-                  "gitSource",
+      var body = objectMapper.createObjectNode().put("name", name).put("target", "production");
+      var projectSettings = body.putObject("projectSettings");
+      projectSettings.put("framework", "vite");
+      projectSettings.put("buildCommand", "npm run build");
+      projectSettings.put("installCommand", "npm install");
+      projectSettings.put("outputDirectory", "dist");
+      var filesNode = body.putArray("files");
+      files.forEach(
+          (path, content) ->
+              filesNode.add(
                   objectMapper
                       .createObjectNode()
-                      .put("type", "github")
-                      .put("ref", "main")
-                      .put("org", r.org())
-                      .put("repo", r.repo()));
+                      .put("file", normalizePath(path))
+                      .put("data", content == null ? "" : content)));
 
       StringBuilder url = new StringBuilder("https://api.vercel.com/v13/deployments");
       if (teamId != null && !teamId.isBlank()) {
-        url.append("?teamId=").append(URLEncoder.encode(teamId.trim(), StandardCharsets.UTF_8));
+        url.append("?teamId=").append(teamId.trim());
       }
 
       HttpRequest req =
@@ -130,12 +113,19 @@ public class VercelPrototypeDeployService {
               ? root.path("alias").get(0).asText(null)
               : null;
       String production = alias != null && alias.startsWith("http") ? alias : deploymentUrl;
-      return Optional.of(
-          new VercelResolution(deploymentUrl, production, false, true));
+      return Optional.of(new VercelResolution(deploymentUrl, production, false, true));
     } catch (Exception e) {
       log.warn("Vercel deployment API error: {}", e.getMessage());
       return Optional.empty();
     }
+  }
+
+  private static String normalizePath(String path) {
+    if (path == null || path.isBlank()) {
+      return "index.html";
+    }
+    String p = path.replace("\\", "/");
+    return p.startsWith("/") ? p.substring(1) : p;
   }
 
   private static String truncate(String s) {

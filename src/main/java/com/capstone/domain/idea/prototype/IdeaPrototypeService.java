@@ -22,6 +22,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 @Slf4j
 @Service
@@ -38,6 +40,14 @@ public class IdeaPrototypeService {
   @Transactional
   public PrototypeJobAcceptedResponse startPipelineAsync(Long userId, Long ideaId) {
     Idea idea = loadIdeaAndCheckAccess(userId, ideaId);
+    // 동일 아이디어에 대기 중이던 이전 작업은 새 PRD로 대체되므로 취소 (중복 파이프라인·500 완화)
+    for (IdeaPrototypeJob j : jobRepository.findByIdea_IdOrderByIdDesc(idea.getId())) {
+      if (j.getStatus() == PrototypeJobStatus.PENDING) {
+        j.setStatus(PrototypeJobStatus.FAILED);
+        j.setErrorMessage("새 PRD 파이프라인이 시작되어 이 대기 작업은 취소되었습니다.");
+        jobRepository.save(j);
+      }
+    }
     IdeaPrototypeJob job =
         jobRepository.save(
             IdeaPrototypeJob.builder()
@@ -45,7 +55,19 @@ public class IdeaPrototypeService {
                 .status(PrototypeJobStatus.PENDING)
                 .simulated(false)
                 .build());
-    prototypePipelineRunner.runPipelineAsync(job.getId());
+    Long jobIdToRun = job.getId();
+    // 트랜잭션 커밋 후 비동기 실행 — 커밋 전에 워커가 조회하면 job 행이 없어 파이프라인이 실패·PENDING 고착 가능
+    if (TransactionSynchronizationManager.isSynchronizationActive()) {
+      TransactionSynchronizationManager.registerSynchronization(
+          new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+              prototypePipelineRunner.runPipelineAsync(jobIdToRun);
+            }
+          });
+    } else {
+      prototypePipelineRunner.runPipelineAsync(jobIdToRun);
+    }
     return PrototypeJobAcceptedResponse.builder()
         .jobId(job.getId())
         .ideaId(ideaId)
@@ -57,6 +79,13 @@ public class IdeaPrototypeService {
   @Transactional
   public PrototypePipelineResponse runPipelineSync(Long userId, Long ideaId) {
     Idea idea = loadIdeaAndCheckAccess(userId, ideaId);
+    for (IdeaPrototypeJob j : jobRepository.findByIdea_IdOrderByIdDesc(idea.getId())) {
+      if (j.getStatus() == PrototypeJobStatus.PENDING) {
+        j.setStatus(PrototypeJobStatus.FAILED);
+        j.setErrorMessage("새 PRD 파이프라인이 시작되어 이 대기 작업은 취소되었습니다.");
+        jobRepository.save(j);
+      }
+    }
     IdeaPrototypeJob job =
         jobRepository.save(
             IdeaPrototypeJob.builder()
@@ -165,7 +194,7 @@ public class IdeaPrototypeService {
     boolean sim = Boolean.TRUE.equals(job.getSimulated());
     boolean api = Boolean.TRUE.equals(job.getVercelDeploymentApiUsed());
     if (sim) {
-      return "GitHub 푸시 또는 Vercel 설정이 없어 시뮬레이션 URL을 반환했습니다. APP_PROTOTYPE_* 환경변수를 확인하세요.";
+      return "Vercel 계정 연결/설정이 없어 시뮬레이션 URL을 반환했습니다. APP_PROTOTYPE_VERCEL_* 설정을 확인하세요.";
     }
     if (api) {
       return "Vercel 배포 API로 배포를 생성했습니다. 프리뷰 URL을 확인하세요.";

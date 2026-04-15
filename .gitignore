@@ -47,5 +47,13 @@ Thumbs.db
 .env.development
 .env.production
 
+### 로컬 전용 Spring 설정 (OpenAI 키 등) — 템플릿은 local-application.yml.template 참고 ###
+local-application.yml
+src/main/resources/application-local.yml
+
+### 업로드/로컬 생성물 (저장소 미포함) ###
+uploads/
+frontend-thumbnail/
+
 ### Gradle ###
 .gradle/
