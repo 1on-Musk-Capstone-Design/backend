@@ -48,4 +48,6 @@ Thumbs.db
 .env.production
 
 ### Gradle ###
+bin/
+uploads/
 .gradle/

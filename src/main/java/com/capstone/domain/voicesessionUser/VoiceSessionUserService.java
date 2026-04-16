@@ -148,4 +148,31 @@ public class VoiceSessionUserService {
 
     return voiceSessionUserRepository.countBySessionIdAndLeftAtIsNull(sessionId);
   }
+
+  /**
+   * WebRTC 시그널링 전송 권한 검증
+   */
+  public void validateSignalingPermission(Long workspaceId, Long sessionId, Long workspaceUserId) {
+    WorkspaceUser workspaceUser = workspaceUserRepository.findById(workspaceUserId)
+        .orElseThrow(() -> new CustomException(NOT_FOUND_WORKSPACE_USER));
+
+    if (!workspaceUser.getWorkspace().getWorkspaceId().equals(workspaceId)) {
+      throw new CustomException(FORBIDDEN_WORKSPACE_ACCESS);
+    }
+
+    VoiceSession session = sessionRepository.findById(sessionId)
+        .orElseThrow(() -> new CustomException(NOT_FOUND_SESSION));
+
+    if (!session.getWorkspace().getWorkspaceId().equals(workspaceId)) {
+      throw new CustomException(FORBIDDEN_WORKSPACE_SESSION);
+    }
+
+    if (session.getEndedAt() != null) {
+      throw new CustomException(FORBIDDEN_CLOSED_SESSION);
+    }
+
+    voiceSessionUserRepository
+        .findBySessionIdAndWorkspaceUserIdAndLeftAtIsNull(sessionId, workspaceUserId)
+        .orElseThrow(() -> new CustomException(NOT_FOUND_SESSION_USER));
+  }
 }
