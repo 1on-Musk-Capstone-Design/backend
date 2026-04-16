@@ -224,6 +224,8 @@ jobs:
           GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
           GOOGLE_REDIRECT_URI: ${{ secrets.GOOGLE_REDIRECT_URI }}
           GOOGLE_LOGIN_URI: ${{ secrets.GOOGLE_LOGIN_URI }}
+          GOOGLE_IOS_CLIENT_ID: ${{ secrets.GOOGLE_IOS_CLIENT_ID }}
+          GOOGLE_IOS_REDIRECT_URI: ${{ secrets.GOOGLE_IOS_REDIRECT_URI }}
           WORKSPACE_INVITE_BASE_URL: ${{ secrets.WORKSPACE_INVITE_BASE_URL }}
           APP_FILE_BASE_URL: ${{ secrets.APP_FILE_BASE_URL }}
         run: |
@@ -232,6 +234,8 @@ jobs:
           GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
           GOOGLE_REDIRECT_URI=${{ secrets.GOOGLE_REDIRECT_URI }}
           GOOGLE_LOGIN_URI=${{ secrets.GOOGLE_LOGIN_URI }}
+          GOOGLE_IOS_CLIENT_ID=${{ secrets.GOOGLE_IOS_CLIENT_ID }}
+          GOOGLE_IOS_REDIRECT_URI=${{ secrets.GOOGLE_IOS_REDIRECT_URI }}
           WORKSPACE_INVITE_BASE_URL=${{ secrets.WORKSPACE_INVITE_BASE_URL }}
           APP_FILE_BASE_URL=${{ secrets.APP_FILE_BASE_URL }}
           ENVEOF
