@@ -36,9 +36,6 @@ public class GoogleService {
   @Value("${oauth2.google.ios.client-id}")
   private String iosClientId;
 
-  @Value("${oauth2.google.ios.client-secret:}")
-  private String iosClientSecret;
-
   @Value("${oauth2.google.token-uri}")
   private String tokenUri;
 
@@ -111,12 +108,15 @@ public class GoogleService {
 
   private String getAccessToken(String code, String dynamicRedirectUri, boolean isIos) {
     MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
-    params.add("code", code);
-    String selectedClientId = isIos ? iosClientId : clientId;
-    String selectedClientSecret = isIos ? iosClientSecret : clientSecret;
 
+    params.add("code", code);
+
+    String selectedClientId = isIos ? iosClientId : clientId;
     params.add("client_id", selectedClientId);
-    params.add("client_secret", selectedClientSecret);
+    if (!isIos) {
+      params.add("client_secret", clientSecret);
+    }
+
     params.add("redirect_uri", dynamicRedirectUri);
     params.add("grant_type", "authorization_code");
 
