@@ -49,6 +49,9 @@ dependencies {
     implementation 'io.jsonwebtoken:jjwt-jackson:0.12.6'
     runtimeOnly 'org.postgresql:postgresql'
 
+    // APPLE 로그인 공개키 검증용
+    implementation 'com.nimbusds:nimbus-jose-jwt:9.37.3'
+
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
 }

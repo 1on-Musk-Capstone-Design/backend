@@ -43,6 +43,10 @@ public class SecurityConfig {
             .requestMatchers("/api/v1/auth-google/**").permitAll()
             .requestMatchers("/v1/auth-google/**").permitAll()
 
+            // Apple OAuth
+            .requestMatchers("/api/v1/auth-apple/**").permitAll()
+            .requestMatchers("/v1/auth-apple/**").permitAll()
+
             // User info
             .requestMatchers("/v1/users/me").permitAll()
 
