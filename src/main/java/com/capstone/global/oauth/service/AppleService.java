@@ -25,7 +25,7 @@ public class AppleService {
   private final AppleJwtValidator appleJwtValidator;
 
   @Transactional
-  public TokenDto loginOrJoin(String identityToken, String fullName) { // fullName 파라미터 추가
+  public TokenDto loginOrJoin(String identityToken, String fullName) {
     try {
       Map<String, Object> claims = appleJwtValidator.validateAndGetClaims(identityToken);
 
