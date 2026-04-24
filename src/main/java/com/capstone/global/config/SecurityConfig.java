@@ -98,7 +98,7 @@ public class SecurityConfig {
     // 구성 파일 기반 허용 Origin 적용
     configuration.setAllowedOriginPatterns(appProperties.getAllowedOrigins());
     configuration.setAllowedOriginPatterns(
-        List.of("https://*.ngrok-free.dev", "http://localhost:3000", "https://on-it.kro.kr"));
+        List.of("http://localhost:3000", "https://on-it.kro.kr"));
     configuration.setAllowedMethods(
         Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
     configuration.setAllowedMethods(List.of("*"));
