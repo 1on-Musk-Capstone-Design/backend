@@ -72,5 +72,27 @@ public class UserController {
     UserResponse response = userService.updateUser(accessToken, request);
     return ResponseEntity.ok(response);
   }
+
+  @Operation(summary = "회원 탈퇴", description = "현재 로그인한 사용자의 계정을 삭제합니다.")
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "204", description = "탈퇴 성공"),
+      @ApiResponse(responseCode = "401", description = "인증 실패"),
+      @ApiResponse(responseCode = "404", description = "사용자를 찾을 수 없음")
+  })
+  @SecurityRequirement(name = "Bearer Authentication")
+  @org.springframework.web.bind.annotation.DeleteMapping("/me")
+  public ResponseEntity<Void> deleteCurrentUser(
+      @Parameter(description = "JWT 토큰", required = true)
+      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorizationHeader) {
+
+    if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+      throw new CustomException(ErrorCode.UNAUTHORIZED_USER);
+    }
+
+    String accessToken = authorizationHeader.substring(7);
+    userService.deleteUser(accessToken);
+
+    return ResponseEntity.noContent().build();
+  }
 }
 

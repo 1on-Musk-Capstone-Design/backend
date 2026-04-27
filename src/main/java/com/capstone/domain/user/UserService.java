@@ -50,5 +50,18 @@ public class UserService {
       throw new CustomException(ErrorCode.INVALID_TOKEN);
     }
   }
-}
 
+  @Transactional
+  public void deleteUser(String accessToken) {
+    try {
+      User user = userRepository.findById
+              (jwtProvider.getUserIdFromAccessToken(accessToken))
+          .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_USER));
+
+      userRepository.delete(user);
+
+    } catch (JwtException | IllegalArgumentException e) {
+      throw new CustomException(ErrorCode.INVALID_TOKEN);
+    }
+  }
+}
