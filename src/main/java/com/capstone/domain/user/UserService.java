@@ -6,8 +6,10 @@ import com.capstone.global.oauth.JwtProvider;
 import io.jsonwebtoken.JwtException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserService {
@@ -54,14 +56,19 @@ public class UserService {
   @Transactional
   public void deleteUser(String accessToken) {
     try {
-      User user = userRepository.findById
-              (jwtProvider.getUserIdFromAccessToken(accessToken))
+      Long userId = jwtProvider.getUserIdFromAccessToken(accessToken);
+      User user = userRepository.findById(userId)
           .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_USER));
 
+      user.setRefreshToken(null);
+      userRepository.saveAndFlush(user);
       userRepository.delete(user);
 
     } catch (JwtException | IllegalArgumentException e) {
       throw new CustomException(ErrorCode.INVALID_TOKEN);
+    } catch (Exception e) {
+      log.error("유저 삭제 중 예기치 못한 오류 발생: {}", e.getMessage());
+      throw e;
     }
   }
 }
