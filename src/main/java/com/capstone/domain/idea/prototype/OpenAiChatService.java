@@ -58,14 +58,22 @@ public class OpenAiChatService {
    * @param messages OpenAI messages 배열 (role: system|user|assistant, content)
    */
   public String createChatCompletion(String model, List<Map<String, String>> messages) {
+    return createChatCompletion(model, messages, 0.4, 4096);
+  }
+
+  /**
+   * @param maxTokens PRD 같이 긴 문서는 8192 등으로 올릴 수 있음 (모델 상한 내)
+   */
+  public String createChatCompletion(
+      String model, List<Map<String, String>> messages, double temperature, int maxTokens) {
     if (!enabled || webClient == null) {
       throw new IllegalStateException("OpenAI is not configured");
     }
     Map<String, Object> body = new HashMap<>();
     body.put("model", model);
     body.put("messages", messages);
-    body.put("temperature", 0.4);
-    body.put("max_tokens", 4096);
+    body.put("temperature", temperature);
+    body.put("max_tokens", maxTokens);
 
     try {
       JsonNode root =
@@ -75,7 +83,7 @@ public class OpenAiChatService {
               .bodyValue(body)
               .retrieve()
               .bodyToMono(JsonNode.class)
-              .block(Duration.ofSeconds(120));
+              .block(Duration.ofSeconds(180));
 
       if (root == null) {
         return null;

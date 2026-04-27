@@ -27,6 +27,8 @@ openai:
 app:
   # PRD/프로토타입 완료 시 내려가는 prdViewUrl 용 (프론트 SPA). API 서버(8080)가 아님.
   # prd-public-base-url: http://localhost:3000
+  # 로컬 디버깅 중 권한으로 막힐 때만 true (운영/공용 환경에서는 절대 true 금지)
+  local-dev-permit-all-workspace-access: true
   prototype:
     # Vercel Token (현재는 이 값으로 API 배포 수행)
     # vercel-token: your-vercel-token

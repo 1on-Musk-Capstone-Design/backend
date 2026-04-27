@@ -36,6 +36,8 @@ public class IdeaPrototypeService {
 
   @Value("${app.prd-public-base-url:http://localhost:3000}")
   private String prdPublicBaseUrl;
+  @Value("${app.local-dev-permit-all-workspace-access:false}")
+  private boolean localDevPermitAllWorkspaceAccess;
 
   private final IdeaRepository ideaRepository;
   private final UserRepository userRepository;
@@ -211,11 +213,28 @@ public class IdeaPrototypeService {
   }
 
   private void ensureWorkspaceAccess(Long userId, Workspace workspace) {
-    workspaceUserRepository
-        .findByWorkspaceAndUser(
-            workspace,
-            userRepository.findById(userId).orElseThrow(() -> new CustomException(NOT_FOUND_USER)))
-        .orElseThrow(() -> new CustomException(FORBIDDEN_WORKSPACE_ACCESS));
+    if (localDevPermitAllWorkspaceAccess) {
+      log.warn(
+          "workspace access bypassed by local-dev flag userId={} workspaceId={}",
+          userId,
+          workspace != null ? workspace.getWorkspaceId() : null);
+      return;
+    }
+    var user = userRepository.findById(userId).orElseThrow(() -> new CustomException(NOT_FOUND_USER));
+    boolean member = workspaceUserRepository.existsByWorkspaceAndUser(workspace, user);
+    if (!member) {
+      var memberIds =
+          workspaceUserRepository.findByWorkspace(workspace).stream()
+              .map(wu -> wu.getUser().getId())
+              .toList();
+      log.warn(
+          "workspace access denied in PRD flow userId={} workspaceId={} workspaceOwnerId={} memberIds={}",
+          userId,
+          workspace.getWorkspaceId(),
+          workspace.getOwner() != null ? workspace.getOwner().getId() : null,
+          memberIds);
+      throw new CustomException(FORBIDDEN_WORKSPACE_ACCESS);
+    }
   }
 
   private Idea requireWorkspaceScopedIdea(IdeaPrototypeJob job, Long workspaceId) {

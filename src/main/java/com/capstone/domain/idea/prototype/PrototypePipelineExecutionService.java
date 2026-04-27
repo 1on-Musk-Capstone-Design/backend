@@ -77,7 +77,7 @@ public class PrototypePipelineExecutionService {
         job.setStatus(PrototypeJobStatus.UI_GENERATED);
         jobRepository.saveAndFlush(job);
 
-        Map<String, String> files = reactPrototypeGenerator.generateFiles(idea);
+        Map<String, String> files = reactPrototypeGenerator.generateFiles(idea, ui);
         job.setGeneratedFilesSummaryJson(buildFilesSummary(files));
         job.setStatus(PrototypeJobStatus.CODE_GENERATED);
         jobRepository.saveAndFlush(job);
