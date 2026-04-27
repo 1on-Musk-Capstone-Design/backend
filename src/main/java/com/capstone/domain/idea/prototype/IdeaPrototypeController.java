@@ -6,6 +6,7 @@ import static com.capstone.global.exception.ErrorCode.UNAUTHORIZED_USER;
 import com.capstone.domain.idea.prototype.dto.PrototypeJobAcceptedResponse;
 import com.capstone.domain.idea.prototype.dto.PrototypeJobSummaryResponse;
 import com.capstone.domain.idea.prototype.dto.PrototypePipelineResponse;
+import com.capstone.domain.idea.prototype.dto.PrototypeSourceFileResponse;
 import com.capstone.global.exception.CustomException;
 import com.capstone.global.oauth.JwtProvider;
 import io.jsonwebtoken.JwtException;
@@ -85,6 +86,18 @@ public class IdeaPrototypeController {
       @PathVariable Long jobId) {
     Long userId = extractUserId(token);
     return ResponseEntity.ok(ideaPrototypeService.getJob(userId, ideaId, jobId));
+  }
+
+  @Operation(
+      summary = "프로토타입 생성 소스 파일 목록 (AI 생성 코드, 서버 로컬 보관)",
+      description = "같은 워크스페이스 권한이 있으면 조회 가능합니다. PRD/코드 뷰어에 사용됩니다.")
+  @GetMapping("/{ideaId}/prototype/jobs/{jobId}/source-files")
+  public ResponseEntity<List<PrototypeSourceFileResponse>> listSourceFiles(
+      @RequestHeader("Authorization") String token,
+      @PathVariable Long ideaId,
+      @PathVariable Long jobId) {
+    Long userId = extractUserId(token);
+    return ResponseEntity.ok(ideaPrototypeService.listSourceFiles(userId, ideaId, jobId));
   }
 
   private Long extractUserId(String authorizationHeader) {

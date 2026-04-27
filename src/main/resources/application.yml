@@ -120,6 +120,8 @@ app:
     localhost: ${APP_OAUTH_REDIRECT_LOCALHOST:http://localhost:3000/auth/callback}
     127.0.0.1: ${APP_OAUTH_REDIRECT_LOOPBACK:http://localhost:3000/auth/callback}
     on-it.kro.kr: ${APP_OAUTH_REDIRECT_ONIT:https://on-it.kro.kr/auth/callback}
+  # PRD 공유·웹알림용 프론트(SPA) 베이스 URL (백엔드 8080/api 가 아님). 운영은 실제 사이트 도메인.
+  prd-public-base-url: ${APP_PRD_PUBLIC_BASE_URL:http://localhost:3000}
   file:
     upload-dir: ${APP_FILE_UPLOAD_DIR:./uploads}
     thumbnail-dir: ${APP_FILE_THUMBNAIL_DIR:./uploads/thumbnails}
@@ -127,10 +129,12 @@ app:
   # 로컬 자동 로그인: POST /v1/auth/dev/bootstrap (프론트 Vite dev + localhost에서 호출)
   # 운영 배포 시 반드시 APP_DEV_BOOTSTRAP_AUTH=false
   dev-bootstrap-auth:
-    enabled: ${APP_DEV_BOOTSTRAP_AUTH:false}
+    enabled: ${APP_DEV_BOOTSTRAP_AUTH:true}
 
   # 아이디어 프로토타입 파이프라인 (선택). Vercel 토큰이 있으면 생성 파일 직접 배포
   prototype:
+    # AI가 생성한 소스 보관( /uploads 외부 — 정적 공개되지 않음, API+JWT로만 조회)
+    artifact-base-dir: ${APP_PROTOTYPE_ARTIFACT_DIR:./data/prototype-artifacts}
     vercel-token: ${APP_PROTOTYPE_VERCEL_TOKEN:}
     vercel-team-id: ${APP_PROTOTYPE_VERCEL_TEAM_ID:}
     simulated-base-url: ${APP_PROTOTYPE_SIMULATED_BASE_URL:https://prototype.example.com}

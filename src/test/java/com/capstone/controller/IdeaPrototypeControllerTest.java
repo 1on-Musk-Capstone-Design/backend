@@ -38,6 +38,9 @@ class IdeaPrototypeControllerTest {
 
   private static PrototypePipelineResponse sampleFullResponse(Long ideaId) {
     return PrototypePipelineResponse.builder()
+        .workspaceId(1L)
+        .prdViewPath("/prd/workspaces/1/prds/99")
+        .prdViewUrl("http://localhost:3000/prd/workspaces/1/prds/99")
         .jobId(99L)
         .ideaId(ideaId)
         .status(PrototypeJobStatus.DEPLOYED)
@@ -103,6 +106,9 @@ class IdeaPrototypeControllerTest {
     given(jwtProvider.getUserIdFromAccessToken("test-token")).willReturn(userId);
     PrototypePipelineResponse body =
         PrototypePipelineResponse.builder()
+            .workspaceId(1L)
+            .prdViewPath("/prd/workspaces/1/prds/1")
+            .prdViewUrl("http://localhost:3000/prd/workspaces/1/prds/1")
             .jobId(1L)
             .ideaId(ideaId)
             .status(PrototypeJobStatus.DEPLOYED)

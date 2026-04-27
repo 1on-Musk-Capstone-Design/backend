@@ -94,6 +94,39 @@ public class ReactPrototypeGenerator {
         """
             .formatted(safeTitle, body));
 
+    files.put(
+        "preview/index.html",
+        """
+        <!doctype html>
+        <html lang="ko">
+          <head>
+            <meta charset="UTF-8" />
+            <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+            <title>%s</title>
+            <style>
+              body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 0; background: #f8fafc; color: #0f172a; }
+              .wrap { max-width: 760px; margin: 42px auto; padding: 0 20px; }
+              .card { background: #fff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 24px; box-shadow: 0 1px 2px rgba(0,0,0,.04); }
+              h1 { margin: 0 0 12px; font-size: 28px; line-height: 1.25; }
+              p { margin: 0; color: #334155; line-height: 1.75; white-space: pre-wrap; }
+              button { margin-top: 24px; padding: 11px 18px; border-radius: 8px; border: 0; background: #01cd15; color: #fff; font-weight: 700; }
+              .hint { margin-top: 14px; font-size: 12px; color: #64748b; }
+            </style>
+          </head>
+          <body>
+            <main class="wrap">
+              <section class="card">
+                <h1>%s</h1>
+                <p>%s</p>
+                <button type="button">다음 단계로</button>
+                <div class="hint">AI generated prototype preview (server-hosted)</div>
+              </section>
+            </main>
+          </body>
+        </html>
+        """
+            .formatted(safeTitle, safeTitle, body.replace("\\n", "\n")));
+
     files.put(".gitignore", "node_modules\ndist\n.DS_Store\n");
     return files;
   }

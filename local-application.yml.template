@@ -25,6 +25,8 @@ openai:
 # GitHub 없이 Vercel로 직접 배포합니다.
 # 비워두면 PRD는 생성되지만, 배포 URL은 시뮬레이션/결과 페이지 링크로 대체됩니다.
 app:
+  # PRD/프로토타입 완료 시 내려가는 prdViewUrl 용 (프론트 SPA). API 서버(8080)가 아님.
+  # prd-public-base-url: http://localhost:3000
   prototype:
     # Vercel Token (현재는 이 값으로 API 배포 수행)
     # vercel-token: your-vercel-token

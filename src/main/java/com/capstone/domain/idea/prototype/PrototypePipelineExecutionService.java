@@ -2,13 +2,16 @@ package com.capstone.domain.idea.prototype;
 
 import com.capstone.domain.idea.Idea;
 import com.capstone.domain.idea.IdeaRepository;
+import com.capstone.global.service.WebSocketService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,6 +19,9 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 public class PrototypePipelineExecutionService {
+
+  @Value("${app.prd-public-base-url:http://localhost:3000}")
+  private String prdPublicBaseUrl;
 
   /** 동일 아이디어에 대한 파이프라인은 순차 실행 (재생성·동시 실행 충돌 방지) */
   private static final ConcurrentHashMap<Long, Object> PIPELINE_LOCK_BY_IDEA_ID =
@@ -26,6 +32,8 @@ public class PrototypePipelineExecutionService {
   private final PrototypeAiContentService prototypeAiContentService;
   private final ReactPrototypeGenerator reactPrototypeGenerator;
   private final VercelPrototypeDeployService vercelPrototypeDeployService;
+  private final PrototypeArtifactService prototypeArtifactService;
+  private final WebSocketService webSocketService;
   private final ObjectMapper objectMapper;
 
   @Transactional
@@ -74,6 +82,12 @@ public class PrototypePipelineExecutionService {
         job.setStatus(PrototypeJobStatus.CODE_GENERATED);
         jobRepository.saveAndFlush(job);
 
+        try {
+          prototypeArtifactService.writeForJob(job.getId(), files);
+        } catch (Exception e) {
+          log.warn("prototype disk artifact write failed (pipeline continues) jobId={}", job.getId(), e);
+        }
+
         Long iid = idea.getId();
         String repoName = "idea-prototype-" + iid + "-" + job.getId();
         String projectSlug = sanitizeProjectSlug(repoName);
@@ -86,6 +100,17 @@ public class PrototypePipelineExecutionService {
         job.setVercelDeploymentApiUsed(urls.deploymentApiUsed());
         job.setStatus(PrototypeJobStatus.DEPLOYED);
         jobRepository.saveAndFlush(job);
+
+        long workspaceId = idea.getWorkspace().getWorkspaceId();
+        String prdViewPath = "/prd/workspaces/" + workspaceId + "/prds/" + job.getId();
+        Map<String, Object> wsPayload = new HashMap<>();
+        wsPayload.put("type", "prototype_ready");
+        wsPayload.put("ideaId", iid);
+        wsPayload.put("jobId", job.getId());
+        wsPayload.put("workspaceId", workspaceId);
+        wsPayload.put("prdViewPath", prdViewPath);
+        wsPayload.put("prdViewUrl", buildPrdPublicUrl(prdViewPath));
+        webSocketService.broadcastToWorkspace(workspaceId, "prototype", wsPayload);
       } catch (Exception e) {
         log.error("executePipeline failed jobId={}", jobId, e);
         fail(job, e.getMessage());
@@ -111,6 +136,18 @@ public class PrototypePipelineExecutionService {
       files.forEach((k, v) -> m.put(k, v.length()));
       return m.toString();
     }
+  }
+
+  private String buildPrdPublicUrl(String path) {
+    if (path == null || path.isBlank()) {
+      return null;
+    }
+    String base = prdPublicBaseUrl != null ? prdPublicBaseUrl.trim() : "http://localhost:3000";
+    while (base.endsWith("/")) {
+      base = base.substring(0, base.length() - 1);
+    }
+    String p = path.startsWith("/") ? path : "/" + path;
+    return base + p;
   }
 
   private static String sanitizeProjectSlug(String name) {

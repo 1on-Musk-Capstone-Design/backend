@@ -14,6 +14,7 @@ import com.capstone.domain.workspace.WorkspaceService;
 import com.capstone.domain.workspaceUser.WorkspaceUserRepository;
 import com.capstone.domain.user.UserRepository;
 import com.capstone.global.exception.CustomException;
+import com.capstone.global.exception.ErrorCode;
 import com.capstone.global.service.WebSocketService;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -37,6 +38,9 @@ public class IdeaService {
 
   @Transactional
   public IdeaResponse createIdea(Long userId, IdeaRequest request) {
+    if (request == null || request.getWorkspaceId() == null) {
+      throw new CustomException(ErrorCode.BAD_REQUEST);
+    }
     Workspace workspace = workspaceRepository.findById(request.getWorkspaceId())
         .orElseThrow(() -> new CustomException(NOT_FOUND_WORKSPACE));
 

@@ -9,6 +9,11 @@ import lombok.Getter;
 @Builder
 public class PrototypePipelineResponse {
 
+  private final Long workspaceId;
+  /** 팀이 같은 뷰를 열 때 사용(프론트 라우트, 상대 경로) */
+  private final String prdViewPath;
+  /** app.prd-public-base-url + prdViewPath (공유·복사용) */
+  private final String prdViewUrl;
   private final Long jobId;
   private final Long ideaId;
   private final PrototypeJobStatus status;
