@@ -1,10 +1,12 @@
 package com.capstone.domain.user;
 
-import com.capstone.domain.voicesessionUser.VoiceSessionUser;
+import com.capstone.domain.canvas.Canvas;
+import com.capstone.domain.canvas.CanvasRepository;
+import com.capstone.domain.idea.IdeaRepository;
 import com.capstone.domain.voicesessionUser.VoiceSessionUserRepository;
-import com.capstone.domain.workspaceInvitation.WorkspaceInvitation;
+import com.capstone.domain.workspace.Workspace;
+import com.capstone.domain.workspace.WorkspaceRepository;
 import com.capstone.domain.workspaceInvitation.WorkspaceInvitationRepository;
-import com.capstone.domain.workspaceInvite.WorkspaceInvite;
 import com.capstone.domain.workspaceInvite.WorkspaceInviteRepository;
 import com.capstone.domain.workspaceUser.WorkspaceUser;
 import com.capstone.domain.workspaceUser.WorkspaceUserRepository;
@@ -29,6 +31,9 @@ public class UserService {
   private final WorkspaceInviteRepository workspaceInviteRepository;
   private final WorkspaceInvitationRepository workspaceInvitationRepository;
   private final VoiceSessionUserRepository voiceSessionUserRepository;
+  private final WorkspaceRepository workspaceRepository;
+  private final IdeaRepository ideaRepository;
+  private final CanvasRepository canvasRepository;
   private final JwtProvider jwtProvider;
 
   public UserResponse getCurrentUser(String accessToken) {
@@ -90,18 +95,38 @@ public class UserService {
 
   @NotNull
   private List<WorkspaceUser> deleteAllUserRelatedData(User user) {
-    List<WorkspaceInvitation> invitations = workspaceInvitationRepository.findByInvitedUserOrInvitedBy(
-        user, user);
-    workspaceInvitationRepository.deleteAll(invitations);
+    workspaceInvitationRepository.deleteAll(
+        workspaceInvitationRepository.findByInvitedUserOrInvitedBy(user, user));
+    workspaceInviteRepository.deleteAll(workspaceInviteRepository.findByCreatedBy(user));
 
-    List<WorkspaceInvite> createdInvites = workspaceInviteRepository.findByCreatedBy(user);
-    workspaceInviteRepository.deleteAll(createdInvites);
+    List<Workspace> ownedWorkspaces = workspaceRepository.findByOwner(user);
+    for (Workspace ws : ownedWorkspaces) {
+      canvasRepository.deleteAll(canvasRepository.findByWorkspace(ws));
+      ideaRepository.deleteAll(ideaRepository.findByWorkspace(ws));
+
+      List<WorkspaceUser> allMembersOfWorkspace = workspaceUserRepository.findByWorkspace(ws);
+      workspaceUserRepository.deleteAll(allMembersOfWorkspace);
+
+      log.info("워크스페이스({}) 내 컨텐츠 및 멤버십 삭제 완료", ws.getWorkspaceId());
+
+      workspaceRepository.delete(ws);
+      log.info("Owner인 워크스페이스({}) 삭제 완료", ws.getWorkspaceId());
+    }
 
     List<WorkspaceUser> memberships = workspaceUserRepository.findByUser(user);
     for (WorkspaceUser member : memberships) {
-      List<VoiceSessionUser> vsUsers = voiceSessionUserRepository.findByWorkspaceUser(member);
-      voiceSessionUserRepository.deleteAll(vsUsers);
+      if (!workspaceRepository.existsById(member.getWorkspace().getWorkspaceId())) {
+        continue;
+      }
+
+      for (Canvas canvas : canvasRepository.findByWorkspaceUser(member)) {
+        canvas.setWorkspaceUser(null);
+        canvasRepository.save(canvas);
+      }
+
+      voiceSessionUserRepository.deleteAll(voiceSessionUserRepository.findByWorkspaceUser(member));
     }
-    return memberships;
+
+    return workspaceUserRepository.findByUser(user);
   }
 }

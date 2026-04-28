@@ -36,8 +36,9 @@ public class Canvas {
   @JoinColumn(name = "workspace", nullable = false)
   private Workspace workspace;
 
+  @Setter
   @ManyToOne
-  @JoinColumn(name = "workspace_user_id", nullable = false)
+  @JoinColumn(name = "workspace_user_id")
   private WorkspaceUser workspaceUser;
 
   @Setter
