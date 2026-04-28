@@ -1,5 +1,11 @@
 package com.capstone.domain.user;
 
+import com.capstone.domain.voicesessionUser.VoiceSessionUser;
+import com.capstone.domain.voicesessionUser.VoiceSessionUserRepository;
+import com.capstone.domain.workspaceInvitation.WorkspaceInvitation;
+import com.capstone.domain.workspaceInvitation.WorkspaceInvitationRepository;
+import com.capstone.domain.workspaceInvite.WorkspaceInvite;
+import com.capstone.domain.workspaceInvite.WorkspaceInviteRepository;
 import com.capstone.domain.workspaceUser.WorkspaceUser;
 import com.capstone.domain.workspaceUser.WorkspaceUserRepository;
 import com.capstone.global.exception.CustomException;
@@ -10,6 +16,7 @@ import jakarta.transaction.Transactional;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -19,6 +26,9 @@ public class UserService {
 
   private final UserRepository userRepository;
   private final WorkspaceUserRepository workspaceUserRepository;
+  private final WorkspaceInviteRepository workspaceInviteRepository;
+  private final WorkspaceInvitationRepository workspaceInvitationRepository;
+  private final VoiceSessionUserRepository voiceSessionUserRepository;
   private final JwtProvider jwtProvider;
 
   public UserResponse getCurrentUser(String accessToken) {
@@ -64,20 +74,34 @@ public class UserService {
       User user = userRepository.findById(userId)
           .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_USER));
 
-      List<WorkspaceUser> memberships = workspaceUserRepository.findByUser(user);
-      if (!memberships.isEmpty()) {
-        workspaceUserRepository.deleteAll(memberships);
-        log.info("유저({})의 워크스페이스 멤버십 {}건 삭제 완료", userId, memberships.size());
-      }
+      List<WorkspaceUser> memberships = deleteAllUserRelatedData(user);
+
+      workspaceUserRepository.deleteAll(memberships);
 
       user.setRefreshToken(null);
       userRepository.delete(user);
+      log.info("유저({}) 탈퇴 처리 완료", userId);
 
-    } catch (JwtException | IllegalArgumentException e) {
-      throw new CustomException(ErrorCode.INVALID_TOKEN);
     } catch (Exception e) {
-      log.error("유저 삭제 중 예기치 못한 오류 발생: {}", e.getMessage());
+      log.error("유저 삭제 중 오류 발생: {}", e.getMessage());
       throw e;
     }
+  }
+
+  @NotNull
+  private List<WorkspaceUser> deleteAllUserRelatedData(User user) {
+    List<WorkspaceInvitation> invitations = workspaceInvitationRepository.findByInvitedUserOrInvitedBy(
+        user, user);
+    workspaceInvitationRepository.deleteAll(invitations);
+
+    List<WorkspaceInvite> createdInvites = workspaceInviteRepository.findByCreatedBy(user);
+    workspaceInviteRepository.deleteAll(createdInvites);
+
+    List<WorkspaceUser> memberships = workspaceUserRepository.findByUser(user);
+    for (WorkspaceUser member : memberships) {
+      List<VoiceSessionUser> vsUsers = voiceSessionUserRepository.findByWorkspaceUser(member);
+      voiceSessionUserRepository.deleteAll(vsUsers);
+    }
+    return memberships;
   }
 }

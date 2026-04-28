@@ -14,8 +14,11 @@ public interface WorkspaceInvitationRepository extends JpaRepository<WorkspaceIn
 
   List<WorkspaceInvitation> findByInvitedUser(User invitedUser);
 
+  List<WorkspaceInvitation> findByInvitedUserOrInvitedBy(User invitedUser, User invitedBy);
+
   List<WorkspaceInvitation> findByWorkspace(Workspace workspace);
 
   List<WorkspaceInvitation> findByWorkspaceAndStatus(Workspace workspace, WorkspaceInvitation.InvitationStatus status);
+
 }
 
