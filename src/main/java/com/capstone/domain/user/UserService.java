@@ -1,10 +1,13 @@
 package com.capstone.domain.user;
 
+import com.capstone.domain.workspaceUser.WorkspaceUser;
+import com.capstone.domain.workspaceUser.WorkspaceUserRepository;
 import com.capstone.global.exception.CustomException;
 import com.capstone.global.exception.ErrorCode;
 import com.capstone.global.oauth.JwtProvider;
 import io.jsonwebtoken.JwtException;
 import jakarta.transaction.Transactional;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -15,6 +18,7 @@ import org.springframework.stereotype.Service;
 public class UserService {
 
   private final UserRepository userRepository;
+  private final WorkspaceUserRepository workspaceUserRepository;
   private final JwtProvider jwtProvider;
 
   public UserResponse getCurrentUser(String accessToken) {
@@ -59,6 +63,12 @@ public class UserService {
       Long userId = jwtProvider.getUserIdFromAccessToken(accessToken);
       User user = userRepository.findById(userId)
           .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_USER));
+
+      List<WorkspaceUser> memberships = workspaceUserRepository.findByUser(user);
+      if (!memberships.isEmpty()) {
+        workspaceUserRepository.deleteAll(memberships);
+        log.info("유저({})의 워크스페이스 멤버십 {}건 삭제 완료", userId, memberships.size());
+      }
 
       user.setRefreshToken(null);
       userRepository.delete(user);
