@@ -14,7 +14,7 @@ import com.capstone.domain.idea.prototype.dto.PrototypeJobSummaryResponse;
 import com.capstone.domain.idea.prototype.dto.PrototypePipelineResponse;
 import com.capstone.domain.idea.prototype.dto.PrototypeSourceFileResponse;
 import com.capstone.domain.workspace.Workspace;
-import com.capstone.domain.user.repository.UserRepository;
+import com.capstone.domain.user.UserRepository;
 import com.capstone.domain.workspaceUser.WorkspaceUserRepository;
 import com.capstone.global.exception.CustomException;
 import java.sql.Timestamp;
