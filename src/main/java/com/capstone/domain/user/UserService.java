@@ -61,7 +61,6 @@ public class UserService {
           .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_USER));
 
       user.setRefreshToken(null);
-      userRepository.saveAndFlush(user);
       userRepository.delete(user);
 
     } catch (JwtException | IllegalArgumentException e) {
