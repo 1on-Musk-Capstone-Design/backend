@@ -14,6 +14,7 @@ import com.capstone.domain.workspace.WorkspaceService;
 import com.capstone.domain.workspaceUser.WorkspaceUserRepository;
 import com.capstone.domain.user.UserRepository;
 import com.capstone.global.exception.CustomException;
+import com.capstone.global.exception.ErrorCode;
 import com.capstone.global.service.WebSocketService;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -37,6 +38,9 @@ public class IdeaService {
 
   @Transactional
   public IdeaResponse createIdea(Long userId, IdeaRequest request) {
+    if (request == null || request.getWorkspaceId() == null) {
+      throw new CustomException(ErrorCode.BAD_REQUEST);
+    }
     Workspace workspace = workspaceRepository.findById(request.getWorkspaceId())
         .orElseThrow(() -> new CustomException(NOT_FOUND_WORKSPACE));
 
@@ -62,8 +66,12 @@ public class IdeaService {
 
     IdeaResponse response = IdeaResponse.from(ideaRepository.save(idea));
 
-    // WebSocket 브로드캐스트
-    webSocketService.broadcastIdeaChange(request.getWorkspaceId(), "created", response);
+    // WebSocket 브로드캐스트 (실패해도 API 응답은 성공 — STOMP/직렬화 이슈로 500 방지)
+    try {
+      webSocketService.broadcastIdeaChange(request.getWorkspaceId(), "created", response);
+    } catch (Exception e) {
+      log.warn("아이디어 생성 브로드캐스트 실패 workspaceId={}: {}", request.getWorkspaceId(), e.getMessage());
+    }
 
     // 썸네일 자동 갱신 (비동기)
     try {
@@ -106,16 +114,36 @@ public class IdeaService {
       idea.setCanvas(canvas);
     }
 
-    idea.setContent(request.getContent());
-    idea.setPatchSizeX(request.getPatchSizeX());
-    idea.setPatchSizeY(request.getPatchSizeY());
-    idea.setPositionX(request.getPositionX());
-    idea.setPositionY(request.getPositionY());
+    // null 필드는 덮어쓰지 않음 — PRD 등에서 content·workspaceId만 보낼 때 좌표/패치가 null로 지워지며 500·데이터 꼬임 방지
+    if (request.getContent() != null) {
+      idea.setContent(request.getContent());
+    }
+    if (request.getPatchSizeX() != null) {
+      idea.setPatchSizeX(request.getPatchSizeX());
+    }
+    if (request.getPatchSizeY() != null) {
+      idea.setPatchSizeY(request.getPatchSizeY());
+    }
+    if (request.getPositionX() != null) {
+      idea.setPositionX(request.getPositionX());
+    }
+    if (request.getPositionY() != null) {
+      idea.setPositionY(request.getPositionY());
+    }
+
+    ideaRepository.save(idea);
 
     IdeaResponse response = IdeaResponse.from(idea);
 
-    // WebSocket 브로드캐스트
-    webSocketService.broadcastIdeaChange(idea.getWorkspace().getWorkspaceId(), "updated", response);
+    // WebSocket 브로드캐스트 (실패해도 API는 성공 — 직렬화/메시지 크기 등으로 500 방지)
+    try {
+      webSocketService.broadcastIdeaChange(idea.getWorkspace().getWorkspaceId(), "updated", response);
+    } catch (Exception e) {
+      log.warn(
+          "아이디어 수정 브로드캐스트 실패 workspaceId={}: {}",
+          idea.getWorkspace().getWorkspaceId(),
+          e.getMessage());
+    }
 
     // 썸네일 자동 갱신 (비동기)
     try {
@@ -143,8 +171,11 @@ public class IdeaService {
 
     ideaRepository.delete(idea);
 
-    // WebSocket 브로드캐스트
-    webSocketService.broadcastIdeaChange(workspaceId, "deleted", java.util.Map.of("id", deletedIdeaId));
+    try {
+      webSocketService.broadcastIdeaChange(workspaceId, "deleted", java.util.Map.of("id", deletedIdeaId));
+    } catch (Exception e) {
+      log.warn("아이디어 삭제 브로드캐스트 실패 workspaceId={}: {}", workspaceId, e.getMessage());
+    }
 
     // 썸네일 자동 갱신 (비동기)
     try {

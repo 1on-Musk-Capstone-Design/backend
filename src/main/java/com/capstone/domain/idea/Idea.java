@@ -2,6 +2,7 @@ package com.capstone.domain.idea;
 
 import com.capstone.domain.canvas.Canvas;
 import com.capstone.domain.workspace.Workspace;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -40,6 +41,7 @@ public class Idea {
   private Canvas canvas;
 
   @Setter
+  @Column(columnDefinition = "TEXT")
   private String content;
 
   @Setter

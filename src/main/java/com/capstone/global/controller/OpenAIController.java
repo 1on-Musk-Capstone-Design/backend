@@ -1,23 +1,31 @@
 package com.capstone.global.controller;
 
-// import com.capstone.service.OpenAIService;
-
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
+import com.capstone.domain.idea.prototype.OpenAiChatService;
 import java.util.List;
 import java.util.Map;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 /**
- * OpenAI API 관련 REST API 컨트롤러 AI 클러스터링 및 분석 기능 제공
+ * OpenAI 관련 REST API. {@code GET /v1/openai/test} 는 Chat Completions 로 실제 연결을 검증합니다.
  */
-// @RestController
+@RestController
 @RequestMapping("/v1/openai")
 @CrossOrigin(origins = {"http://localhost:3000", "http://127.0.0.1:3000"})
+@RequiredArgsConstructor
 public class OpenAIController {
 
-  // @Autowired
-  // private OpenAIService openAIService;
+  private final OpenAiChatService openAiChatService;
+
+  @Value("${openai.prototype-model:gpt-4o-mini}")
+  private String prototypeModel;
 
   /**
    * 아이디어 클러스터링 API POST /openai/cluster
@@ -31,7 +39,6 @@ public class OpenAIController {
             .body(Map.of("error", "아이디어 목록이 비어있습니다."));
       }
 
-      // String result = openAIService.clusterIdeas(ideas);
       String result = "OpenAI 서비스가 비활성화되어 있습니다.";
       return ResponseEntity.ok(Map.of("clusters", result));
     } catch (Exception e) {
@@ -52,7 +59,6 @@ public class OpenAIController {
             .body(Map.of("error", "아이디어가 비어있습니다."));
       }
 
-      // String feedback = openAIService.generateFeedback(idea);
       String feedback = "OpenAI 서비스가 비활성화되어 있습니다.";
       return ResponseEntity.ok(Map.of("feedback", feedback));
     } catch (Exception e) {
@@ -77,10 +83,9 @@ public class OpenAIController {
       }
 
       if (duration == null || duration <= 0) {
-        duration = 30; // 기본값 30분
+        duration = 30;
       }
 
-      // String summary = openAIService.generateSessionSummary(ideas, duration);
       String summary = "OpenAI 서비스가 비활성화되어 있습니다.";
       return ResponseEntity.ok(Map.of("summary", summary));
     } catch (Exception e) {
@@ -101,8 +106,7 @@ public class OpenAIController {
             .body(Map.of("error", "텍스트가 비어있습니다."));
       }
 
-      // List<Double> embedding = openAIService.getEmbedding(text);
-      List<Double> embedding = List.of(0.0, 0.0, 0.0); // 더미 데이터
+      List<Double> embedding = List.of(0.0, 0.0, 0.0);
       return ResponseEntity.ok(Map.of("embedding", embedding));
     } catch (Exception e) {
       return ResponseEntity.internalServerError()
@@ -122,10 +126,9 @@ public class OpenAIController {
             .body(Map.of("error", "텍스트 목록이 비어있습니다."));
       }
 
-      // List<List<Double>> embeddings = openAIService.getEmbeddings(texts);
       List<List<Double>> embeddings = texts.stream()
           .map(text -> List.of(0.0, 0.0, 0.0))
-          .toList(); // 더미 데이터
+          .toList();
       return ResponseEntity.ok(Map.of("embeddings", embeddings));
     } catch (Exception e) {
       return ResponseEntity.internalServerError()
@@ -134,25 +137,44 @@ public class OpenAIController {
   }
 
   /**
-   * OpenAI API 연결 테스트 GET /openai/test
+   * OpenAI Chat Completions 실호출 연결 테스트 GET /v1/openai/test
    */
   @GetMapping("/test")
   public ResponseEntity<?> testConnection() {
+    if (!openAiChatService.isEnabled()) {
+      return ResponseEntity.status(503)
+          .body(
+              Map.of(
+                  "status",
+                  "disabled",
+                  "message",
+                  "OPENAI_API_KEY 또는 local-application.yml 의 openai.api-key 가 없거나 형식이 올바르지 않습니다."));
+    }
     try {
-      // 간단한 테스트를 위해 "test" 텍스트의 임베딩을 생성
-      // List<Double> embedding = openAIService.getEmbedding("test");
-      List<Double> embedding = List.of(0.0, 0.0, 0.0); // 더미 데이터
-      return ResponseEntity.ok(Map.of(
-          "status", "success",
-          "message", "OpenAI API 연결이 정상입니다.",
-          "embedding_size", embedding.size()
-      ));
+      String reply =
+          openAiChatService.createChatCompletion(
+              prototypeModel,
+              List.of(Map.of("role", "user", "content", "Reply with exactly: OK")));
+      boolean ok = reply != null && reply.toLowerCase().contains("ok");
+      String preview = reply == null ? "" : reply.substring(0, Math.min(120, reply.length()));
+      return ResponseEntity.ok(
+          Map.of(
+              "status",
+              ok ? "success" : "partial",
+              "message",
+              ok ? "OpenAI Chat Completions 호출 성공" : "응답을 받았으나 예상과 다를 수 있음",
+              "model",
+              prototypeModel,
+              "replyPreview",
+              preview));
     } catch (Exception e) {
       return ResponseEntity.internalServerError()
-          .body(Map.of(
-              "status", "error",
-              "message", "OpenAI API 연결에 실패했습니다: " + e.getMessage()
-          ));
+          .body(
+              Map.of(
+                  "status",
+                  "error",
+                  "message",
+                  e.getMessage() != null ? e.getMessage() : "unknown"));
     }
   }
 }

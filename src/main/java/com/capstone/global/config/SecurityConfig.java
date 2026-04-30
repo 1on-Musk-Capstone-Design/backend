@@ -1,6 +1,5 @@
 package com.capstone.global.config;
 
-import java.util.List;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -46,6 +45,9 @@ public class SecurityConfig {
             // Apple OAuth
             .requestMatchers("/api/v1/auth-apple/**").permitAll()
             .requestMatchers("/v1/auth-apple/**").permitAll()
+
+            // 로컬 개발 자동 로그인 (app.dev-bootstrap-auth.enabled=true 일 때만 컨트롤러가 응답)
+            .requestMatchers(HttpMethod.POST, "/v1/auth/dev/bootstrap").permitAll()
 
             // User info
             .requestMatchers("/v1/users/me").permitAll()
@@ -97,11 +99,8 @@ public class SecurityConfig {
     CorsConfiguration configuration = new CorsConfiguration();
     // 구성 파일 기반 허용 Origin 적용
     configuration.setAllowedOriginPatterns(appProperties.getAllowedOrigins());
-    configuration.setAllowedOriginPatterns(
-        List.of("http://localhost:3000", "https://on-it.kro.kr"));
     configuration.setAllowedMethods(
         Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
-    configuration.setAllowedMethods(List.of("*"));
     configuration.setAllowCredentials(true);
     configuration.setMaxAge(3600L);
 
