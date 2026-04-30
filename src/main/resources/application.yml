@@ -13,28 +13,27 @@ spring:
   application:
     name: capstone-project
   jwt:
-    # 운영에서는 반드시 SPRING_JWT_SECRET 으로 덮어쓰세요(32자 이상).
-    secret: ${SPRING_JWT_SECRET:development-only-change-with-SPRING_JWT_SECRET-min-32}
+    secret: ${SPRING_JWT_SECRET:local-dev-secret-please-change-this-is-a-very-long-secret-key-for-jwt-token-generation-minimum-32-characters}
   
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/capstone_db}
+    url: jdbc:postgresql://localhost:5432/capstone_db
     driver-class-name: org.postgresql.Driver
-    username: ${SPRING_DATASOURCE_USERNAME:postgres}
-    password: ${SPRING_DATASOURCE_PASSWORD:}
+    username: postgres
+    password: musk12!
   
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
-      ddl-auto: ${JPA_DDL_AUTO:update}
-    show-sql: ${JPA_SHOW_SQL:false}
+      ddl-auto: update
+    show-sql: true
     properties:
       hibernate:
         format_sql: true
 
   security:
     user:
-      name: ${SPRING_SECURITY_USER_NAME:admin}
-      password: ${SPRING_SECURITY_USER_PASSWORD:}
+      name: admin
+      password: admin
 
 # WebSocket 설정은 WebSocketConfig에서 관리
 
@@ -101,10 +100,10 @@ springdoc:
 
 logging:
   level:
-    com.capstone: ${LOG_LEVEL_COM_CAPSTONE:INFO}
+    com.capstone: DEBUG
     org.springframework.security: INFO
-    org.springframework.web.socket: ${LOG_LEVEL_WEBSOCKET:WARN}
-    org.springframework.messaging: ${LOG_LEVEL_MESSAGING:WARN}
+    org.springframework.web.socket: DEBUG
+    org.springframework.messaging: DEBUG
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
 
