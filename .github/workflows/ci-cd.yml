@@ -220,10 +220,6 @@ jobs:
 
       - name: Upload environment variables to server
         env:
-          SPRING_DATASOURCE_URL: ${{ secrets.SPRING_DATASOURCE_URL }}
-          SPRING_DATASOURCE_USERNAME: ${{ secrets.SPRING_DATASOURCE_USERNAME }}
-          SPRING_DATASOURCE_PASSWORD: ${{ secrets.SPRING_DATASOURCE_PASSWORD }}
-          SPRING_JWT_SECRET: ${{ secrets.SPRING_JWT_SECRET }}
           APP_DEV_BOOTSTRAP_AUTH: ${{ secrets.APP_DEV_BOOTSTRAP_AUTH }}
           GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
           GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
@@ -236,17 +232,7 @@ jobs:
           APPLE_BUNDLE_ID: ${{ secrets.APPLE_BUNDLE_ID }}
           APPLE_PUBLIC_KEY_URL: "https://appleid.apple.com/auth/keys"
         run: |
-          # Required secrets validation (fail fast)
-          [ -n "${{ secrets.SPRING_DATASOURCE_URL }}" ] || { echo "❌ SPRING_DATASOURCE_URL is not set"; exit 1; }
-          [ -n "${{ secrets.SPRING_DATASOURCE_USERNAME }}" ] || { echo "❌ SPRING_DATASOURCE_USERNAME is not set"; exit 1; }
-          [ -n "${{ secrets.SPRING_DATASOURCE_PASSWORD }}" ] || { echo "❌ SPRING_DATASOURCE_PASSWORD is not set"; exit 1; }
-          [ -n "${{ secrets.SPRING_JWT_SECRET }}" ] || { echo "❌ SPRING_JWT_SECRET is not set"; exit 1; }
-
           ssh -o StrictHostKeyChecking=no ec2-user@${{ secrets.AWS_SERVER_HOST }} "cat > ~/capstone-app/.env << 'ENVEOF'
-          SPRING_DATASOURCE_URL=${{ secrets.SPRING_DATASOURCE_URL }}
-          SPRING_DATASOURCE_USERNAME=${{ secrets.SPRING_DATASOURCE_USERNAME }}
-          SPRING_DATASOURCE_PASSWORD=${{ secrets.SPRING_DATASOURCE_PASSWORD }}
-          SPRING_JWT_SECRET=${{ secrets.SPRING_JWT_SECRET }}
           APP_DEV_BOOTSTRAP_AUTH=${{ secrets.APP_DEV_BOOTSTRAP_AUTH }}
           GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
           GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
