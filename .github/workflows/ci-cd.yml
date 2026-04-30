@@ -232,8 +232,13 @@ jobs:
           APPLE_BUNDLE_ID: ${{ secrets.APPLE_BUNDLE_ID }}
           APPLE_PUBLIC_KEY_URL: "https://appleid.apple.com/auth/keys"
         run: |
+          APP_DEV_BOOTSTRAP_AUTH_VALUE="${{ secrets.APP_DEV_BOOTSTRAP_AUTH }}"
+          if [ -z "$APP_DEV_BOOTSTRAP_AUTH_VALUE" ]; then
+            APP_DEV_BOOTSTRAP_AUTH_VALUE=true
+          fi
+
           ssh -o StrictHostKeyChecking=no ec2-user@${{ secrets.AWS_SERVER_HOST }} "cat > ~/capstone-app/.env << 'ENVEOF'
-          APP_DEV_BOOTSTRAP_AUTH=${{ secrets.APP_DEV_BOOTSTRAP_AUTH }}
+          APP_DEV_BOOTSTRAP_AUTH=${APP_DEV_BOOTSTRAP_AUTH_VALUE}
           GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
           GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
           GOOGLE_REDIRECT_URI=${{ secrets.GOOGLE_REDIRECT_URI }}
