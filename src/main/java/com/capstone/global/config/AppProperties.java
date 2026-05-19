@@ -26,6 +26,11 @@ public class AppProperties {
   private Map<String, String> oauthRedirectMap = new HashMap<>();
 
   /**
+   * WebRTC/SFU 메시지 라우팅 및 기능 플래그.
+   */
+  private WebRtc webrtc = new WebRtc();
+
+  /**
    * 매핑되지 않은 Origin에서 사용할 기본 redirect URI.
    */
   private String defaultRedirectUri = "http://localhost:3000/auth/callback";
@@ -48,6 +53,29 @@ public class AppProperties {
     private String vercelTeamId = "";
     /** 시뮬레이션 모드에서 사용할 기본 URL 접두사 */
     private String simulatedBaseUrl = "https://prototype.example.com";
+  }
+
+  @Getter
+  @Setter
+  public static class WebRtc {
+    private boolean sfuEnabled = false;
+    private String signalTopicPrefix = "/topic/workspace";
+    private String voiceSessionSegment = "voice";
+    private String signalSegment = "signal";
+    private SfuServer sfuServer = new SfuServer();
+  }
+
+  @Getter
+  @Setter
+  public static class SfuServer {
+    private String baseUrl = "http://localhost:4000";
+    private int httpPort = 4000;
+    private String healthPath = "/health";
+    private String roomsPath = "/rooms";
+    private String wsPath = "/ws";
+    private int workerMinPort = 40000;
+    private int workerMaxPort = 49999;
+    private String logLevel = "warn";
   }
 }
 

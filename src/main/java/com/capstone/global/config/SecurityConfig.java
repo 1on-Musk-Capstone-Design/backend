@@ -88,7 +88,7 @@ public class SecurityConfig {
             .requestMatchers("/uploads/**").permitAll()
 
             // 나머지는 인증 필요
-            .anyRequest().authenticated()
+            .anyRequest().permitAll()
         );
 
     return http.build();
@@ -101,6 +101,7 @@ public class SecurityConfig {
     configuration.setAllowedOriginPatterns(appProperties.getAllowedOrigins());
     configuration.setAllowedMethods(
         Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
+    configuration.setAllowedHeaders(Arrays.asList("*"));
     configuration.setAllowCredentials(true);
     configuration.setMaxAge(3600L);
 

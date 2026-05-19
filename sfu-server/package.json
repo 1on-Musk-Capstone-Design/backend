@@ -1,0 +1,18 @@
+{
+  "name": "capstone-sfu-server",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Mediasoup SFU server skeleton for Capstone voice chat",
+  "main": "src/index.js",
+  "scripts": {
+    "dev": "node src/index.js",
+    "start": "node src/index.js",
+    "check": "node --check src/index.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.2",
+    "mediasoup": "^3.15.8"
+  }
+}

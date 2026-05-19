@@ -54,6 +54,11 @@ openai:
   # 2) 최종 편집 패스(사용자 스토리·DoD·엣지 등 실무 섹션 보강) — 권장 on
   prototype-prd-editor-pass-enabled: ${OPENAI_PROTOTYPE_PRD_EDITOR_PASS:true}
 
+# 로컬 개발용 Apple 설정. appleJwtValidator 가 애플리케이션 시작 시 필수로 참조합니다.
+apple:
+  bundle-id: ${APPLE_BUNDLE_ID:test.bundle}
+  public-key-url: ${APPLE_PUBLIC_KEY_URL:https://appleid.apple.com/auth/keys}
+
 # OAuth2 (Google) 로컬 기본값
 oauth2:
   google:
@@ -101,7 +106,7 @@ springdoc:
 logging:
   level:
     com.capstone: DEBUG
-    org.springframework.security: INFO
+    org.springframework.security: TRACE
     org.springframework.web.socket: DEBUG
     org.springframework.messaging: DEBUG
   pattern:
@@ -130,7 +135,21 @@ app:
   # PRD 공유·웹알림용 프론트(SPA) 베이스 URL (백엔드 8080/api 가 아님). 운영은 실제 사이트 도메인.
   prd-public-base-url: ${APP_PRD_PUBLIC_BASE_URL:http://localhost:3000}
   # 로컬 디버깅용: true면 PRD/프로토타입 워크스페이스 권한 체크를 우회합니다. (운영에서는 반드시 false)
-  local-dev-permit-all-workspace-access: ${APP_LOCAL_DEV_PERMIT_ALL_WORKSPACE_ACCESS:false}
+  local-dev-permit-all-workspace-access: ${APP_LOCAL_DEV_PERMIT_ALL_WORKSPACE_ACCESS:true}
+  webrtc:
+    sfu-enabled: ${APP_WEBRTC_SFU_ENABLED:true}
+    signal-topic-prefix: ${APP_WEBRTC_SIGNAL_TOPIC_PREFIX:/topic/workspace}
+    voice-session-segment: ${APP_WEBRTC_VOICE_SESSION_SEGMENT:voice}
+    signal-segment: ${APP_WEBRTC_SIGNAL_SEGMENT:signal}
+    sfu-server:
+      base-url: ${APP_WEBRTC_SFU_SERVER_BASE_URL:http://localhost:4000}
+      http-port: ${APP_WEBRTC_SFU_SERVER_HTTP_PORT:4000}
+      health-path: ${APP_WEBRTC_SFU_SERVER_HEALTH_PATH:/health}
+      rooms-path: ${APP_WEBRTC_SFU_SERVER_ROOMS_PATH:/rooms}
+      ws-path: ${APP_WEBRTC_SFU_SERVER_WS_PATH:/ws}
+      worker-min-port: ${APP_WEBRTC_SFU_WORKER_MIN_PORT:40000}
+      worker-max-port: ${APP_WEBRTC_SFU_WORKER_MAX_PORT:49999}
+      log-level: ${APP_WEBRTC_SFU_LOG_LEVEL:warn}
   file:
     upload-dir: ${APP_FILE_UPLOAD_DIR:./uploads}
     thumbnail-dir: ${APP_FILE_THUMBNAIL_DIR:./uploads/thumbnails}
