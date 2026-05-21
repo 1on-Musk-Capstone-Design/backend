@@ -1,0 +1,190 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: capstone-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-capstone_db}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-capstone_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7
+    container_name: capstone-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+
+  api-gateway:
+    build:
+      context: .
+      args:
+        JAR_FILE: api-gateway/build/libs/api-gateway-0.0.1-SNAPSHOT.jar
+    container_name: capstone-api-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      AUTH_SERVICE_URI: http://auth-service:8081
+      WORKSPACE_SERVICE_URI: http://workspace-service:8082
+      CANVAS_SERVICE_URI: http://canvas-service:8083
+      CHAT_SERVICE_URI: http://chat-service:8084
+      CHAT_WS_URI: ws://chat-service:8084
+      VOICE_SERVICE_URI: http://voice-service:8085
+      PROTOTYPE_SERVICE_URI: http://prototype-service:8086
+      STORAGE_SERVICE_URI: http://storage-service:8087
+      APP_ALLOWED_ORIGINS_0: ${APP_ALLOWED_ORIGINS_0:-http://localhost:*}
+      APP_ALLOWED_ORIGINS_1: ${APP_ALLOWED_ORIGINS_1:-http://127.0.0.1:*}
+      APP_ALLOWED_ORIGINS_2: ${APP_ALLOWED_ORIGINS_2:-https://on-it.kro.kr}
+    depends_on:
+      - auth-service
+      - workspace-service
+      - canvas-service
+      - chat-service
+      - voice-service
+      - prototype-service
+      - storage-service
+
+  auth-service:
+    build:
+      context: .
+      args:
+        JAR_FILE: services/auth-service/build/libs/auth-service-0.0.1-SNAPSHOT.jar
+    container_name: capstone-auth-service
+    ports:
+      - "8081:8081"
+    environment: &service-env
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-capstone_db}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      SPRING_JWT_SECRET: ${SPRING_JWT_SECRET:-change-this-secret-before-deploying-change-this-secret-before-deploying}
+      APP_FILE_BASE_URL: ${APP_FILE_BASE_URL:-http://localhost:8080/api}
+      APP_FILE_UPLOAD_DIR: /var/lib/capstone/uploads
+      APP_FILE_THUMBNAIL_DIR: /var/lib/capstone/uploads/thumbnails
+      APP_PROTOTYPE_ARTIFACT_DIR: /var/lib/capstone/prototype-artifacts
+      APP_DEV_BOOTSTRAP_AUTH: ${APP_DEV_BOOTSTRAP_AUTH:-false}
+      SOCKETIO_ENABLED: "false"
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI:-https://on-it.kro.kr/auth/callback}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+    volumes:
+      - capstone-files:/var/lib/capstone
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+  workspace-service:
+    build:
+      context: .
+      args:
+        JAR_FILE: services/workspace-service/build/libs/workspace-service-0.0.1-SNAPSHOT.jar
+    container_name: capstone-workspace-service
+    ports:
+      - "8082:8082"
+    environment:
+      <<: *service-env
+      WORKSPACE_INVITE_BASE_URL: ${WORKSPACE_INVITE_BASE_URL:-https://on-it.kro.kr/invite}
+    volumes:
+      - capstone-files:/var/lib/capstone
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  canvas-service:
+    build:
+      context: .
+      args:
+        JAR_FILE: services/canvas-service/build/libs/canvas-service-0.0.1-SNAPSHOT.jar
+    container_name: capstone-canvas-service
+    ports:
+      - "8083:8083"
+    environment:
+      <<: *service-env
+    volumes:
+      - capstone-files:/var/lib/capstone
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  chat-service:
+    build:
+      context: .
+      args:
+        JAR_FILE: services/chat-service/build/libs/chat-service-0.0.1-SNAPSHOT.jar
+    container_name: capstone-chat-service
+    ports:
+      - "8084:8084"
+    environment:
+      <<: *service-env
+    volumes:
+      - capstone-files:/var/lib/capstone
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  voice-service:
+    build:
+      context: .
+      args:
+        JAR_FILE: services/voice-service/build/libs/voice-service-0.0.1-SNAPSHOT.jar
+    container_name: capstone-voice-service
+    ports:
+      - "8085:8085"
+    environment:
+      <<: *service-env
+    volumes:
+      - capstone-files:/var/lib/capstone
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  prototype-service:
+    build:
+      context: .
+      args:
+        JAR_FILE: services/prototype-service/build/libs/prototype-service-0.0.1-SNAPSHOT.jar
+    container_name: capstone-prototype-service
+    ports:
+      - "8086:8086"
+    environment:
+      <<: *service-env
+      APP_PROTOTYPE_VERCEL_TOKEN: ${APP_PROTOTYPE_VERCEL_TOKEN:-}
+      APP_PROTOTYPE_VERCEL_TEAM_ID: ${APP_PROTOTYPE_VERCEL_TEAM_ID:-}
+      APP_PRD_PUBLIC_BASE_URL: ${APP_PRD_PUBLIC_BASE_URL:-https://on-it.kro.kr}
+    volumes:
+      - capstone-files:/var/lib/capstone
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  storage-service:
+    build:
+      context: .
+      args:
+        JAR_FILE: services/storage-service/build/libs/storage-service-0.0.1-SNAPSHOT.jar
+    container_name: capstone-storage-service
+    ports:
+      - "8087:8087"
+    environment:
+      <<: *service-env
+    volumes:
+      - capstone-files:/var/lib/capstone
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  postgres-data:
+  redis-data:
+  capstone-files:

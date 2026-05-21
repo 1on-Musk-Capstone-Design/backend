@@ -1,0 +1,87 @@
+server:
+  address: 0.0.0.0
+  port: ${SERVER_PORT:8080}
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      globalcors:
+        add-to-simple-url-handler-mapping: true
+        cors-configurations:
+          '[/**]':
+            allowed-origin-patterns:
+              - ${APP_ALLOWED_ORIGINS_0:http://localhost:*}
+              - ${APP_ALLOWED_ORIGINS_1:http://127.0.0.1:*}
+              - ${APP_ALLOWED_ORIGINS_2:https://on-it.kro.kr}
+            allowed-methods: '*'
+            allowed-headers: '*'
+            exposed-headers:
+              - Authorization
+              - Location
+            allow-credentials: true
+            max-age: 3600
+      default-filters:
+        - PreserveHostHeader
+      routes:
+        - id: health
+          uri: ${AUTH_SERVICE_URI:http://localhost:8081}
+          predicates:
+            - Path=/api/v1/health
+
+        - id: chat-websocket
+          uri: ${CHAT_WS_URI:ws://localhost:8084}
+          predicates:
+            - Path=/api/ws/**
+            - Header=Upgrade, websocket
+
+        - id: chat-sockjs-http
+          uri: ${CHAT_SERVICE_URI:http://localhost:8084}
+          predicates:
+            - Path=/api/ws/**
+
+        - id: auth-service
+          uri: ${AUTH_SERVICE_URI:http://localhost:8081}
+          predicates:
+            - Path=/api/v1/auth-google/**,/api/v1/auth-apple/**,/api/v1/auth/dev/**,/api/v1/users/**
+
+        - id: voice-service
+          uri: ${VOICE_SERVICE_URI:http://localhost:8085}
+          predicates:
+            - Path=/api/v1/workspaces/*/voice/**
+
+        - id: prototype-service
+          uri: ${PROTOTYPE_SERVICE_URI:http://localhost:8086}
+          predicates:
+            - Path=/api/v1/ideas/*/prototype/**,/api/v1/workspaces/*/prds/**,/api/v1/openai/**
+
+        - id: storage-service
+          uri: ${STORAGE_SERVICE_URI:http://localhost:8087}
+          predicates:
+            - Path=/api/uploads/**,/uploads/**
+
+        - id: workspace-service
+          uri: ${WORKSPACE_SERVICE_URI:http://localhost:8082}
+          predicates:
+            - Path=/api/v1/workspaces/**
+
+        - id: canvas-service
+          uri: ${CANVAS_SERVICE_URI:http://localhost:8083}
+          predicates:
+            - Path=/api/v1/*/canvas,/api/v1/canvas/**,/api/v1/ideas/**
+
+        - id: chat-service
+          uri: ${CHAT_SERVICE_URI:http://localhost:8084}
+          predicates:
+            - Path=/api/v1/chat/**
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,gateway
+
+logging:
+  level:
+    org.springframework.cloud.gateway: INFO
