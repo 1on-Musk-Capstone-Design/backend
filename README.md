@@ -47,6 +47,7 @@ Use the same pattern for other modules, then run:
 ```
 
 This builds every backend service jar once, starts Postgres/Redis, and runs all MSA services. The gateway is exposed on `8080` and keeps frontend-facing paths on `/api/**`.
+For local development, this script enables `APP_DEV_BOOTSTRAP_AUTH=true` by default so the existing frontend login flow can issue a local developer JWT without changing frontend code.
 
 To stop:
 
@@ -71,3 +72,9 @@ APP_FILE_UPLOAD_DIR=/var/lib/capstone/uploads
 APP_PROTOTYPE_ARTIFACT_DIR=/var/lib/capstone/prototype-artifacts
 APP_FILE_BASE_URL=https://on-it.kro.kr/api
 ```
+
+## CI/CD
+
+GitHub Actions are configured in `.github/workflows/ci-cd.yml`.
+
+The workflow builds every MSA module, packages service JARs with `Dockerfile`, `docker-compose.yml`, and `scripts`, uploads the bundle to EC2, then restarts the whole stack with Docker Compose. See `.github/workflows/README.md` for required GitHub Secrets and EC2 prerequisites.

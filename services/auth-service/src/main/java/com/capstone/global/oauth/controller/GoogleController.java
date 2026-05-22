@@ -1,7 +1,9 @@
 package com.capstone.global.oauth.controller;
 
 import com.capstone.global.config.AppProperties;
+import com.capstone.global.config.DevBootstrapAuthProperties;
 import com.capstone.global.oauth.TokenDto;
+import com.capstone.global.oauth.service.DevBootstrapService;
 import com.capstone.global.oauth.service.GoogleService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +19,11 @@ import org.springframework.web.util.UriComponentsBuilder;
 @RequiredArgsConstructor
 public class GoogleController {
 
+  private static final String LOCAL_DEV_CODE = "local-dev";
+
   private final GoogleService googleService;
+  private final DevBootstrapAuthProperties devBootstrapAuthProperties;
+  private final DevBootstrapService devBootstrapService;
   private final AppProperties appProperties;
 
   @Value("${oauth2.google.web.client-id}")
@@ -48,6 +54,10 @@ public class GoogleController {
       } else {
         dynamicRedirectUri = resolveRedirectUri(origin);
         log.info("OAuth 로그인 처리 - Origin 헤더 기반: {}, Redirect URI: {}", origin, dynamicRedirectUri);
+      }
+      if (isLocalDevLogin(code, dynamicRedirectUri)) {
+        log.info("로컬 개발자 로그인 처리 - redirect_uri: {}", dynamicRedirectUri);
+        return ResponseEntity.ok(devBootstrapService.issueToken());
       }
       boolean isIos = "ios".equalsIgnoreCase(platform);
       TokenDto tokenDto = googleService.loginOrJoin(code, dynamicRedirectUri, isIos);
@@ -85,6 +95,15 @@ public class GoogleController {
 
     log.info("OAuth 로그인 URI 생성 - platform: {}, redirect_uri: {}", platform, dynamicRedirectUri);
 
+    if (!isIos && isLocalRedirectUri(dynamicRedirectUri) && devBootstrapAuthProperties.isEnabled()) {
+      String localDevCallbackUri = UriComponentsBuilder.fromHttpUrl(dynamicRedirectUri)
+          .queryParam("code", LOCAL_DEV_CODE)
+          .build()
+          .toUriString();
+      log.info("로컬 개발자 로그인 URI 생성: {}", localDevCallbackUri);
+      return ResponseEntity.ok(localDevCallbackUri);
+    }
+
     String selectedClientId = isIos ? iosClientId : clientId;
 
     String scope = "openid email profile";
@@ -110,5 +129,17 @@ public class GoogleController {
       }
     }
     return appProperties.getDefaultRedirectUri();
+  }
+
+  private boolean isLocalDevLogin(String code, String redirectUri) {
+    return devBootstrapAuthProperties.isEnabled()
+        && LOCAL_DEV_CODE.equals(code)
+        && isLocalRedirectUri(redirectUri);
+  }
+
+  private boolean isLocalRedirectUri(String redirectUri) {
+    return redirectUri != null
+        && (redirectUri.startsWith("http://localhost:")
+        || redirectUri.startsWith("http://127.0.0.1:"));
   }
 }

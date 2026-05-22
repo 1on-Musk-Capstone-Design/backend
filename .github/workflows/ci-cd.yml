@@ -1,0 +1,237 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - develop
+      - main
+      - feature/aws-sync
+  pull_request:
+    branches:
+      - develop
+      - main
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    name: Build and Test
+    runs-on: ubuntu-latest
+    continue-on-error: false
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Cache Gradle dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Build all MSA services
+        run: ./gradlew clean assemble -x test --stacktrace
+        continue-on-error: false
+
+      - name: Run tests
+        id: test
+        run: ./gradlew test || echo "test_failed=true" >> $GITHUB_OUTPUT
+        continue-on-error: true
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        continue-on-error: true
+        with:
+          name: test-results
+          path: '**/build/test-results/test/TEST-*.xml'
+          retention-days: 7
+          if-no-files-found: ignore
+
+      - name: Create deployment bundle
+        run: |
+          tar -czf capstone-msa-deploy.tar.gz \
+            Dockerfile \
+            docker-compose.yml \
+            scripts \
+            api-gateway/build/libs/*.jar \
+            services/auth-service/build/libs/*.jar \
+            services/workspace-service/build/libs/*.jar \
+            services/canvas-service/build/libs/*.jar \
+            services/chat-service/build/libs/*.jar \
+            services/voice-service/build/libs/*.jar \
+            services/prototype-service/build/libs/*.jar \
+            services/storage-service/build/libs/*.jar
+
+      - name: Upload deployment bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: capstone-msa-deploy
+          path: capstone-msa-deploy.tar.gz
+          retention-days: 1
+
+      - name: Check test results
+        if: steps.test.outputs.test_failed == 'true'
+        run: |
+          echo "Some tests failed, but continuing deployment like the original workflow."
+          exit 0
+
+  deploy:
+    name: Deploy to AWS
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    if: always() && (needs.build-and-test.result == 'success' || needs.build-and-test.result == 'failure') && (github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/feature/aws-sync')))
+
+    steps:
+      - name: Download deployment bundle
+        uses: actions/download-artifact@v4
+        with:
+          name: capstone-msa-deploy
+          path: .
+
+      - name: Setup SSH key with correct permissions
+        run: |
+          echo "Setting up SSH key..."
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+
+          if [ -z "${{ secrets.AWS_SSH_PRIVATE_KEY }}" ]; then
+            echo "AWS_SSH_PRIVATE_KEY secret is not set!"
+            exit 1
+          fi
+
+          echo "${{ secrets.AWS_SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 400 ~/.ssh/deploy_key
+
+          if ! grep -q "BEGIN.*PRIVATE KEY" ~/.ssh/deploy_key; then
+            echo "SSH key format appears to be invalid"
+            exit 1
+          fi
+
+      - name: Setup SSH agent
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.AWS_SSH_PRIVATE_KEY }}
+
+      - name: Add server to known hosts
+        run: |
+          if [ -z "${{ secrets.AWS_SERVER_HOST }}" ]; then
+            echo "AWS_SERVER_HOST secret is not set!"
+            exit 1
+          fi
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          ssh-keyscan -H ${{ secrets.AWS_SERVER_HOST }} >> ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+
+      - name: Verify SSH and Docker
+        run: |
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -o ConnectTimeout=10 ec2-user@${{ secrets.AWS_SERVER_HOST }} \
+            "echo 'SSH connection successful' && docker --version && docker compose version"
+
+      - name: Upload deployment bundle to server
+        run: |
+          scp -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -o ConnectTimeout=30 -o ServerAliveInterval=60 \
+            capstone-msa-deploy.tar.gz \
+            ec2-user@${{ secrets.AWS_SERVER_HOST }}:~/capstone-msa-deploy.tar.gz
+
+      - name: Upload environment variables to server
+        run: |
+          APP_DEV_BOOTSTRAP_AUTH_VALUE="${{ secrets.APP_DEV_BOOTSTRAP_AUTH }}"
+          if [ -z "$APP_DEV_BOOTSTRAP_AUTH_VALUE" ]; then
+            APP_DEV_BOOTSTRAP_AUTH_VALUE=false
+          fi
+
+          cat > capstone-msa.env << 'ENVEOF'
+          POSTGRES_DB=${{ secrets.POSTGRES_DB }}
+          POSTGRES_USER=${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+          SPRING_JWT_SECRET=${{ secrets.SPRING_JWT_SECRET }}
+          APP_DEV_BOOTSTRAP_AUTH=__APP_DEV_BOOTSTRAP_AUTH__
+          APP_ALLOWED_ORIGINS_0=${{ secrets.APP_ALLOWED_ORIGINS_0 }}
+          APP_ALLOWED_ORIGINS_1=${{ secrets.APP_ALLOWED_ORIGINS_1 }}
+          APP_ALLOWED_ORIGINS_2=${{ secrets.APP_ALLOWED_ORIGINS_2 }}
+          APP_DEFAULT_REDIRECT_URI=${{ secrets.APP_DEFAULT_REDIRECT_URI }}
+          APP_OAUTH_REDIRECT_LOCALHOST=${{ secrets.APP_OAUTH_REDIRECT_LOCALHOST }}
+          APP_OAUTH_REDIRECT_LOOPBACK=${{ secrets.APP_OAUTH_REDIRECT_LOOPBACK }}
+          APP_OAUTH_REDIRECT_ONIT=${{ secrets.APP_OAUTH_REDIRECT_ONIT }}
+          APP_PRD_PUBLIC_BASE_URL=${{ secrets.APP_PRD_PUBLIC_BASE_URL }}
+          APP_FILE_BASE_URL=${{ secrets.APP_FILE_BASE_URL }}
+          APP_PROTOTYPE_VERCEL_TOKEN=${{ secrets.APP_PROTOTYPE_VERCEL_TOKEN }}
+          APP_PROTOTYPE_VERCEL_TEAM_ID=${{ secrets.APP_PROTOTYPE_VERCEL_TEAM_ID }}
+          GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
+          GOOGLE_REDIRECT_URI=${{ secrets.GOOGLE_REDIRECT_URI }}
+          GOOGLE_LOGIN_URI=${{ secrets.GOOGLE_LOGIN_URI }}
+          GOOGLE_IOS_CLIENT_ID=${{ secrets.GOOGLE_IOS_CLIENT_ID }}
+          GOOGLE_IOS_REDIRECT_URI=${{ secrets.GOOGLE_IOS_REDIRECT_URI }}
+          WORKSPACE_INVITE_BASE_URL=${{ secrets.WORKSPACE_INVITE_BASE_URL }}
+          OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
+          APPLE_BUNDLE_ID=${{ secrets.APPLE_BUNDLE_ID }}
+          APPLE_PUBLIC_KEY_URL=https://appleid.apple.com/auth/keys
+          ENVEOF
+
+          sed -i 's/^          //' capstone-msa.env
+          sed -i "s|__APP_DEV_BOOTSTRAP_AUTH__|${APP_DEV_BOOTSTRAP_AUTH_VALUE}|g" capstone-msa.env
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no ec2-user@${{ secrets.AWS_SERVER_HOST }} "mkdir -p ~/capstone-msa"
+          scp -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no capstone-msa.env ec2-user@${{ secrets.AWS_SERVER_HOST }}:~/capstone-msa/.env
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no ec2-user@${{ secrets.AWS_SERVER_HOST }} "chmod 600 ~/capstone-msa/.env"
+
+      - name: Deploy MSA stack
+        run: |
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no ec2-user@${{ secrets.AWS_SERVER_HOST }} << 'EOF'
+            set -e
+            mkdir -p ~/capstone-msa
+            cd ~/capstone-msa
+
+            if [ -f docker-compose.yml ]; then
+              docker compose down || true
+            fi
+
+            tar -xzf ~/capstone-msa-deploy.tar.gz -C ~/capstone-msa
+            chmod +x scripts/*.sh
+            docker compose up --build -d
+            docker compose ps
+          EOF
+
+      - name: Wait for MSA gateway to start
+        run: |
+          echo "Waiting for API gateway to start..."
+          sleep 20
+          for i in {1..40}; do
+            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://${{ secrets.AWS_SERVER_HOST }}:8080/api/v1/health || echo "000")
+            if [ "$HTTP_CODE" = "200" ]; then
+              echo "API gateway is healthy. HTTP $HTTP_CODE"
+              exit 0
+            fi
+            echo "Waiting for API gateway... ($i/40) - HTTP $HTTP_CODE"
+            sleep 3
+          done
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no ec2-user@${{ secrets.AWS_SERVER_HOST }} \
+            "cd ~/capstone-msa && docker compose ps && docker compose logs --tail=80 api-gateway auth-service" || true
+          exit 1
+
+      - name: Health check
+        run: |
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://${{ secrets.AWS_SERVER_HOST }}:8080/api/v1/health || echo "000")
+          if [ "$HTTP_CODE" = "200" ]; then
+            echo "Health check passed. HTTP $HTTP_CODE"
+            curl -s http://${{ secrets.AWS_SERVER_HOST }}:8080/api/v1/health | head -5
+            exit 0
+          fi
+          echo "Health check failed. HTTP $HTTP_CODE"
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no ec2-user@${{ secrets.AWS_SERVER_HOST }} \
+            "cd ~/capstone-msa && docker compose logs --tail=120" || true
+          exit 1
