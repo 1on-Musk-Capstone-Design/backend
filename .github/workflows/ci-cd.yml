@@ -221,6 +221,10 @@ jobs:
       - name: Upload environment variables to server
         env:
           APP_DEV_BOOTSTRAP_AUTH: ${{ secrets.APP_DEV_BOOTSTRAP_AUTH }}
+          APP_WEBRTC_SFU_ENABLED: ${{ secrets.APP_WEBRTC_SFU_ENABLED }}
+          APP_WEBRTC_SFU_SERVER_BASE_URL: ${{ secrets.APP_WEBRTC_SFU_SERVER_BASE_URL }}
+          APP_WEBRTC_SFU_SERVER_HEALTH_PATH: ${{ secrets.APP_WEBRTC_SFU_SERVER_HEALTH_PATH }}
+          APP_WEBRTC_SFU_SERVER_ROOMS_PATH: ${{ secrets.APP_WEBRTC_SFU_SERVER_ROOMS_PATH }}
           GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
           GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
           GOOGLE_REDIRECT_URI: ${{ secrets.GOOGLE_REDIRECT_URI }}
@@ -239,6 +243,10 @@ jobs:
 
           ssh -o StrictHostKeyChecking=no ec2-user@${{ secrets.AWS_SERVER_HOST }} "cat > ~/capstone-app/.env << 'ENVEOF'
           APP_DEV_BOOTSTRAP_AUTH=${APP_DEV_BOOTSTRAP_AUTH_VALUE}
+          APP_WEBRTC_SFU_ENABLED=${{ secrets.APP_WEBRTC_SFU_ENABLED }}
+          APP_WEBRTC_SFU_SERVER_BASE_URL=${{ secrets.APP_WEBRTC_SFU_SERVER_BASE_URL }}
+          APP_WEBRTC_SFU_SERVER_HEALTH_PATH=${{ secrets.APP_WEBRTC_SFU_SERVER_HEALTH_PATH }}
+          APP_WEBRTC_SFU_SERVER_ROOMS_PATH=${{ secrets.APP_WEBRTC_SFU_SERVER_ROOMS_PATH }}
           GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
           GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
           GOOGLE_REDIRECT_URI=${{ secrets.GOOGLE_REDIRECT_URI }}
@@ -347,4 +355,3 @@ jobs:
             ssh -o StrictHostKeyChecking=no ec2-user@${{ secrets.AWS_SERVER_HOST }} "tail -50 ~/capstone-app/app.log" || echo "Could not retrieve logs"
             exit 1
           fi
-

@@ -8,7 +8,20 @@ function toInt(value, fallback) {
   return Number.isFinite(parsed) ? parsed : fallback;
 }
 
-module.exports = {
+function validateWebRtcTransportConfig(config) {
+  const announcedIp = config.mediasoup.webRtcTransport.announcedIp;
+  const listenIp = config.mediasoup.webRtcTransport.listenIp;
+
+  if (!announcedIp || announcedIp === "127.0.0.1" || announcedIp === "localhost") {
+    console.warn(
+      "[SFU config] SFU_ANNOUNCED_IP is not set to a client-reachable address. " +
+      `Current announcedIp=${announcedIp}, listenIp=${listenIp}. ` +
+      "External-network clients will fail ICE unless this is the public or private reachable IP/DNS."
+    );
+  }
+}
+
+const config = {
   http: {
     host: process.env.SFU_HTTP_HOST || "0.0.0.0",
     port: toInt(process.env.SFU_HTTP_PORT, 4000),
@@ -38,3 +51,7 @@ module.exports = {
     ],
   },
 };
+
+validateWebRtcTransportConfig(config);
+
+module.exports = config;
