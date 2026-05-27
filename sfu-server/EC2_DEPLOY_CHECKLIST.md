@@ -4,9 +4,9 @@ mediasoup SFU와 coturn을 EC2에서 함께 운영할 때 사용하는 체크리
 
 현재 이 저장소에서 기준으로 삼는 운영 대상:
 
-- EC2 instance public IP: `3.85.63.196`
+- EC2 instance public IP: `54.146.223.193`
 - Spring backend and SFU on the same EC2 host: use `http://127.0.0.1:4000` between them
-- Browser clients connect to SFU/TURN through `3.85.63.196`
+- Browser clients connect to SFU/TURN through `54.146.223.193`
 
 ### 1. Backend env
 
@@ -29,7 +29,7 @@ EC2 호스트에서 `backend/sfu-server/.env` 파일을 생성합니다:
 SFU_HTTP_PORT=4000
 SFU_HTTP_HOST=0.0.0.0
 SFU_LISTEN_IP=0.0.0.0
-SFU_ANNOUNCED_IP=3.85.63.196
+SFU_ANNOUNCED_IP=54.146.223.193
 SFU_WORKER_MIN_PORT=40000
 SFU_WORKER_MAX_PORT=49999
 SFU_LOG_LEVEL=warn
@@ -42,7 +42,7 @@ SFU_LOG_LEVEL=warn
 프론트엔드 env 값은 coturn 호스트 기준으로 설정합니다:
 
 ```env
-VITE_WEBRTC_TURN_URLS=turn:3.85.63.196:3478?transport=udp,turn:3.85.63.196:3478?transport=tcp
+VITE_WEBRTC_TURN_URLS=turn:54.146.223.193:3478?transport=udp,turn:54.146.223.193:3478?transport=tcp
 VITE_WEBRTC_TURN_USERNAME=turnuser
 VITE_WEBRTC_TURN_CREDENTIAL=turnpass123
 VITE_WEBRTC_ICE_TRANSPORT_POLICY=relay

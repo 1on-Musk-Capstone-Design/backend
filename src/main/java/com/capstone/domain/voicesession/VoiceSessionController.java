@@ -10,7 +10,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/v1/workspaces/{workspaceId}/voice")
-@CrossOrigin(origins = {"http://localhost:3000", "http://127.0.0.1:3000"})
+@CrossOrigin(originPatterns = "*")
 @Slf4j
 public class VoiceSessionController {
 
