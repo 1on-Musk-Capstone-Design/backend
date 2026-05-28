@@ -7,7 +7,7 @@
   "variable": [
     {
       "key": "baseUrl",
-      "value": "http://51.20.106.74:8080/",
+      "value": "http://18.234.217.130:8080/",
       "type": "string"
     },
     {
