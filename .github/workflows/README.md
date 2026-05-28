@@ -33,7 +33,7 @@
 
 2. **AWS_SERVER_HOST**
    - AWS 서버의 호스트 주소
-   - 예: `51.20.106.74`
+   - 예: `54.91.162.220`
    - Settings → Secrets and variables → Actions → New repository secret
 
 ## Secrets 설정 방법
@@ -45,7 +45,7 @@
    - Name: `AWS_SSH_PRIVATE_KEY`
      Value: SSH 키 파일 전체 내용 (-----BEGIN RSA PRIVATE KEY----- 부터 -----END RSA PRIVATE KEY----- 까지)
    - Name: `AWS_SERVER_HOST`
-     Value: `51.20.106.74`
+   Value: `54.91.162.220`
 
 ## 서버 사전 요구사항
 
