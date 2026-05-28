@@ -5,6 +5,7 @@ import com.capstone.global.oauth.dto.DevBootstrapSessionDto;
 import com.capstone.global.oauth.dto.DevPreviewBootstrapRequest;
 import com.capstone.global.oauth.dto.DevPreviewBootstrapSessionDto;
 import com.capstone.global.oauth.service.DevBootstrapService;
+import lombok.extern.slf4j.Slf4j;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/v1/auth/dev")
 @RequiredArgsConstructor
+@Slf4j
 public class DevBootstrapController {
 
   private final DevBootstrapAuthProperties devBootstrapAuthProperties;
@@ -41,7 +43,16 @@ public class DevBootstrapController {
     if (!devBootstrapAuthProperties.isEnabled()) {
       return ResponseEntity.notFound().build();
     }
-    return ResponseEntity.ok(
-        devBootstrapService.issuePreviewSession(request.getWorkspaceId(), request.getBrowserSessionId()));
+    try {
+      return ResponseEntity.ok(
+          devBootstrapService.issuePreviewSession(request.getWorkspaceId(), request.getBrowserSessionId()));
+    } catch (Exception exception) {
+      log.error(
+          "preview bootstrap failed: workspaceId={}, browserSessionId={}",
+          request.getWorkspaceId(),
+          request.getBrowserSessionId(),
+          exception);
+      throw exception;
+    }
   }
 }
