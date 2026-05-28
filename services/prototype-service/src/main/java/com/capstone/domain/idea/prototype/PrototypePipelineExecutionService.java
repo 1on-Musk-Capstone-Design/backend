@@ -106,6 +106,7 @@ public class PrototypePipelineExecutionService {
         Map<String, Object> wsPayload = new HashMap<>();
         wsPayload.put("type", "prototype_ready");
         wsPayload.put("ideaId", iid);
+        wsPayload.put("prdId", job.getId());
         wsPayload.put("jobId", job.getId());
         wsPayload.put("workspaceId", workspaceId);
         wsPayload.put("prdViewPath", prdViewPath);

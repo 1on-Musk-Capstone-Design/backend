@@ -22,6 +22,8 @@ import java.util.UUID;
 @Service
 public class FileStorageService {
 
+  private static final String PRD_PIPELINE_MARKER = "[PRD_PIPELINE]";
+
   @Value("${app.file.upload-dir:./uploads}")
   private String uploadDir;
 
@@ -109,6 +111,12 @@ public class FileStorageService {
    * @throws IOException 이미지 생성 또는 저장 실패 시
    */
   public String generateWorkspaceContentThumbnail(String workspaceName, Long workspaceId, List<Idea> ideas) throws IOException {
+    if (ideas != null) {
+      ideas = ideas.stream()
+          .filter(idea -> !isInternalPrdPipelineIdea(idea))
+          .toList();
+    }
+
     // 디렉토리 생성
     Path thumbnailPath = Paths.get(thumbnailDir).toAbsolutePath().normalize();
     Files.createDirectories(thumbnailPath);
@@ -329,6 +337,13 @@ public class FileStorageService {
     return url;
   }
 
+  private boolean isInternalPrdPipelineIdea(Idea idea) {
+    if (idea == null || idea.getContent() == null) {
+      return false;
+    }
+    return idea.getContent().trim().startsWith(PRD_PIPELINE_MARKER);
+  }
+
   /**
    * 워크스페이스 이름을 기반으로 기본 썸네일을 생성합니다.
    * 워크스페이스 이름의 이니셜을 랜덤 색상 배경 위에 표시합니다.
@@ -445,4 +460,3 @@ public class FileStorageService {
     return brightness > 0.5 ? Color.BLACK : Color.WHITE;
   }
 }
-

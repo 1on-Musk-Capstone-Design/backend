@@ -9,6 +9,8 @@ import lombok.Getter;
 @Builder
 public class PrototypeJobSummaryResponse {
 
+  /** PRD 문서 식별자. 현재는 prototype job id와 동일합니다. */
+  private final Long prdId;
   private final Long jobId;
   private final Long ideaId;
   private final PrototypeJobStatus status;

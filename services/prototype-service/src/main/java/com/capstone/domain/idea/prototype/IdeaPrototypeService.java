@@ -79,6 +79,7 @@ public class IdeaPrototypeService {
       prototypePipelineRunner.runPipelineAsync(jobIdToRun);
     }
     return PrototypeJobAcceptedResponse.builder()
+        .prdId(job.getId())
         .jobId(job.getId())
         .ideaId(ideaId)
         .status(PrototypeJobStatus.PENDING)
@@ -109,7 +110,7 @@ public class IdeaPrototypeService {
     if (updated.getStatus() == PrototypeJobStatus.FAILED) {
       throw new CustomException(PROTOTYPE_PIPELINE_FAILED);
     }
-    return toResponse(updated, idea, ideaId);
+    return toResponse(updated, idea, ideaId, false);
   }
 
   @Transactional
@@ -124,7 +125,7 @@ public class IdeaPrototypeService {
         jobRepository
             .findTopByIdea_IdOrderByIdDesc(idea.getId())
             .orElseThrow(() -> new CustomException(NOT_FOUND_PROTOTYPE_JOB));
-    return toResponse(job, idea, ideaId);
+    return toResponse(job, idea, ideaId, false);
   }
 
   @Transactional(readOnly = true)
@@ -134,7 +135,7 @@ public class IdeaPrototypeService {
         jobRepository
             .findByIdea_IdAndId(idea.getId(), jobId)
             .orElseThrow(() -> new CustomException(NOT_FOUND_PROTOTYPE_JOB_BY_ID));
-    return toResponse(job, idea, ideaId);
+    return toResponse(job, idea, ideaId, false);
   }
 
   @Transactional(readOnly = true)
@@ -155,7 +156,7 @@ public class IdeaPrototypeService {
             .orElseThrow(() -> new CustomException(NOT_FOUND_PROTOTYPE_JOB_BY_ID));
     Idea idea = requireWorkspaceScopedIdea(job, workspaceId);
     ensureWorkspaceAccess(userId, idea.getWorkspace());
-    return toResponse(job, idea, idea.getId());
+    return toResponse(job, idea, idea.getId(), true);
   }
 
   @Transactional(readOnly = true)
@@ -264,6 +265,7 @@ public class IdeaPrototypeService {
             ? null
             : (err.length() > 200 ? err.substring(0, 200) + "…" : err);
     return PrototypeJobSummaryResponse.builder()
+        .prdId(job.getId())
         .jobId(job.getId())
         .ideaId(ideaId)
         .status(job.getStatus())
@@ -272,7 +274,8 @@ public class IdeaPrototypeService {
         .build();
   }
 
-  private PrototypePipelineResponse toResponse(IdeaPrototypeJob job, Idea idea, Long ideaId) {
+  private PrototypePipelineResponse toResponse(
+      IdeaPrototypeJob job, Idea idea, Long ideaId, boolean includePrdMarkdown) {
     long workspaceId = idea.getWorkspace().getWorkspaceId();
     String prdViewPath = "/prd/workspaces/" + workspaceId + "/prds/" + job.getId();
     String prdViewUrl = buildPrdPublicUrl(prdViewPath);
@@ -281,10 +284,11 @@ public class IdeaPrototypeService {
         .workspaceId(workspaceId)
         .prdViewPath(prdViewPath)
         .prdViewUrl(prdViewUrl)
+        .prdId(job.getId())
         .jobId(job.getId())
         .ideaId(ideaId)
         .status(job.getStatus())
-        .prdMarkdown(job.getPrdMarkdown())
+        .prdMarkdown(includePrdMarkdown ? job.getPrdMarkdown() : null)
         .uiStructureJson(job.getUiStructureJson())
         .githubRepoUrl(job.getGithubRepoUrl())
         .vercelPreviewUrl(job.getVercelPreviewUrl())

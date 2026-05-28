@@ -28,6 +28,8 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class IdeaService {
 
+  private static final String PRD_PIPELINE_MARKER = "[PRD_PIPELINE]";
+
   private final IdeaRepository ideaRepository;
   private final WorkspaceRepository workspaceRepository;
   private final CanvasRepository canvasRepository;
@@ -58,7 +60,9 @@ public class IdeaService {
         .positionY(request.getPositionY())
         .build();
 
-    if (request.getCanvasId() != null) {
+    boolean internalPrdPipelineIdea = isInternalPrdPipelineContent(request.getContent());
+
+    if (!internalPrdPipelineIdea && request.getCanvasId() != null) {
       Canvas canvas = canvasRepository.findById(request.getCanvasId())
           .orElseThrow(() -> new CustomException(NOT_FOUND_CANVAS));
       idea.setCanvas(canvas);
@@ -66,11 +70,13 @@ public class IdeaService {
 
     IdeaResponse response = IdeaResponse.from(ideaRepository.save(idea));
 
-    // WebSocket 브로드캐스트 (실패해도 API 응답은 성공 — STOMP/직렬화 이슈로 500 방지)
-    try {
-      webSocketService.broadcastIdeaChange(request.getWorkspaceId(), "created", response);
-    } catch (Exception e) {
-      log.warn("아이디어 생성 브로드캐스트 실패 workspaceId={}: {}", request.getWorkspaceId(), e.getMessage());
+    if (!internalPrdPipelineIdea) {
+      // WebSocket 브로드캐스트 (실패해도 API 응답은 성공 — STOMP/직렬화 이슈로 500 방지)
+      try {
+        webSocketService.broadcastIdeaChange(request.getWorkspaceId(), "created", response);
+      } catch (Exception e) {
+        log.warn("아이디어 생성 브로드캐스트 실패 workspaceId={}: {}", request.getWorkspaceId(), e.getMessage());
+      }
     }
 
     // 썸네일 자동 갱신 (비동기)
@@ -88,6 +94,7 @@ public class IdeaService {
   public List<IdeaResponse> getAllIdeas(Long workspaceId) {
     return ideaRepository.findAll().stream()
         .filter(i -> i.getWorkspace().getWorkspaceId().equals(workspaceId))
+        .filter(i -> !isInternalPrdPipelineIdea(i))
         .map(IdeaResponse::from)
         .collect(Collectors.toList());
   }
@@ -96,6 +103,20 @@ public class IdeaService {
     Idea idea = ideaRepository.findById(ideaId)
         .orElseThrow(() -> new CustomException(NOT_FOUND_IDEA));
     return IdeaResponse.from(idea);
+  }
+
+  private boolean isInternalPrdPipelineIdea(Idea idea) {
+    if (idea == null || idea.getContent() == null) {
+      return false;
+    }
+    return isInternalPrdPipelineContent(idea.getContent());
+  }
+
+  private boolean isInternalPrdPipelineContent(String content) {
+    if (content == null) {
+      return false;
+    }
+    return content.trim().startsWith(PRD_PIPELINE_MARKER);
   }
 
   @Transactional
@@ -108,10 +129,16 @@ public class IdeaService {
                 .orElseThrow(() -> new CustomException(NOT_FOUND_USER)))
         .orElseThrow(() -> new CustomException(FORBIDDEN_WORKSPACE_ACCESS));
 
-    if (request.getCanvasId() != null) {
+    boolean internalPrdPipelineIdea = isInternalPrdPipelineIdea(idea)
+        || isInternalPrdPipelineContent(request.getContent());
+
+    if (!internalPrdPipelineIdea && request.getCanvasId() != null) {
       Canvas canvas = canvasRepository.findById(request.getCanvasId())
           .orElseThrow(() -> new CustomException(NOT_FOUND_CANVAS));
       idea.setCanvas(canvas);
+    }
+    if (internalPrdPipelineIdea) {
+      idea.setCanvas(null);
     }
 
     // null 필드는 덮어쓰지 않음 — PRD 등에서 content·workspaceId만 보낼 때 좌표/패치가 null로 지워지며 500·데이터 꼬임 방지
@@ -135,14 +162,16 @@ public class IdeaService {
 
     IdeaResponse response = IdeaResponse.from(idea);
 
-    // WebSocket 브로드캐스트 (실패해도 API는 성공 — 직렬화/메시지 크기 등으로 500 방지)
-    try {
-      webSocketService.broadcastIdeaChange(idea.getWorkspace().getWorkspaceId(), "updated", response);
-    } catch (Exception e) {
-      log.warn(
-          "아이디어 수정 브로드캐스트 실패 workspaceId={}: {}",
-          idea.getWorkspace().getWorkspaceId(),
-          e.getMessage());
+    if (!internalPrdPipelineIdea) {
+      // WebSocket 브로드캐스트 (실패해도 API는 성공 — 직렬화/메시지 크기 등으로 500 방지)
+      try {
+        webSocketService.broadcastIdeaChange(idea.getWorkspace().getWorkspaceId(), "updated", response);
+      } catch (Exception e) {
+        log.warn(
+            "아이디어 수정 브로드캐스트 실패 workspaceId={}: {}",
+            idea.getWorkspace().getWorkspaceId(),
+            e.getMessage());
+      }
     }
 
     // 썸네일 자동 갱신 (비동기)

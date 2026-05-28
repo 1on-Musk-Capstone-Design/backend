@@ -14,6 +14,8 @@ public class PrototypePipelineResponse {
   private final String prdViewPath;
   /** app.prd-public-base-url + prdViewPath (공유·복사용) */
   private final String prdViewUrl;
+  /** PRD 문서 식별자. 현재는 prototype job id와 동일합니다. */
+  private final Long prdId;
   private final Long jobId;
   private final Long ideaId;
   private final PrototypeJobStatus status;
