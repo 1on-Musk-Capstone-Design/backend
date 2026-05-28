@@ -67,10 +67,21 @@ SPRING_JWT_SECRET=<long-secret>
 GOOGLE_CLIENT_ID=<google-client-id>
 GOOGLE_CLIENT_SECRET=<google-client-secret>
 GOOGLE_REDIRECT_URI=https://on-it.kro.kr/auth/callback
+GOOGLE_LOGIN_URI=https://accounts.google.com/o/oauth2/v2/auth
+GOOGLE_IOS_CLIENT_ID=<google-ios-client-id>
+GOOGLE_IOS_CLIENT_SECRET=<google-ios-client-secret>
+GOOGLE_IOS_REDIRECT_URI=<google-ios-redirect-uri>
 OPENAI_API_KEY=<openai-api-key>
+OPENAI_PROTOTYPE_MODEL=gpt-4o-mini
 APP_FILE_UPLOAD_DIR=/var/lib/capstone/uploads
+APP_FILE_THUMBNAIL_DIR=/var/lib/capstone/uploads/thumbnails
 APP_PROTOTYPE_ARTIFACT_DIR=/var/lib/capstone/prototype-artifacts
 APP_FILE_BASE_URL=https://on-it.kro.kr/api
+WORKSPACE_INVITE_BASE_URL=https://on-it.kro.kr/invite
+APP_PRD_PUBLIC_BASE_URL=https://on-it.kro.kr
+APP_ALLOWED_ORIGINS_0=http://localhost:*
+APP_ALLOWED_ORIGINS_1=http://127.0.0.1:*
+APP_ALLOWED_ORIGINS_3=https://on-it.kro.kr
 ```
 
 ## CI/CD

@@ -3,6 +3,8 @@ server:
   port: ${SERVER_PORT:8080}
 
 spring:
+  config:
+    import: optional:file:./local-application.yml,optional:classpath:application-local.yml
   application:
     name: api-gateway
   cloud:
@@ -15,6 +17,7 @@ spring:
               - ${APP_ALLOWED_ORIGINS_0:http://localhost:*}
               - ${APP_ALLOWED_ORIGINS_1:http://127.0.0.1:*}
               - ${APP_ALLOWED_ORIGINS_2:https://on-it.kro.kr}
+              - ${APP_ALLOWED_ORIGINS_3:https://on-it.kro.kr}
             allowed-methods: '*'
             allowed-headers: '*'
             exposed-headers:

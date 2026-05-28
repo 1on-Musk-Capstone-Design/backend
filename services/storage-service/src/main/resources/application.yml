@@ -5,6 +5,8 @@ server:
     context-path: /api
 
 spring:
+  config:
+    import: optional:file:./local-application.yml,optional:classpath:application-local.yml
   application:
     name: storage-service
   jwt:
@@ -14,7 +16,7 @@ spring:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/capstone_db}
     driver-class-name: org.postgresql.Driver
     username: ${SPRING_DATASOURCE_USERNAME:postgres}
-    password: ${SPRING_DATASOURCE_PASSWORD:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:musk12!}
   
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
