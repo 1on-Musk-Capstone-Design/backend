@@ -127,7 +127,7 @@ app:
     - ${APP_ALLOWED_ORIGINS_0:http://localhost:*}
     - ${APP_ALLOWED_ORIGINS_1:http://127.0.0.1:*}
     - ${APP_ALLOWED_ORIGINS_3:https://on-it.kro.kr}
-    - ${APP_ALLOWED_ORIGINS_4:http://54.146.223.193:*}
+    - ${APP_ALLOWED_ORIGINS_4:http://54.145.51.239:*}
     - ${APP_ALLOWED_ORIGINS_5:https://*.ngrok-free.app}
     - ${APP_ALLOWED_ORIGINS_6:https://*.ngrok.io}
     - ${APP_ALLOWED_ORIGINS_7:https://*.ngrok.app}
