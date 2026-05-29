@@ -106,7 +106,7 @@ springdoc:
 logging:
   level:
     com.capstone: DEBUG
-    org.springframework.security: TRACE
+    org.springframework.security: INFO
     org.springframework.web.socket: DEBUG
     org.springframework.messaging: DEBUG
   pattern:
@@ -127,11 +127,10 @@ app:
     - ${APP_ALLOWED_ORIGINS_0:http://localhost:*}
     - ${APP_ALLOWED_ORIGINS_1:http://127.0.0.1:*}
     - ${APP_ALLOWED_ORIGINS_3:https://on-it.kro.kr}
-    - ${APP_ALLOWED_ORIGINS_4:http://54.91.62.109:*}
-    - ${APP_ALLOWED_ORIGINS_5:https://*.ngrok-free.app}
-    - ${APP_ALLOWED_ORIGINS_6:https://*.ngrok.io}
-    - ${APP_ALLOWED_ORIGINS_7:https://*.ngrok.app}
-    - ${APP_ALLOWED_ORIGINS_8:https://*.ngrok-free.dev}
+    - ${APP_ALLOWED_ORIGINS_4:https://*.ngrok-free.app}
+    - ${APP_ALLOWED_ORIGINS_5:https://*.ngrok.io}
+    - ${APP_ALLOWED_ORIGINS_6:https://*.ngrok.app}
+    - ${APP_ALLOWED_ORIGINS_7:https://*.ngrok-free.dev}
   default-redirect-uri: ${APP_DEFAULT_REDIRECT_URI:http://localhost:3000/auth/callback}
   oauth-redirect-map:
     localhost: ${APP_OAUTH_REDIRECT_LOCALHOST:http://localhost:3000/auth/callback}
@@ -140,7 +139,7 @@ app:
   # PRD 공유·웹알림용 프론트(SPA) 베이스 URL (백엔드 8080/api 가 아님). 운영은 실제 사이트 도메인.
   prd-public-base-url: ${APP_PRD_PUBLIC_BASE_URL:http://localhost:3000}
   # 로컬 디버깅용: true면 PRD/프로토타입 워크스페이스 권한 체크를 우회합니다. (운영에서는 반드시 false)
-  local-dev-permit-all-workspace-access: ${APP_LOCAL_DEV_PERMIT_ALL_WORKSPACE_ACCESS:true}
+  local-dev-permit-all-workspace-access: ${APP_LOCAL_DEV_PERMIT_ALL_WORKSPACE_ACCESS:false}
   webrtc:
     sfu-enabled: ${APP_WEBRTC_SFU_ENABLED:true}
     signal-topic-prefix: ${APP_WEBRTC_SIGNAL_TOPIC_PREFIX:/topic/workspace}

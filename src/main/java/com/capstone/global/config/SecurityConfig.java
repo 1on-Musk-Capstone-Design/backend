@@ -88,7 +88,7 @@ public class SecurityConfig {
             .requestMatchers("/uploads/**").permitAll()
 
             // 나머지는 인증 필요
-            .anyRequest().permitAll()
+            .anyRequest().authenticated()
         );
 
     return http.build();

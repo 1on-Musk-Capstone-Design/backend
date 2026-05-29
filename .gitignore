@@ -57,3 +57,8 @@ frontend-thumbnail/
 
 ### Gradle ###
 .gradle/
+
+### Generated / vendored artifacts ###
+bin/
+node_modules/
+sfu-server/node_modules/
