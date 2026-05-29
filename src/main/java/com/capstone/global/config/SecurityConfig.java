@@ -47,7 +47,13 @@ public class SecurityConfig {
             .requestMatchers("/v1/auth-apple/**").permitAll()
 
             // 로컬 개발 자동 로그인 (app.dev-bootstrap-auth.enabled=true 일 때만 컨트롤러가 응답)
-            .requestMatchers(HttpMethod.POST, "/v1/auth/dev/bootstrap").permitAll()
+            .requestMatchers(
+                HttpMethod.POST,
+                "/v1/auth/dev/bootstrap",
+                "/api/v1/auth/dev/bootstrap",
+                "/v1/auth/dev/preview/bootstrap",
+                "/api/v1/auth/dev/preview/bootstrap")
+            .permitAll()
 
             // User info
             .requestMatchers("/v1/users/me").permitAll()
