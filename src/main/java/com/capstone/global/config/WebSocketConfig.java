@@ -18,8 +18,8 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
       "https://localhost:*",
       "http://127.0.0.1:*",
       "https://127.0.0.1:*",
-      "http://18.234.217.130:*",
-      "https://18.234.217.130:*",
+      "http://54.91.62.109:*",
+      "https://54.91.62.109:*",
       "https://*.ngrok-free.app",
       "http://*.ngrok-free.app",
       "https://*.ngrok.app",
@@ -58,4 +58,3 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         .withSockJS();
   }
 }
-
