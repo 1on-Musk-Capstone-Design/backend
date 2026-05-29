@@ -5,6 +5,8 @@ import com.capstone.global.dto.WebRtcSignalMessage;
 import com.capstone.global.dto.WebRtcSignalMessage.SignalType;
 import com.capstone.global.exception.CustomException;
 import com.capstone.global.exception.ErrorCode;
+import com.capstone.global.service.WebRtcSignalAuthorizationService;
+import java.security.Principal;
 import java.time.Instant;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,14 +22,15 @@ public class WebRtcSignalingController {
 
   private final AppProperties appProperties;
   private final SimpMessagingTemplate messagingTemplate;
+  private final WebRtcSignalAuthorizationService webRtcSignalAuthorizationService;
 
   @MessageMapping("/webrtc/signal")
-  public void relaySignal(@Payload WebRtcSignalMessage message) {
+  public void relaySignal(@Payload WebRtcSignalMessage message, Principal principal) {
     validateSignalMessage(message);
 
-    // NOTE: 로컬 voice-preview 다중 메쉬 테스트 중에는 시그널 릴레이 권한 검사로 인해
-    // OFFER/ANSWER/ICE가 전파되지 않는 경우가 있어 검증을 임시 우회한다.
-    // 프로덕션 적용 전에는 반드시 권한 검증 로직을 복구해야 한다.
+    if (appProperties.getWebrtc().isSignalAuthSoftValidationEnabled()) {
+      webRtcSignalAuthorizationService.validateAndLog(principal, message);
+    }
 
     message.setSentAt(Instant.now());
 

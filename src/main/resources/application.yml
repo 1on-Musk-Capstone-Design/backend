@@ -142,6 +142,7 @@ app:
   local-dev-permit-all-workspace-access: ${APP_LOCAL_DEV_PERMIT_ALL_WORKSPACE_ACCESS:false}
   webrtc:
     sfu-enabled: ${APP_WEBRTC_SFU_ENABLED:true}
+    signal-auth-soft-validation-enabled: ${APP_WEBRTC_SIGNAL_AUTH_SOFT_VALIDATION_ENABLED:true}
     signal-topic-prefix: ${APP_WEBRTC_SIGNAL_TOPIC_PREFIX:/topic/workspace}
     voice-session-segment: ${APP_WEBRTC_VOICE_SESSION_SEGMENT:voice}
     signal-segment: ${APP_WEBRTC_SIGNAL_SEGMENT:signal}

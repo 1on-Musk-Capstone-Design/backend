@@ -59,6 +59,7 @@ public class AppProperties {
   @Setter
   public static class WebRtc {
     private boolean sfuEnabled = false;
+    private boolean signalAuthSoftValidationEnabled = false;
     private String signalTopicPrefix = "/topic/workspace";
     private String voiceSessionSegment = "voice";
     private String signalSegment = "signal";
@@ -78,4 +79,3 @@ public class AppProperties {
     private String logLevel = "warn";
   }
 }
-
