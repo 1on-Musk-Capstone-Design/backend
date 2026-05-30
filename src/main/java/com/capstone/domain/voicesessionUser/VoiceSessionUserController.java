@@ -1,6 +1,7 @@
 package com.capstone.domain.voicesessionUser;
 
-import com.capstone.domain.workspaceUser.WorkspaceUser;
+import com.capstone.global.service.SfuServerClientService;
+import lombok.extern.slf4j.Slf4j;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,9 +15,11 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/v1/workspaces/{workspaceId}/voice/{sessionId}/users")
 @RequiredArgsConstructor
+@Slf4j
 public class VoiceSessionUserController {
 
   private final VoiceSessionUserService service;
+  private final SfuServerClientService sfuServerClientService;
 
   @PostMapping
   public ResponseEntity<VoiceSessionUserResponse> joinSession(
@@ -39,6 +42,7 @@ public class VoiceSessionUserController {
       @PathVariable Long workspaceUserId
   ) {
     VoiceSessionUser user = service.leaveSession(workspaceId, sessionId, workspaceUserId);
+    closeSfuPeer(workspaceId, sessionId, workspaceUserId);
     return ResponseEntity.ok(VoiceSessionUserResponse.from(user));
   }
 
@@ -86,5 +90,23 @@ public class VoiceSessionUserController {
   ) {
     long count = service.getActiveUserCount(workspaceId, sessionId);
     return ResponseEntity.ok(count);
+  }
+
+  private void closeSfuPeer(Long workspaceId, Long sessionId, Long workspaceUserId) {
+    if (!sfuServerClientService.isEnabled()) {
+      return;
+    }
+
+    try {
+      sfuServerClientService.closePeer(workspaceId, sessionId, String.valueOf(workspaceUserId));
+    } catch (Exception e) {
+      log.warn(
+          "SFU peer cleanup failed: workspaceId={}, sessionId={}, workspaceUserId={}, error={}",
+          workspaceId,
+          sessionId,
+          workspaceUserId,
+          e.getMessage()
+      );
+    }
   }
 }

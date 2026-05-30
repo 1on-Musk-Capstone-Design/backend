@@ -2,16 +2,21 @@ package com.capstone.global.oauth.controller;
 
 import com.capstone.global.config.DevBootstrapAuthProperties;
 import com.capstone.global.oauth.dto.DevBootstrapSessionDto;
+import com.capstone.global.oauth.dto.DevPreviewBootstrapRequest;
+import com.capstone.global.oauth.dto.DevPreviewBootstrapSessionDto;
 import com.capstone.global.oauth.service.DevBootstrapService;
+import lombok.extern.slf4j.Slf4j;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/v1/auth/dev")
 @RequiredArgsConstructor
+@Slf4j
 public class DevBootstrapController {
 
   private final DevBootstrapAuthProperties devBootstrapAuthProperties;
@@ -27,5 +32,27 @@ public class DevBootstrapController {
       return ResponseEntity.notFound().build();
     }
     return ResponseEntity.ok(devBootstrapService.issueSession());
+  }
+
+  /**
+   * 로컬/프리뷰 전용: 브라우저별 임시 사용자 + 워크스페이스 참여 상태를 만들어 반환.
+   */
+  @PostMapping("/preview/bootstrap")
+  public ResponseEntity<DevPreviewBootstrapSessionDto> previewBootstrap(
+      @RequestBody DevPreviewBootstrapRequest request) {
+    if (!devBootstrapAuthProperties.isEnabled()) {
+      return ResponseEntity.notFound().build();
+    }
+    try {
+      return ResponseEntity.ok(
+          devBootstrapService.issuePreviewSession(request.getWorkspaceId(), request.getBrowserSessionId()));
+    } catch (Exception exception) {
+      log.error(
+          "preview bootstrap failed: workspaceId={}, browserSessionId={}",
+          request.getWorkspaceId(),
+          request.getBrowserSessionId(),
+          exception);
+      throw exception;
+    }
   }
 }

@@ -10,6 +10,7 @@ import lombok.Getter;
 public class WorkspaceUserResponse {
 
   private Long id;
+  private Long workspaceUserId;
   private String email;
   private String name;
   private String profileImage;

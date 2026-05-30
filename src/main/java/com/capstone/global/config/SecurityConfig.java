@@ -47,7 +47,13 @@ public class SecurityConfig {
             .requestMatchers("/v1/auth-apple/**").permitAll()
 
             // 로컬 개발 자동 로그인 (app.dev-bootstrap-auth.enabled=true 일 때만 컨트롤러가 응답)
-            .requestMatchers(HttpMethod.POST, "/v1/auth/dev/bootstrap").permitAll()
+            .requestMatchers(
+                HttpMethod.POST,
+                "/v1/auth/dev/bootstrap",
+                "/api/v1/auth/dev/bootstrap",
+                "/v1/auth/dev/preview/bootstrap",
+                "/api/v1/auth/dev/preview/bootstrap")
+            .permitAll()
 
             // User info
             .requestMatchers("/v1/users/me").permitAll()
@@ -81,6 +87,10 @@ public class SecurityConfig {
             .requestMatchers("/v1/workspaces/*/voice/**")
             .permitAll()  // TODO: 프로덕션에서는 authenticated()로 변경
 
+            // SFU REST bridge - 모두 허용 (개발용)
+            .requestMatchers("/v1/webrtc/sfu/**", "/api/v1/webrtc/sfu/**")
+            .permitAll()  // TODO: 프로덕션에서는 authenticated()로 변경
+
             // OpenAI (개발용)
             .requestMatchers("/v1/openai/**").permitAll()  // TODO: 프로덕션에서는 authenticated()로 변경
 
@@ -101,6 +111,7 @@ public class SecurityConfig {
     configuration.setAllowedOriginPatterns(appProperties.getAllowedOrigins());
     configuration.setAllowedMethods(
         Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
+    configuration.setAllowedHeaders(Arrays.asList("*"));
     configuration.setAllowCredentials(true);
     configuration.setMaxAge(3600L);
 
