@@ -1,5 +1,6 @@
 package com.capstone.domain.voicesessionUser;
 
+import static com.capstone.global.exception.ErrorCode.ALREADY_JOINED_SESSION;
 import static com.capstone.global.exception.ErrorCode.FORBIDDEN_CLOSED_SESSION;
 import static com.capstone.global.exception.ErrorCode.FORBIDDEN_WORKSPACE_ACCESS;
 import static com.capstone.global.exception.ErrorCode.FORBIDDEN_WORKSPACE_SESSION;
@@ -7,17 +8,19 @@ import static com.capstone.global.exception.ErrorCode.NOT_FOUND_SESSION;
 import static com.capstone.global.exception.ErrorCode.NOT_FOUND_SESSION_USER;
 import static com.capstone.global.exception.ErrorCode.NOT_FOUND_WORKSPACE_USER;
 
+import com.capstone.domain.user.User;
+import com.capstone.domain.user.UserRepository;
 import com.capstone.domain.voicesession.VoiceSession;
 import com.capstone.domain.voicesession.VoiceSessionRepository;
+import com.capstone.domain.workspace.Workspace;
 import com.capstone.domain.workspaceUser.WorkspaceUser;
 import com.capstone.domain.workspaceUser.WorkspaceUserRepository;
 import com.capstone.global.exception.CustomException;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -27,44 +30,39 @@ public class VoiceSessionUserService {
   private final VoiceSessionUserRepository voiceSessionUserRepository;
   private final VoiceSessionRepository sessionRepository;
   private final WorkspaceUserRepository workspaceUserRepository;
+  private final UserRepository userRepository;
 
   /**
    * 세션 참여
    */
   @Transactional
   public VoiceSessionUser joinSession(Long workspaceId, Long sessionId, Long workspaceUserId) {
-    // 1. WorkspaceUser 조회
-    WorkspaceUser workspaceUser = workspaceUserRepository.findById(workspaceUserId)
-        .orElseThrow(() -> new CustomException(NOT_FOUND_WORKSPACE_USER));
-
-    // 2. 워크스페이스 일치 확인
-    if (!workspaceUser.getWorkspace().getWorkspaceId().equals(workspaceId)) {
-      throw new CustomException(FORBIDDEN_WORKSPACE_ACCESS);
-    }
-
-    // 3. 세션 조회
+    // 1. 세션 조회
     VoiceSession session = sessionRepository.findById(sessionId)
         .orElseThrow(() -> new CustomException(NOT_FOUND_SESSION));
 
-    // 4. 세션이 해당 워크스페이스에 속하는지 확인
+    // 2. 세션이 해당 워크스페이스에 속하는지 확인
     if (!session.getWorkspace().getWorkspaceId().equals(workspaceId)) {
       throw new CustomException(FORBIDDEN_WORKSPACE_SESSION);
     }
 
-    // 5. 세션 종료 여부 확인
+    // 3. workspaceUserId 또는 user.id로 실제 워크스페이스 사용자를 해석
+    WorkspaceUser workspaceUser = resolveWorkspaceUser(session.getWorkspace(), workspaceUserId);
+
+    // 4. 세션 종료 여부 확인
     if (session.getEndedAt() != null) {
       throw new CustomException(FORBIDDEN_CLOSED_SESSION);
     }
 
-    // 6. 이미 참여 중인지 확인
-    Optional<VoiceSessionUser> existing = voiceSessionUserRepository
-        .findBySessionIdAndWorkspaceUserIdAndLeftAtIsNull(sessionId, workspaceUserId);
+    // 5. 이미 참여 중인지 확인
+    List<VoiceSessionUser> existing = voiceSessionUserRepository
+        .findBySessionIdAndWorkspaceUserIdAndLeftAtIsNull(sessionId, workspaceUser.getId());
 
-    if (existing.isPresent()) {
-      throw new CustomException(FORBIDDEN_CLOSED_SESSION);
+    if (!existing.isEmpty()) {
+      throw new CustomException(ALREADY_JOINED_SESSION);
     }
 
-    // 7. 참여자 생성
+    // 6. 참여자 생성
     VoiceSessionUser voiceSessionUser = VoiceSessionUser.builder()
         .session(session)
         .workspaceUser(workspaceUser)
@@ -78,19 +76,36 @@ public class VoiceSessionUserService {
    */
   @Transactional
   public VoiceSessionUser leaveSession(Long workspaceId, Long sessionId, Long workspaceUserId) {
-    VoiceSessionUser voiceSessionUser = voiceSessionUserRepository
-        .findBySessionIdAndWorkspaceUserIdAndLeftAtIsNull(sessionId, workspaceUserId)
-        .orElseThrow(() -> new CustomException(NOT_FOUND_SESSION_USER));
+    VoiceSession session = sessionRepository.findById(sessionId)
+        .orElseThrow(() -> new CustomException(NOT_FOUND_SESSION));
+
+    WorkspaceUser workspaceUser = resolveWorkspaceUser(session.getWorkspace(), workspaceUserId);
+
+    List<VoiceSessionUser> activeUsers = voiceSessionUserRepository
+        .findBySessionIdAndWorkspaceUserIdAndLeftAtIsNull(sessionId, workspaceUser.getId());
+
+    if (activeUsers.isEmpty()) {
+      throw new CustomException(NOT_FOUND_SESSION_USER);
+    }
+
+    VoiceSessionUser voiceSessionUser = activeUsers.get(0);
 
     // 워크스페이스 일치 확인
     if (!voiceSessionUser.getWorkspaceUser().getWorkspace().getWorkspaceId().equals(workspaceId)) {
       throw new CustomException(FORBIDDEN_WORKSPACE_SESSION);
     }
 
-    // 퇴장 처리
-    voiceSessionUser.leave();
+    // 동일한 사용자/세션의 활성 중복 레코드가 있으면 함께 종료하여 다음 조회를 안전하게 만든다.
+    List<VoiceSessionUser> toClose = new ArrayList<>();
+    for (VoiceSessionUser candidate : activeUsers) {
+      if (candidate.isActive()) {
+        candidate.leave();
+        toClose.add(candidate);
+      }
+    }
 
-    return voiceSessionUserRepository.save(voiceSessionUser);
+    voiceSessionUserRepository.saveAll(toClose);
+    return voiceSessionUser;
   }
 
   /**
@@ -105,6 +120,23 @@ public class VoiceSessionUserService {
       // 무시
     }
     return joinSession(workspaceId, toSessionId, workspaceUserId);
+  }
+
+  private WorkspaceUser resolveWorkspaceUser(Workspace workspace, Long providedId) {
+    WorkspaceUser workspaceUser = workspaceUserRepository.findById(providedId).orElse(null);
+
+    if (workspaceUser != null) {
+      if (!workspaceUser.getWorkspace().getWorkspaceId().equals(workspace.getWorkspaceId())) {
+        throw new CustomException(FORBIDDEN_WORKSPACE_ACCESS);
+      }
+      return workspaceUser;
+    }
+
+    User user = userRepository.findById(providedId)
+        .orElseThrow(() -> new CustomException(NOT_FOUND_WORKSPACE_USER));
+
+    return workspaceUserRepository.findByWorkspaceAndUser(workspace, user)
+        .orElseThrow(() -> new CustomException(FORBIDDEN_WORKSPACE_ACCESS));
   }
 
   /**

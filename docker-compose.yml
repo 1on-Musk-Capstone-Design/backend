@@ -24,6 +24,22 @@ services:
     volumes:
       - redis-data:/data
 
+  sfu-server:
+    build:
+      context: ./sfu-server
+    container_name: capstone-sfu-server
+    ports:
+      - "${SFU_HTTP_PORT:-4000}:4000"
+      - "${SFU_WORKER_MIN_PORT:-40000}-${SFU_WORKER_MAX_PORT:-40100}:${SFU_WORKER_MIN_PORT:-40000}-${SFU_WORKER_MAX_PORT:-40100}/udp"
+    environment:
+      SFU_HTTP_HOST: ${SFU_HTTP_HOST:-0.0.0.0}
+      SFU_HTTP_PORT: 4000
+      SFU_LISTEN_IP: ${SFU_LISTEN_IP:-0.0.0.0}
+      SFU_ANNOUNCED_IP: ${SFU_ANNOUNCED_IP:-127.0.0.1}
+      SFU_WORKER_MIN_PORT: ${SFU_WORKER_MIN_PORT:-40000}
+      SFU_WORKER_MAX_PORT: ${SFU_WORKER_MAX_PORT:-40100}
+      SFU_LOG_LEVEL: ${SFU_LOG_LEVEL:-warn}
+
   api-gateway:
     build:
       context: .
@@ -104,6 +120,19 @@ services:
       GOOGLE_IOS_REDIRECT_URI: ${GOOGLE_IOS_REDIRECT_URI:-dummy-ios-redirect-uri}
       WORKSPACE_INVITE_BASE_URL: ${WORKSPACE_INVITE_BASE_URL:-http://localhost:3000/invite}
       WORKSPACE_INVITE_EXPIRE_HOURS: ${WORKSPACE_INVITE_EXPIRE_HOURS:-168}
+      APP_WEBRTC_SFU_ENABLED: ${APP_WEBRTC_SFU_ENABLED:-true}
+      APP_WEBRTC_SIGNAL_AUTH_SOFT_VALIDATION_ENABLED: ${APP_WEBRTC_SIGNAL_AUTH_SOFT_VALIDATION_ENABLED:-false}
+      APP_WEBRTC_SIGNAL_TOPIC_PREFIX: ${APP_WEBRTC_SIGNAL_TOPIC_PREFIX:-/topic/workspace}
+      APP_WEBRTC_VOICE_SESSION_SEGMENT: ${APP_WEBRTC_VOICE_SESSION_SEGMENT:-voice}
+      APP_WEBRTC_SIGNAL_SEGMENT: ${APP_WEBRTC_SIGNAL_SEGMENT:-signal}
+      APP_WEBRTC_SFU_SERVER_BASE_URL: ${APP_WEBRTC_SFU_SERVER_BASE_URL:-http://sfu-server:4000}
+      APP_WEBRTC_SFU_SERVER_HTTP_PORT: ${APP_WEBRTC_SFU_SERVER_HTTP_PORT:-4000}
+      APP_WEBRTC_SFU_SERVER_HEALTH_PATH: ${APP_WEBRTC_SFU_SERVER_HEALTH_PATH:-/health}
+      APP_WEBRTC_SFU_SERVER_ROOMS_PATH: ${APP_WEBRTC_SFU_SERVER_ROOMS_PATH:-/rooms}
+      APP_WEBRTC_SFU_SERVER_WS_PATH: ${APP_WEBRTC_SFU_SERVER_WS_PATH:-/ws}
+      APP_WEBRTC_SFU_WORKER_MIN_PORT: ${APP_WEBRTC_SFU_WORKER_MIN_PORT:-40000}
+      APP_WEBRTC_SFU_WORKER_MAX_PORT: ${APP_WEBRTC_SFU_WORKER_MAX_PORT:-40100}
+      APP_WEBRTC_SFU_LOG_LEVEL: ${APP_WEBRTC_SFU_LOG_LEVEL:-warn}
     volumes:
       - capstone-files:/var/lib/capstone
     depends_on:
@@ -176,6 +205,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      sfu-server:
+        condition: service_started
 
   prototype-service:
     build:

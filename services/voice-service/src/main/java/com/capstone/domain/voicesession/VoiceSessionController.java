@@ -1,5 +1,7 @@
 package com.capstone.domain.voicesession;
 
+import com.capstone.global.service.SfuServerClientService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -8,13 +10,17 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/v1/workspaces/{workspaceId}/voice")
-@CrossOrigin(origins = {"http://localhost:3000", "http://127.0.0.1:3000"})
+@CrossOrigin(originPatterns = "*")
+@Slf4j
 public class VoiceSessionController {
 
   private final VoiceSessionService service;
+  private final SfuServerClientService sfuServerClientService;
 
-  public VoiceSessionController(VoiceSessionService service) {
+  public VoiceSessionController(VoiceSessionService service,
+      SfuServerClientService sfuServerClientService) {
     this.service = service;
+    this.sfuServerClientService = sfuServerClientService;
   }
 
   @PostMapping
@@ -37,6 +43,7 @@ public class VoiceSessionController {
         .equals(workspaceId)) {
       return ResponseEntity.badRequest().build();
     }
+    closeSfuRoom(workspaceId, sessionId);
     return ResponseEntity.ok(VoiceSessionDto.from(session));
   }
 
@@ -47,5 +54,22 @@ public class VoiceSessionController {
         .map(VoiceSessionDto::from)
         .toList();
     return ResponseEntity.ok(list);
+  }
+
+  private void closeSfuRoom(Long workspaceId, Long sessionId) {
+    if (!sfuServerClientService.isEnabled()) {
+      return;
+    }
+
+    try {
+      sfuServerClientService.closeRoom(workspaceId, sessionId);
+    } catch (Exception e) {
+      log.warn(
+          "SFU room cleanup failed: workspaceId={}, sessionId={}, error={}",
+          workspaceId,
+          sessionId,
+          e.getMessage()
+      );
+    }
   }
 }

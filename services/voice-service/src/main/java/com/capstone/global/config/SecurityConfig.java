@@ -81,6 +81,10 @@ public class SecurityConfig {
             .requestMatchers("/v1/workspaces/*/voice/**")
             .permitAll()  // TODO: 프로덕션에서는 authenticated()로 변경
 
+            // WebRTC SFU control API - voice-service가 SFU 서버를 프록시
+            .requestMatchers("/v1/webrtc/sfu/**")
+            .permitAll()  // TODO: 프로덕션에서는 authenticated()로 변경
+
             // OpenAI (개발용)
             .requestMatchers("/v1/openai/**").permitAll()  // TODO: 프로덕션에서는 authenticated()로 변경
 

@@ -6,7 +6,6 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.Optional;
 
 @Repository
 public interface VoiceSessionUserRepository extends JpaRepository<VoiceSessionUser, Long> {
@@ -24,7 +23,7 @@ public interface VoiceSessionUserRepository extends JpaRepository<VoiceSessionUs
   /**
    * 사용자가 특정 세션에 활성 참여 중인지 확인
    */
-  Optional<VoiceSessionUser> findBySessionIdAndWorkspaceUserIdAndLeftAtIsNull(Long sessionId,
+  List<VoiceSessionUser> findBySessionIdAndWorkspaceUserIdAndLeftAtIsNull(Long sessionId,
       Long workspaceUserId);
 
   /**

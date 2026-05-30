@@ -52,7 +52,7 @@ spring:
         - id: voice-service
           uri: ${VOICE_SERVICE_URI:http://localhost:8085}
           predicates:
-            - Path=/api/v1/workspaces/*/voice/**
+            - Path=/api/v1/workspaces/*/voice/**,/api/v1/webrtc/sfu/**
 
         - id: prototype-service
           uri: ${PROTOTYPE_SERVICE_URI:http://localhost:8086}
