@@ -48,6 +48,8 @@ spring:
           uri: ${AUTH_SERVICE_URI:http://localhost:8081}
           predicates:
             - Path=/api/v1/auth-google/**,/api/v1/auth-apple/**,/api/v1/auth/dev/**,/api/v1/users/**
+          filters:
+            - StripPrefix=1
 
         - id: voice-service
           uri: ${VOICE_SERVICE_URI:http://localhost:8085}
