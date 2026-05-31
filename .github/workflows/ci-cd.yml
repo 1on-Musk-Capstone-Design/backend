@@ -94,7 +94,7 @@ jobs:
     name: Deploy to AWS
     needs: build-and-test
     runs-on: ubuntu-latest
-    if: always() && (needs.build-and-test.result == 'success' || needs.build-and-test.result == 'failure') && (github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/feature/aws-sync')))
+    if: always() && (needs.build-and-test.result == 'success' || needs.build-and-test.result == 'failure') && (github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/feature/aws-sync' || github.ref == 'refs/heads/feat/msa-backend-split')))
 
     steps:
       - name: Download deployment bundle
