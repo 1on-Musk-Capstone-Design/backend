@@ -6,6 +6,7 @@ on:
       - develop
       - main
       - feature/aws-sync
+      - feat/msa-backend-split
   pull_request:
     branches:
       - develop
