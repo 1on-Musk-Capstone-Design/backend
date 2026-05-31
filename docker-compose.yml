@@ -61,7 +61,6 @@ services:
       APP_ALLOWED_ORIGINS_1: ${APP_ALLOWED_ORIGINS_1:-http://127.0.0.1:*}
       APP_ALLOWED_ORIGINS_2: ${APP_ALLOWED_ORIGINS_2:-https://on-it.kro.kr}
       APP_ALLOWED_ORIGINS_3: ${APP_ALLOWED_ORIGINS_3:-https://on-it.kro.kr}
-      APP_ALLOWED_ORIGINS_4: ${APP_ALLOWED_ORIGINS_4:-https://on-it.kro.kr:*}
     depends_on:
       - auth-service
       - workspace-service
@@ -94,7 +93,6 @@ services:
       APP_ALLOWED_ORIGINS_0: ${APP_ALLOWED_ORIGINS_0:-http://localhost:*}
       APP_ALLOWED_ORIGINS_1: ${APP_ALLOWED_ORIGINS_1:-http://127.0.0.1:*}
       APP_ALLOWED_ORIGINS_3: ${APP_ALLOWED_ORIGINS_3:-https://on-it.kro.kr}
-      APP_ALLOWED_ORIGINS_4: ${APP_ALLOWED_ORIGINS_4:-https://on-it.kro.kr:*}
       APP_DEFAULT_REDIRECT_URI: ${APP_DEFAULT_REDIRECT_URI:-http://localhost:3000/auth/callback}
       APP_OAUTH_REDIRECT_LOCALHOST: ${APP_OAUTH_REDIRECT_LOCALHOST:-http://localhost:3000/auth/callback}
       APP_OAUTH_REDIRECT_LOOPBACK: ${APP_OAUTH_REDIRECT_LOOPBACK:-http://localhost:3000/auth/callback}
