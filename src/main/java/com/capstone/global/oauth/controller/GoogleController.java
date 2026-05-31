@@ -89,7 +89,7 @@ public class GoogleController {
 
     String scope = "openid email profile";
 
-    String loginUri = UriComponentsBuilder.fromHttpUrl(loginUriBase)
+    String loginUri = UriComponentsBuilder.fromUriString(loginUriBase)
         .queryParam("client_id", selectedClientId)
         .queryParam("redirect_uri", dynamicRedirectUri)
         .queryParam("response_type", "code")
