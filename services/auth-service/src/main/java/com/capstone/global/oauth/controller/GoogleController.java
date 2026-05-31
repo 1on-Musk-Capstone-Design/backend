@@ -108,12 +108,13 @@ public class GoogleController {
 
     String scope = "openid email profile";
 
-    String loginUri = UriComponentsBuilder.fromHttpUrl(loginUriBase)
-        .queryParam("client_id", selectedClientId)
-        .queryParam("redirect_uri", dynamicRedirectUri)
-        .queryParam("response_type", "code")
-        .queryParam("scope", scope)
+    String loginUri = UriComponentsBuilder.fromUriString(loginUriBase)
+        .replaceQueryParam("client_id", selectedClientId)
+        .replaceQueryParam("redirect_uri", dynamicRedirectUri)
+        .replaceQueryParam("response_type", "code")
+        .replaceQueryParam("scope", scope)
         .build()
+        .encode()
         .toUriString();
 
     log.info("생성된 최종 Login URI: {}", loginUri);
