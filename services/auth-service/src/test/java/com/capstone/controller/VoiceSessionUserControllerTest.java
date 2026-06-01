@@ -1,16 +1,22 @@
 package com.capstone.controller;
 
 import com.capstone.domain.user.User;
+import com.capstone.domain.user.UserService;
 import com.capstone.domain.voicesessionUser.VoiceSessionUser;
 import com.capstone.domain.voicesessionUser.VoiceSessionUserController;
 import com.capstone.domain.voicesessionUser.VoiceSessionUserService;
 import com.capstone.domain.voicesession.VoiceSession;
 import com.capstone.domain.workspaceUser.WorkspaceUser;
 import com.capstone.domain.workspace.Workspace;
+import com.capstone.global.config.AppProperties;
+import com.capstone.global.oauth.JwtProvider;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.data.jpa.JpaRepositoriesAutoConfiguration;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
+import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
@@ -29,7 +35,14 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(VoiceSessionUserController.class)
+@WebMvcTest(
+    controllers = VoiceSessionUserController.class,
+    excludeAutoConfiguration = {
+        DataSourceAutoConfiguration.class,
+        HibernateJpaAutoConfiguration.class,
+        JpaRepositoriesAutoConfiguration.class
+    }
+)
 @WithMockUser
 public class VoiceSessionUserControllerTest {
 
@@ -42,6 +55,12 @@ public class VoiceSessionUserControllerTest {
 
   @MockBean
   private VoiceSessionUserService voiceSessionUserService;
+  @MockBean
+  private UserService userService;
+  @MockBean
+  private JwtProvider jwtProvider;
+  @MockBean
+  private AppProperties appProperties;
 
   @Nested
   @DisplayName("세션 참여 테스트")
@@ -53,11 +72,13 @@ public class VoiceSessionUserControllerTest {
       VoiceSessionUser joined = createVoiceSessionUser(SESSION_ID, USER_ID, "홍길동", 1L);
       when(voiceSessionUserService.joinSession(WORKSPACE_ID, SESSION_ID, USER_ID)).thenReturn(
           joined);
+      when(jwtProvider.getUserIdFromAccessToken("test-token")).thenReturn(USER_ID);
 
       String requestBody = "{\"workspaceUserId\": " + USER_ID + "}";
 
       mockMvc.perform(
               post("/v1/workspaces/{workspaceId}/voice/{sessionId}/users", WORKSPACE_ID, SESSION_ID)
+                  .header("Authorization", "Bearer test-token")
                   .contentType(MediaType.APPLICATION_JSON)
                   .content(requestBody)
                   .with(csrf()))
@@ -92,10 +113,12 @@ public class VoiceSessionUserControllerTest {
       left.leave();
       when(voiceSessionUserService.leaveSession(WORKSPACE_ID, SESSION_ID, USER_ID)).thenReturn(
           left);
+      when(jwtProvider.getUserIdFromAccessToken("test-token")).thenReturn(USER_ID);
 
       mockMvc.perform(
               delete("/v1/workspaces/{workspaceId}/voice/{sessionId}/users/{userId}", WORKSPACE_ID,
                   SESSION_ID, USER_ID)
+                  .header("Authorization", "Bearer test-token")
                   .with(csrf()))
           .andDo(print())
           .andExpect(status().isOk())
@@ -114,6 +137,7 @@ public class VoiceSessionUserControllerTest {
       VoiceSessionUser moved = createVoiceSessionUser(toSessionId, USER_ID, "홍길동", 1L);
       when(voiceSessionUserService.moveToSession(eq(WORKSPACE_ID), eq(SESSION_ID), eq(toSessionId),
           eq(USER_ID))).thenReturn(moved);
+      when(jwtProvider.getUserIdFromAccessToken("test-token")).thenReturn(USER_ID);
 
       String requestBody = "{\"workspaceUserId\": " + USER_ID + "}";
 
@@ -122,6 +146,7 @@ public class VoiceSessionUserControllerTest {
                   SESSION_ID)
                   .param("fromSessionId", SESSION_ID.toString())
                   .param("toSessionId", toSessionId.toString())
+                  .header("Authorization", "Bearer test-token")
                   .contentType(MediaType.APPLICATION_JSON)
                   .content(requestBody)
                   .with(csrf()))

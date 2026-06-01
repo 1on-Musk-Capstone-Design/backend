@@ -69,6 +69,7 @@ public class WorkspaceUserService {
     return workspaceUserRepository.findByWorkspace(workspace).stream()
         .map(user -> WorkspaceUserResponse.builder()
             .id(user.getUser().getId())
+            .workspaceUserId(user.getId())
             .email(user.getUser().getEmail())
             .name(user.getUser().getName())
             .profileImage(user.getUser().getProfileImage())

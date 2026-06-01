@@ -1,6 +1,7 @@
 package com.capstone.service;
 
 import com.capstone.domain.user.User;
+import com.capstone.domain.user.UserRepository;
 import com.capstone.domain.voicesession.VoiceSession;
 import com.capstone.domain.voicesession.VoiceSessionRepository;
 import com.capstone.domain.voicesessionUser.VoiceSessionUser;
@@ -39,6 +40,8 @@ class VoiceSessionUserServiceTest {
   private VoiceSessionRepository sessionRepository;
   @Mock
   private WorkspaceUserRepository workspaceUserRepository;
+  @Mock
+  private UserRepository userRepository;
 
   @InjectMocks
   private VoiceSessionUserService service;
@@ -47,21 +50,21 @@ class VoiceSessionUserServiceTest {
   @DisplayName("세션 참여 성공")
   void joinSession_success() {
     // Given
-    Long workspaceId = 1L, sessionId = 10L, workspaceUserId = 100L;
+    Long workspaceId = 1L, sessionId = 10L, userId = 100L, workspaceUserId = 200L;
     VoiceSession session = createSession(workspaceId, sessionId);
-    WorkspaceUser workspaceUser = createWorkspaceUser(workspaceUserId, workspaceId, "홍길동");
+    WorkspaceUser workspaceUser = createWorkspaceUser(workspaceUserId, userId, workspaceId, "홍길동");
     VoiceSessionUser expected = createVoiceSessionUser(session, workspaceUser, 1L);
 
     when(sessionRepository.findById(sessionId)).thenReturn(Optional.of(session));
-    when(workspaceUserRepository.findById(workspaceUserId)).thenReturn(Optional.of(workspaceUser));
-    when(workspaceUserRepository.existsByWorkspaceAndUser(workspaceUser.getWorkspace(),
-        workspaceUser.getUser())).thenReturn(true);
+    when(userRepository.findById(userId)).thenReturn(Optional.of(workspaceUser.getUser()));
+    when(workspaceUserRepository.findByWorkspace_WorkspaceIdAndUser_Id(workspaceId, userId))
+        .thenReturn(Optional.of(workspaceUser));
     when(voiceSessionUserRepository.findBySessionIdAndWorkspaceUserIdAndLeftAtIsNull(sessionId,
         workspaceUserId)).thenReturn(Optional.empty());
     when(voiceSessionUserRepository.save(any(VoiceSessionUser.class))).thenReturn(expected);
 
     // When
-    VoiceSessionUser result = service.joinSession(workspaceId, sessionId, workspaceUserId);
+    VoiceSessionUser result = service.joinSession(workspaceId, sessionId, userId);
 
     // Then
     assertThat(result.getSession().getId()).isEqualTo(sessionId);
@@ -73,20 +76,20 @@ class VoiceSessionUserServiceTest {
   @DisplayName("이미 참여 중인 경우 예외")
   void joinSession_alreadyJoined_throwsException() {
     // Given
-    Long workspaceId = 1L, sessionId = 10L, workspaceUserId = 100L;
+    Long workspaceId = 1L, sessionId = 10L, userId = 100L, workspaceUserId = 200L;
     VoiceSession session = createSession(workspaceId, sessionId);
-    WorkspaceUser workspaceUser = createWorkspaceUser(workspaceUserId, workspaceId, "홍길동");
+    WorkspaceUser workspaceUser = createWorkspaceUser(workspaceUserId, userId, workspaceId, "홍길동");
     VoiceSessionUser existing = createVoiceSessionUser(session, workspaceUser, 1L);
 
     when(sessionRepository.findById(sessionId)).thenReturn(Optional.of(session));
-    when(workspaceUserRepository.findById(workspaceUserId)).thenReturn(Optional.of(workspaceUser));
-    when(workspaceUserRepository.existsByWorkspaceAndUser(workspaceUser.getWorkspace(),
-        workspaceUser.getUser())).thenReturn(true);
+    when(userRepository.findById(userId)).thenReturn(Optional.of(workspaceUser.getUser()));
+    when(workspaceUserRepository.findByWorkspace_WorkspaceIdAndUser_Id(workspaceId, userId))
+        .thenReturn(Optional.of(workspaceUser));
     when(voiceSessionUserRepository.findBySessionIdAndWorkspaceUserIdAndLeftAtIsNull(sessionId,
         workspaceUserId)).thenReturn(Optional.of(existing));
 
     // When & Then
-    assertThatThrownBy(() -> service.joinSession(workspaceId, sessionId, workspaceUserId))
+    assertThatThrownBy(() -> service.joinSession(workspaceId, sessionId, userId))
         .isInstanceOf(com.capstone.global.exception.CustomException.class);
   }
 
@@ -94,10 +97,10 @@ class VoiceSessionUserServiceTest {
   @DisplayName("세션 이동 성공")
   void moveToSession_success() {
     // Given
-    Long workspaceId = 1L, fromSessionId = 10L, toSessionId = 20L, workspaceUserId = 100L;
+    Long workspaceId = 1L, fromSessionId = 10L, toSessionId = 20L, userId = 100L, workspaceUserId = 200L;
     VoiceSession fromSession = createSession(workspaceId, fromSessionId);
     VoiceSession toSession = createSession(workspaceId, toSessionId);
-    WorkspaceUser workspaceUser = createWorkspaceUser(workspaceUserId, workspaceId, "홍길동");
+    WorkspaceUser workspaceUser = createWorkspaceUser(workspaceUserId, userId, workspaceId, "홍길동");
     VoiceSessionUser existing = createVoiceSessionUser(fromSession, workspaceUser, 1L);
 
     VoiceSessionUser moved = VoiceSessionUser.builder()
@@ -108,9 +111,9 @@ class VoiceSessionUserServiceTest {
 
     when(sessionRepository.findById(fromSessionId)).thenReturn(Optional.of(fromSession));
     when(sessionRepository.findById(toSessionId)).thenReturn(Optional.of(toSession));
-    when(workspaceUserRepository.findById(workspaceUserId)).thenReturn(Optional.of(workspaceUser));
-    when(workspaceUserRepository.existsByWorkspaceAndUser(any(Workspace.class),
-        any(User.class))).thenReturn(true);
+    when(userRepository.findById(userId)).thenReturn(Optional.of(workspaceUser.getUser()));
+    when(workspaceUserRepository.findByWorkspace_WorkspaceIdAndUser_Id(workspaceId, userId))
+        .thenReturn(Optional.of(workspaceUser));
     when(voiceSessionUserRepository.findBySessionIdAndWorkspaceUserIdAndLeftAtIsNull(fromSessionId,
         workspaceUserId)).thenReturn(Optional.of(existing));
     when(voiceSessionUserRepository.findBySessionIdAndWorkspaceUserIdAndLeftAtIsNull(toSessionId,
@@ -119,7 +122,7 @@ class VoiceSessionUserServiceTest {
 
     // When
     VoiceSessionUser result = service.moveToSession(workspaceId, fromSessionId, toSessionId,
-        workspaceUserId);
+        userId);
 
     // Then
     assertThat(result.getSession().getId()).isEqualTo(toSessionId);
@@ -131,8 +134,8 @@ class VoiceSessionUserServiceTest {
   void getActiveUsers_success() {
     // Given
     Long workspaceId = 1L, sessionId = 10L;
-    WorkspaceUser wsUser1 = createWorkspaceUser(100L, workspaceId, "홍길동");
-    WorkspaceUser wsUser2 = createWorkspaceUser(101L, workspaceId, "김철수");
+    WorkspaceUser wsUser1 = createWorkspaceUser(100L, 10L, workspaceId, "홍길동");
+    WorkspaceUser wsUser2 = createWorkspaceUser(101L, 11L, workspaceId, "김철수");
     VoiceSession session = createSession(workspaceId, sessionId);
     List<VoiceSessionUser> activeUsers = Arrays.asList(
         createVoiceSessionUser(session, wsUser1, 1L),
@@ -180,13 +183,13 @@ class VoiceSessionUserServiceTest {
     return session;
   }
 
-  private WorkspaceUser createWorkspaceUser(Long workspaceUserId, Long workspaceId,
+  private WorkspaceUser createWorkspaceUser(Long workspaceUserId, Long userId, Long workspaceId,
       String userName) {
     Workspace workspace = new Workspace();
     workspace.setWorkspaceId(workspaceId);
 
     User user = User.builder()
-        .id(workspaceUserId)
+        .id(userId)
         .name(userName)
         .build();
 
