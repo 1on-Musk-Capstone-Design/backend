@@ -10,8 +10,6 @@ import static com.capstone.global.exception.ErrorCode.NOT_FOUND_WORKSPACE_USER;
 
 import com.capstone.domain.voicesession.VoiceSession;
 import com.capstone.domain.voicesession.VoiceSessionRepository;
-import com.capstone.domain.user.User;
-import com.capstone.domain.user.UserRepository;
 import com.capstone.domain.workspaceUser.WorkspaceUser;
 import com.capstone.domain.workspaceUser.WorkspaceUserRepository;
 import com.capstone.global.exception.CustomException;
@@ -30,7 +28,6 @@ public class VoiceSessionUserService {
   private final VoiceSessionUserRepository voiceSessionUserRepository;
   private final VoiceSessionRepository sessionRepository;
   private final WorkspaceUserRepository workspaceUserRepository;
-  private final UserRepository userRepository;
 
   /**
    * 세션 참여
@@ -46,7 +43,7 @@ public class VoiceSessionUserService {
       throw new CustomException(FORBIDDEN_WORKSPACE_SESSION);
     }
 
-    // 3. workspaceUserId 또는 user.id로 실제 워크스페이스 사용자를 해석
+    // 3. workspaceUserId로 실제 워크스페이스 사용자를 해석
     WorkspaceUser workspaceUser = resolveWorkspaceUser(session.getWorkspace(), workspaceUserId);
 
     // 4. 세션 종료 여부 확인
@@ -125,20 +122,13 @@ public class VoiceSessionUserService {
 
   private WorkspaceUser resolveWorkspaceUser(com.capstone.domain.workspace.Workspace workspace, Long providedId) {
     WorkspaceUser workspaceUser = workspaceUserRepository.findById(providedId)
-        .orElse(null);
-
-    if (workspaceUser != null) {
-      if (!workspaceUser.getWorkspace().getWorkspaceId().equals(workspace.getWorkspaceId())) {
-        throw new CustomException(FORBIDDEN_WORKSPACE_ACCESS);
-      }
-      return workspaceUser;
-    }
-
-    User user = userRepository.findById(providedId)
         .orElseThrow(() -> new CustomException(NOT_FOUND_WORKSPACE_USER));
 
-    return workspaceUserRepository.findByWorkspaceAndUser(workspace, user)
-        .orElseThrow(() -> new CustomException(FORBIDDEN_WORKSPACE_ACCESS));
+    if (!workspaceUser.getWorkspace().getWorkspaceId().equals(workspace.getWorkspaceId())) {
+      throw new CustomException(FORBIDDEN_WORKSPACE_ACCESS);
+    }
+
+    return workspaceUser;
   }
 
   /**
