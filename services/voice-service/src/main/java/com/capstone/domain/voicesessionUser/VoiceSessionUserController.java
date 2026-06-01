@@ -1,5 +1,6 @@
 package com.capstone.domain.voicesessionUser;
 
+import com.capstone.global.oauth.JwtProvider;
 import com.capstone.global.service.SfuServerClientService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,18 +21,20 @@ public class VoiceSessionUserController {
 
   private final VoiceSessionUserService service;
   private final SfuServerClientService sfuServerClientService;
+  private final JwtProvider jwtProvider;
 
   @PostMapping
   public ResponseEntity<VoiceSessionUserResponse> joinSession(
       @PathVariable Long workspaceId,
       @PathVariable Long sessionId,
+      @RequestHeader(value = "Authorization", required = false) String token,
       @Valid @RequestBody VoiceSessionUserRequest request
   ) {
-    if (request.getWorkspaceUserId() == null) {
+    Long userId = resolveUserId(token, request.getWorkspaceUserId());
+    if (userId == null) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "사용자 ID는 필수입니다.");
     }
-    VoiceSessionUser user = service.joinSession(workspaceId, sessionId,
-        request.getWorkspaceUserId());
+    VoiceSessionUser user = service.joinSession(workspaceId, sessionId, userId);
     return ResponseEntity.status(HttpStatus.CREATED).body(VoiceSessionUserResponse.from(user));
   }
 
@@ -39,10 +42,15 @@ public class VoiceSessionUserController {
   public ResponseEntity<VoiceSessionUserResponse> leaveSession(
       @PathVariable Long workspaceId,
       @PathVariable Long sessionId,
+      @RequestHeader(value = "Authorization", required = false) String token,
       @PathVariable Long workspaceUserId
   ) {
-    VoiceSessionUser user = service.leaveSession(workspaceId, sessionId, workspaceUserId);
-    closeSfuPeer(workspaceId, sessionId, workspaceUserId);
+    Long userId = resolveUserId(token, workspaceUserId);
+    if (userId == null) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "사용자 ID는 필수입니다.");
+    }
+    VoiceSessionUser user = service.leaveSession(workspaceId, sessionId, userId);
+    closeSfuPeer(workspaceId, sessionId, user.getWorkspaceUser().getId());
     return ResponseEntity.ok(VoiceSessionUserResponse.from(user));
   }
 
@@ -51,13 +59,14 @@ public class VoiceSessionUserController {
       @PathVariable Long workspaceId,
       @RequestParam Long fromSessionId,
       @RequestParam Long toSessionId,
+      @RequestHeader(value = "Authorization", required = false) String token,
       @Valid @RequestBody VoiceSessionUserRequest request
   ) {
-    if (request.getWorkspaceUserId() == null) {
+    Long userId = resolveUserId(token, request.getWorkspaceUserId());
+    if (userId == null) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "사용자 ID는 필수입니다.");
     }
-    VoiceSessionUser user = service.moveToSession(workspaceId, fromSessionId, toSessionId,
-        request.getWorkspaceUserId());
+    VoiceSessionUser user = service.moveToSession(workspaceId, fromSessionId, toSessionId, userId);
     return ResponseEntity.ok(VoiceSessionUserResponse.from(user));
   }
 
@@ -108,5 +117,13 @@ public class VoiceSessionUserController {
           e.getMessage()
       );
     }
+  }
+
+  private Long resolveUserId(String token, Long fallbackId) {
+    if (token != null && !token.trim().isEmpty()) {
+      String jwt = token.replace("Bearer ", "").trim();
+      return jwtProvider.getUserIdFromAccessToken(jwt);
+    }
+    return fallbackId;
   }
 }
