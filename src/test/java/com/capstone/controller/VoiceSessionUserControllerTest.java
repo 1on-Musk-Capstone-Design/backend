@@ -7,6 +7,8 @@ import com.capstone.domain.voicesessionUser.VoiceSessionUserService;
 import com.capstone.domain.voicesession.VoiceSession;
 import com.capstone.domain.workspaceUser.WorkspaceUser;
 import com.capstone.domain.workspace.Workspace;
+import com.capstone.global.oauth.JwtProvider;
+import com.capstone.global.service.SfuServerClientService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -42,6 +44,10 @@ public class VoiceSessionUserControllerTest {
 
   @MockBean
   private VoiceSessionUserService voiceSessionUserService;
+  @MockBean
+  private JwtProvider jwtProvider;
+  @MockBean
+  private SfuServerClientService sfuServerClientService;
 
   @Nested
   @DisplayName("세션 참여 테스트")
@@ -51,6 +57,7 @@ public class VoiceSessionUserControllerTest {
     @DisplayName("세션 참여 성공")
     void joinSession_created() throws Exception {
       VoiceSessionUser joined = createVoiceSessionUser(SESSION_ID, USER_ID, "홍길동", 1L);
+      when(jwtProvider.getUserIdFromAccessToken("test-token")).thenReturn(USER_ID);
       when(voiceSessionUserService.joinSession(WORKSPACE_ID, SESSION_ID, USER_ID)).thenReturn(
           joined);
 
@@ -58,6 +65,7 @@ public class VoiceSessionUserControllerTest {
 
       mockMvc.perform(
               post("/v1/workspaces/{workspaceId}/voice/{sessionId}/users", WORKSPACE_ID, SESSION_ID)
+                  .header("Authorization", "Bearer test-token")
                   .contentType(MediaType.APPLICATION_JSON)
                   .content(requestBody)
                   .with(csrf()))
@@ -90,12 +98,14 @@ public class VoiceSessionUserControllerTest {
     void leaveSession_ok() throws Exception {
       VoiceSessionUser left = createVoiceSessionUser(SESSION_ID, USER_ID, "홍길동", 1L);
       left.leave();
+      when(jwtProvider.getUserIdFromAccessToken("test-token")).thenReturn(USER_ID);
       when(voiceSessionUserService.leaveSession(WORKSPACE_ID, SESSION_ID, USER_ID)).thenReturn(
           left);
 
       mockMvc.perform(
               delete("/v1/workspaces/{workspaceId}/voice/{sessionId}/users/{userId}", WORKSPACE_ID,
                   SESSION_ID, USER_ID)
+                  .header("Authorization", "Bearer test-token")
                   .with(csrf()))
           .andDo(print())
           .andExpect(status().isOk())
@@ -112,6 +122,7 @@ public class VoiceSessionUserControllerTest {
     void moveToSession_ok() throws Exception {
       Long toSessionId = 20L;
       VoiceSessionUser moved = createVoiceSessionUser(toSessionId, USER_ID, "홍길동", 1L);
+      when(jwtProvider.getUserIdFromAccessToken("test-token")).thenReturn(USER_ID);
       when(voiceSessionUserService.moveToSession(eq(WORKSPACE_ID), eq(SESSION_ID), eq(toSessionId),
           eq(USER_ID))).thenReturn(moved);
 
@@ -122,6 +133,7 @@ public class VoiceSessionUserControllerTest {
                   SESSION_ID)
                   .param("fromSessionId", SESSION_ID.toString())
                   .param("toSessionId", toSessionId.toString())
+                  .header("Authorization", "Bearer test-token")
                   .contentType(MediaType.APPLICATION_JSON)
                   .content(requestBody)
                   .with(csrf()))
