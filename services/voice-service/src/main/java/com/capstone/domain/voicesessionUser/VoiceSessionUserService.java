@@ -6,7 +6,7 @@ import static com.capstone.global.exception.ErrorCode.FORBIDDEN_WORKSPACE_ACCESS
 import static com.capstone.global.exception.ErrorCode.FORBIDDEN_WORKSPACE_SESSION;
 import static com.capstone.global.exception.ErrorCode.NOT_FOUND_SESSION;
 import static com.capstone.global.exception.ErrorCode.NOT_FOUND_SESSION_USER;
-import static com.capstone.global.exception.ErrorCode.NOT_FOUND_WORKSPACE_USER;
+import static com.capstone.global.exception.ErrorCode.NOT_FOUND_USER;
 
 import com.capstone.domain.user.User;
 import com.capstone.domain.user.UserRepository;
@@ -36,7 +36,7 @@ public class VoiceSessionUserService {
    * 세션 참여
    */
   @Transactional
-  public VoiceSessionUser joinSession(Long workspaceId, Long sessionId, Long workspaceUserId) {
+  public VoiceSessionUser joinSession(Long workspaceId, Long sessionId, Long userId) {
     // 1. 세션 조회
     VoiceSession session = sessionRepository.findById(sessionId)
         .orElseThrow(() -> new CustomException(NOT_FOUND_SESSION));
@@ -46,8 +46,8 @@ public class VoiceSessionUserService {
       throw new CustomException(FORBIDDEN_WORKSPACE_SESSION);
     }
 
-    // 3. workspaceUserId 또는 user.id로 실제 워크스페이스 사용자를 해석
-    WorkspaceUser workspaceUser = resolveWorkspaceUser(session.getWorkspace(), workspaceUserId);
+    // 3. JWT의 userId 기준으로 실제 워크스페이스 사용자를 해석
+    WorkspaceUser workspaceUser = resolveWorkspaceUser(session.getWorkspace(), userId);
 
     // 4. 세션 종료 여부 확인
     if (session.getEndedAt() != null) {
@@ -75,11 +75,11 @@ public class VoiceSessionUserService {
    * 세션 퇴장
    */
   @Transactional
-  public VoiceSessionUser leaveSession(Long workspaceId, Long sessionId, Long workspaceUserId) {
+  public VoiceSessionUser leaveSession(Long workspaceId, Long sessionId, Long userId) {
     VoiceSession session = sessionRepository.findById(sessionId)
         .orElseThrow(() -> new CustomException(NOT_FOUND_SESSION));
 
-    WorkspaceUser workspaceUser = resolveWorkspaceUser(session.getWorkspace(), workspaceUserId);
+    WorkspaceUser workspaceUser = resolveWorkspaceUser(session.getWorkspace(), userId);
 
     List<VoiceSessionUser> activeUsers = voiceSessionUserRepository
         .findBySessionIdAndWorkspaceUserIdAndLeftAtIsNull(sessionId, workspaceUser.getId());
@@ -113,27 +113,18 @@ public class VoiceSessionUserService {
    */
   @Transactional
   public VoiceSessionUser moveToSession(Long workspaceId, Long fromSessionId, Long toSessionId,
-      Long workspaceUserId) {
+      Long userId) {
     try {
-      leaveSession(workspaceId, fromSessionId, workspaceUserId);
+      leaveSession(workspaceId, fromSessionId, userId);
     } catch (IllegalArgumentException e) {
       // 무시
     }
-    return joinSession(workspaceId, toSessionId, workspaceUserId);
+    return joinSession(workspaceId, toSessionId, userId);
   }
 
-  private WorkspaceUser resolveWorkspaceUser(Workspace workspace, Long providedId) {
-    WorkspaceUser workspaceUser = workspaceUserRepository.findById(providedId).orElse(null);
-
-    if (workspaceUser != null) {
-      if (!workspaceUser.getWorkspace().getWorkspaceId().equals(workspace.getWorkspaceId())) {
-        throw new CustomException(FORBIDDEN_WORKSPACE_ACCESS);
-      }
-      return workspaceUser;
-    }
-
-    User user = userRepository.findById(providedId)
-        .orElseThrow(() -> new CustomException(NOT_FOUND_WORKSPACE_USER));
+  private WorkspaceUser resolveWorkspaceUser(Workspace workspace, Long userId) {
+    User user = userRepository.findById(userId)
+        .orElseThrow(() -> new CustomException(NOT_FOUND_USER));
 
     return workspaceUserRepository.findByWorkspaceAndUser(workspace, user)
         .orElseThrow(() -> new CustomException(FORBIDDEN_WORKSPACE_ACCESS));

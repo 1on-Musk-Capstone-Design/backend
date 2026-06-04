@@ -1,4 +1,4 @@
-# 현재 EC2 호스트 54.91.62.109 기준 coturn 예시 설정입니다.
+# 현재 EC2 호스트 43.201.225.38 기준 coturn 예시 설정입니다.
 # EC2 인스턴스에서 turnserver.conf로 복사한 뒤 필요하면 인증 정보를 바꿔서 사용합니다.
 
 listening-port=3478
@@ -6,12 +6,12 @@ tls-listening-port=5349
 fingerprint
 lt-cred-mech
 
-realm=54.91.62.109
-server-name=54.91.62.109
+realm=43.201.225.38
+server-name=43.201.225.38
 user=turnuser:turnpass123
 
 # 이 EC2 인스턴스는 공인 IP를 직접 노출하므로 단일 주소만 사용해도 됩니다.
-external-ip=54.91.62.109
+external-ip=43.201.225.38
 
 min-port=49160
 max-port=49200
