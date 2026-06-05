@@ -4,7 +4,7 @@
 
 - Apple Store 앱 출시
 - Notion : https://www.notion.so/ONit-26d3bde5a26c80549c57e65470e8a1ce?source=copy_link
-- 캡스톤디자인 작품 발표회 우승상
+- 캡스톤디자인 작품 발표회 우수상
   
 <img width="350" height="500" alt="1론머스크(우수상)" src="https://github.com/user-attachments/assets/224e5ddf-1325-45bb-b32c-fad8b2e20527" />
 
