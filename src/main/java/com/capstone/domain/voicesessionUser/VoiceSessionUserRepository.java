@@ -24,7 +24,7 @@ public interface VoiceSessionUserRepository extends JpaRepository<VoiceSessionUs
   /**
    * 사용자가 특정 세션에 활성 참여 중인지 확인
    */
-  Optional<VoiceSessionUser> findBySessionIdAndWorkspaceUserIdAndLeftAtIsNull(Long sessionId,
+    List<VoiceSessionUser> findBySessionIdAndWorkspaceUserIdAndLeftAtIsNull(Long sessionId,
       Long workspaceUserId);
 
   /**

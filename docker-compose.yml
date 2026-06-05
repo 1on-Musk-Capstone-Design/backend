@@ -1,0 +1,249 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: capstone-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-capstone_db}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-capstone_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7
+    container_name: capstone-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+
+  sfu-server:
+    build:
+      context: ./sfu-server
+    container_name: capstone-sfu-server
+    ports:
+      - "${SFU_HTTP_PORT:-4000}:4000"
+      - "${SFU_WORKER_MIN_PORT:-40000}-${SFU_WORKER_MAX_PORT:-40100}:${SFU_WORKER_MIN_PORT:-40000}-${SFU_WORKER_MAX_PORT:-40100}/udp"
+    environment:
+      SFU_HTTP_HOST: ${SFU_HTTP_HOST:-0.0.0.0}
+      SFU_HTTP_PORT: 4000
+      SFU_LISTEN_IP: ${SFU_LISTEN_IP:-0.0.0.0}
+      SFU_ANNOUNCED_IP: ${SFU_ANNOUNCED_IP:-127.0.0.1}
+      SFU_WORKER_MIN_PORT: ${SFU_WORKER_MIN_PORT:-40000}
+      SFU_WORKER_MAX_PORT: ${SFU_WORKER_MAX_PORT:-40100}
+      SFU_LOG_LEVEL: ${SFU_LOG_LEVEL:-warn}
+
+  api-gateway:
+    build:
+      context: .
+      args:
+        JAR_FILE: api-gateway/build/libs/api-gateway-0.0.1-SNAPSHOT.jar
+    container_name: capstone-api-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      AUTH_SERVICE_URI: http://auth-service:8081
+      WORKSPACE_SERVICE_URI: http://workspace-service:8082
+      CANVAS_SERVICE_URI: http://canvas-service:8083
+      CHAT_SERVICE_URI: http://chat-service:8084
+      CHAT_WS_URI: ws://chat-service:8084
+      VOICE_SERVICE_URI: http://voice-service:8085
+      PROTOTYPE_SERVICE_URI: http://prototype-service:8086
+      STORAGE_SERVICE_URI: http://storage-service:8087
+      APP_ALLOWED_ORIGINS_0: ${APP_ALLOWED_ORIGINS_0:-http://localhost:*}
+      APP_ALLOWED_ORIGINS_1: ${APP_ALLOWED_ORIGINS_1:-http://127.0.0.1:*}
+      APP_ALLOWED_ORIGINS_2: ${APP_ALLOWED_ORIGINS_2:-https://on-it.kro.kr}
+      APP_ALLOWED_ORIGINS_3: ${APP_ALLOWED_ORIGINS_3:-https://on-it.kro.kr}
+    depends_on:
+      - auth-service
+      - workspace-service
+      - canvas-service
+      - chat-service
+      - voice-service
+      - prototype-service
+      - storage-service
+
+  auth-service:
+    build:
+      context: .
+      args:
+        JAR_FILE: services/auth-service/build/libs/auth-service-0.0.1-SNAPSHOT.jar
+    container_name: capstone-auth-service
+    ports:
+      - "8081:8081"
+    environment: &service-env
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-capstone_db}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      SPRING_JWT_SECRET: ${SPRING_JWT_SECRET:-change-this-secret-before-deploying-change-this-secret-before-deploying}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_PROTOTYPE_MODEL: ${OPENAI_PROTOTYPE_MODEL:-gpt-4o-mini}
+      OPENAI_PROTOTYPE_PRD_MAX_TOKENS: ${OPENAI_PROTOTYPE_PRD_MAX_TOKENS:-8192}
+      OPENAI_PROTOTYPE_PRD_MIN_CHARS: ${OPENAI_PROTOTYPE_PRD_MIN_CHARS:-4500}
+      OPENAI_PROTOTYPE_PRD_BRIEF_ENABLED: ${OPENAI_PROTOTYPE_PRD_BRIEF_ENABLED:-true}
+      OPENAI_PROTOTYPE_PRD_BRIEF_MIN_CONTENT: ${OPENAI_PROTOTYPE_PRD_BRIEF_MIN_CONTENT:-180}
+      OPENAI_PROTOTYPE_PRD_EDITOR_PASS: ${OPENAI_PROTOTYPE_PRD_EDITOR_PASS:-true}
+      APP_ALLOWED_ORIGINS_0: ${APP_ALLOWED_ORIGINS_0:-http://localhost:*}
+      APP_ALLOWED_ORIGINS_1: ${APP_ALLOWED_ORIGINS_1:-http://127.0.0.1:*}
+      APP_ALLOWED_ORIGINS_3: ${APP_ALLOWED_ORIGINS_3:-https://on-it.kro.kr}
+      APP_DEFAULT_REDIRECT_URI: ${APP_DEFAULT_REDIRECT_URI:-http://localhost:3000/auth/callback}
+      APP_OAUTH_REDIRECT_LOCALHOST: ${APP_OAUTH_REDIRECT_LOCALHOST:-http://localhost:3000/auth/callback}
+      APP_OAUTH_REDIRECT_LOOPBACK: ${APP_OAUTH_REDIRECT_LOOPBACK:-http://localhost:3000/auth/callback}
+      APP_OAUTH_REDIRECT_ONIT: ${APP_OAUTH_REDIRECT_ONIT:-https://on-it.kro.kr/auth/callback}
+      APP_PRD_PUBLIC_BASE_URL: ${APP_PRD_PUBLIC_BASE_URL:-http://localhost:3000}
+      APP_LOCAL_DEV_PERMIT_ALL_WORKSPACE_ACCESS: ${APP_LOCAL_DEV_PERMIT_ALL_WORKSPACE_ACCESS:-false}
+      APP_FILE_BASE_URL: ${APP_FILE_BASE_URL:-http://localhost:8080/api}
+      APP_FILE_UPLOAD_DIR: ${APP_FILE_UPLOAD_DIR:-/var/lib/capstone/uploads}
+      APP_FILE_THUMBNAIL_DIR: ${APP_FILE_THUMBNAIL_DIR:-/var/lib/capstone/uploads/thumbnails}
+      APP_PROTOTYPE_ARTIFACT_DIR: ${APP_PROTOTYPE_ARTIFACT_DIR:-/var/lib/capstone/prototype-artifacts}
+      APP_PROTOTYPE_SIMULATED_BASE_URL: ${APP_PROTOTYPE_SIMULATED_BASE_URL:-https://prototype.example.com}
+      APP_DEV_BOOTSTRAP_AUTH: ${APP_DEV_BOOTSTRAP_AUTH:-false}
+      SOCKETIO_ENABLED: "false"
+      SOCKETIO_HOST: ${SOCKETIO_HOST:-0.0.0.0}
+      SOCKETIO_PORT: ${SOCKETIO_PORT:-9092}
+      SOCKETIO_ALLOW_ORIGIN: ${SOCKETIO_ALLOW_ORIGIN:-*}
+      APPLE_BUNDLE_ID: ${APPLE_BUNDLE_ID:-com.capstone.local.dev}
+      APPLE_PUBLIC_KEY_URL: ${APPLE_PUBLIC_KEY_URL:-https://appleid.apple.com/auth/keys}
+      GOOGLE_LOGIN_URI: ${GOOGLE_LOGIN_URI:-https://accounts.google.com/o/oauth2/v2/auth}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI:-https://on-it.kro.kr/auth/callback}
+      GOOGLE_IOS_CLIENT_ID: ${GOOGLE_IOS_CLIENT_ID:-dummy-ios-client-id}
+      GOOGLE_IOS_CLIENT_SECRET: ${GOOGLE_IOS_CLIENT_SECRET:-}
+      GOOGLE_IOS_REDIRECT_URI: ${GOOGLE_IOS_REDIRECT_URI:-dummy-ios-redirect-uri}
+      WORKSPACE_INVITE_BASE_URL: ${WORKSPACE_INVITE_BASE_URL:-http://localhost:3000/invite}
+      WORKSPACE_INVITE_EXPIRE_HOURS: ${WORKSPACE_INVITE_EXPIRE_HOURS:-168}
+      APP_WEBRTC_SFU_ENABLED: ${APP_WEBRTC_SFU_ENABLED:-true}
+      APP_WEBRTC_SIGNAL_AUTH_SOFT_VALIDATION_ENABLED: ${APP_WEBRTC_SIGNAL_AUTH_SOFT_VALIDATION_ENABLED:-false}
+      APP_WEBRTC_SIGNAL_TOPIC_PREFIX: ${APP_WEBRTC_SIGNAL_TOPIC_PREFIX:-/topic/workspace}
+      APP_WEBRTC_VOICE_SESSION_SEGMENT: ${APP_WEBRTC_VOICE_SESSION_SEGMENT:-voice}
+      APP_WEBRTC_SIGNAL_SEGMENT: ${APP_WEBRTC_SIGNAL_SEGMENT:-signal}
+      APP_WEBRTC_SFU_SERVER_BASE_URL: ${APP_WEBRTC_SFU_SERVER_BASE_URL:-http://sfu-server:4000}
+      APP_WEBRTC_SFU_SERVER_HTTP_PORT: ${APP_WEBRTC_SFU_SERVER_HTTP_PORT:-4000}
+      APP_WEBRTC_SFU_SERVER_HEALTH_PATH: ${APP_WEBRTC_SFU_SERVER_HEALTH_PATH:-/health}
+      APP_WEBRTC_SFU_SERVER_ROOMS_PATH: ${APP_WEBRTC_SFU_SERVER_ROOMS_PATH:-/rooms}
+      APP_WEBRTC_SFU_SERVER_WS_PATH: ${APP_WEBRTC_SFU_SERVER_WS_PATH:-/ws}
+      APP_WEBRTC_SFU_WORKER_MIN_PORT: ${APP_WEBRTC_SFU_WORKER_MIN_PORT:-40000}
+      APP_WEBRTC_SFU_WORKER_MAX_PORT: ${APP_WEBRTC_SFU_WORKER_MAX_PORT:-40100}
+      APP_WEBRTC_SFU_LOG_LEVEL: ${APP_WEBRTC_SFU_LOG_LEVEL:-warn}
+    volumes:
+      - capstone-files:/var/lib/capstone
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+  workspace-service:
+    build:
+      context: .
+      args:
+        JAR_FILE: services/workspace-service/build/libs/workspace-service-0.0.1-SNAPSHOT.jar
+    container_name: capstone-workspace-service
+    ports:
+      - "8082:8082"
+    environment:
+      <<: *service-env
+      WORKSPACE_INVITE_BASE_URL: ${WORKSPACE_INVITE_BASE_URL:-https://on-it.kro.kr/invite}
+    volumes:
+      - capstone-files:/var/lib/capstone
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  canvas-service:
+    build:
+      context: .
+      args:
+        JAR_FILE: services/canvas-service/build/libs/canvas-service-0.0.1-SNAPSHOT.jar
+    container_name: capstone-canvas-service
+    ports:
+      - "8083:8083"
+    environment:
+      <<: *service-env
+    volumes:
+      - capstone-files:/var/lib/capstone
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  chat-service:
+    build:
+      context: .
+      args:
+        JAR_FILE: services/chat-service/build/libs/chat-service-0.0.1-SNAPSHOT.jar
+    container_name: capstone-chat-service
+    ports:
+      - "8084:8084"
+    environment:
+      <<: *service-env
+    volumes:
+      - capstone-files:/var/lib/capstone
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  voice-service:
+    build:
+      context: .
+      args:
+        JAR_FILE: services/voice-service/build/libs/voice-service-0.0.1-SNAPSHOT.jar
+    container_name: capstone-voice-service
+    ports:
+      - "8085:8085"
+    environment:
+      <<: *service-env
+    volumes:
+      - capstone-files:/var/lib/capstone
+    depends_on:
+      postgres:
+        condition: service_healthy
+      sfu-server:
+        condition: service_started
+
+  prototype-service:
+    build:
+      context: .
+      args:
+        JAR_FILE: services/prototype-service/build/libs/prototype-service-0.0.1-SNAPSHOT.jar
+    container_name: capstone-prototype-service
+    ports:
+      - "8086:8086"
+    environment:
+      <<: *service-env
+      APP_PROTOTYPE_VERCEL_TOKEN: ${APP_PROTOTYPE_VERCEL_TOKEN:-}
+      APP_PROTOTYPE_VERCEL_TEAM_ID: ${APP_PROTOTYPE_VERCEL_TEAM_ID:-}
+      APP_PRD_PUBLIC_BASE_URL: ${APP_PRD_PUBLIC_BASE_URL:-https://on-it.kro.kr}
+    volumes:
+      - capstone-files:/var/lib/capstone
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  storage-service:
+    build:
+      context: .
+      args:
+        JAR_FILE: services/storage-service/build/libs/storage-service-0.0.1-SNAPSHOT.jar
+    container_name: capstone-storage-service
+    ports:
+      - "8087:8087"
+    environment:
+      <<: *service-env
+    volumes:
+      - capstone-files:/var/lib/capstone
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  postgres-data:
+  redis-data:
+  capstone-files:

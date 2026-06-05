@@ -1,6 +1,7 @@
 package com.capstone.service;
 
-import com.capstone.domain.user.entity.User;
+import com.capstone.domain.user.User;
+import com.capstone.domain.user.UserRepository;
 import com.capstone.domain.voicesession.VoiceSession;
 import com.capstone.domain.voicesession.VoiceSessionRepository;
 import com.capstone.domain.voicesessionUser.VoiceSessionUser;
@@ -26,7 +27,6 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -40,6 +40,8 @@ class VoiceSessionUserServiceTest {
   private VoiceSessionRepository sessionRepository;
   @Mock
   private WorkspaceUserRepository workspaceUserRepository;
+  @Mock
+  private UserRepository userRepository;
 
   @InjectMocks
   private VoiceSessionUserService service;
@@ -54,11 +56,11 @@ class VoiceSessionUserServiceTest {
     VoiceSessionUser expected = createVoiceSessionUser(session, workspaceUser, 1L);
 
     when(sessionRepository.findById(sessionId)).thenReturn(Optional.of(session));
-    when(workspaceUserRepository.findById(workspaceUserId)).thenReturn(Optional.of(workspaceUser));
-    when(workspaceUserRepository.existsByWorkspaceAndUser(workspaceUser.getWorkspace(),
-        workspaceUser.getUser())).thenReturn(true);
-    when(voiceSessionUserRepository.findBySessionIdAndWorkspaceUserIdAndLeftAtIsNull(sessionId,
-        workspaceUserId)).thenReturn(Optional.empty());
+    when(userRepository.findById(workspaceUserId)).thenReturn(Optional.of(workspaceUser.getUser()));
+    when(workspaceUserRepository.findByWorkspaceAndUser(any(Workspace.class),
+        any(User.class))).thenReturn(Optional.of(workspaceUser));
+    when(voiceSessionUserRepository.findBySessionIdAndWorkspaceUserIdAndLeftAtIsNull(sessionId, workspaceUserId))
+        .thenReturn(List.of());
     when(voiceSessionUserRepository.save(any(VoiceSessionUser.class))).thenReturn(expected);
 
     // When
@@ -80,11 +82,11 @@ class VoiceSessionUserServiceTest {
     VoiceSessionUser existing = createVoiceSessionUser(session, workspaceUser, 1L);
 
     when(sessionRepository.findById(sessionId)).thenReturn(Optional.of(session));
-    when(workspaceUserRepository.findById(workspaceUserId)).thenReturn(Optional.of(workspaceUser));
-    when(workspaceUserRepository.existsByWorkspaceAndUser(workspaceUser.getWorkspace(),
-        workspaceUser.getUser())).thenReturn(true);
-    when(voiceSessionUserRepository.findBySessionIdAndWorkspaceUserIdAndLeftAtIsNull(sessionId,
-        workspaceUserId)).thenReturn(Optional.of(existing));
+    when(userRepository.findById(workspaceUserId)).thenReturn(Optional.of(workspaceUser.getUser()));
+    when(workspaceUserRepository.findByWorkspaceAndUser(any(Workspace.class),
+        any(User.class))).thenReturn(Optional.of(workspaceUser));
+    when(voiceSessionUserRepository.findBySessionIdAndWorkspaceUserIdAndLeftAtIsNull(sessionId, workspaceUserId))
+        .thenReturn(List.of(existing));
 
     // When & Then
     assertThatThrownBy(() -> service.joinSession(workspaceId, sessionId, workspaceUserId))
@@ -109,13 +111,13 @@ class VoiceSessionUserServiceTest {
 
     when(sessionRepository.findById(fromSessionId)).thenReturn(Optional.of(fromSession));
     when(sessionRepository.findById(toSessionId)).thenReturn(Optional.of(toSession));
-    when(workspaceUserRepository.findById(workspaceUserId)).thenReturn(Optional.of(workspaceUser));
-    when(workspaceUserRepository.existsByWorkspaceAndUser(any(Workspace.class),
-        any(User.class))).thenReturn(true);
-    when(voiceSessionUserRepository.findBySessionIdAndWorkspaceUserIdAndLeftAtIsNull(fromSessionId,
-        workspaceUserId)).thenReturn(Optional.of(existing));
-    when(voiceSessionUserRepository.findBySessionIdAndWorkspaceUserIdAndLeftAtIsNull(toSessionId,
-        workspaceUserId)).thenReturn(Optional.empty());
+    when(userRepository.findById(workspaceUserId)).thenReturn(Optional.of(workspaceUser.getUser()));
+    when(workspaceUserRepository.findByWorkspaceAndUser(any(Workspace.class),
+        any(User.class))).thenReturn(Optional.of(workspaceUser));
+    when(voiceSessionUserRepository.findBySessionIdAndWorkspaceUserIdAndLeftAtIsNull(fromSessionId, workspaceUserId))
+        .thenReturn(List.of(existing));
+    when(voiceSessionUserRepository.findBySessionIdAndWorkspaceUserIdAndLeftAtIsNull(toSessionId, workspaceUserId))
+        .thenReturn(List.of());
     when(voiceSessionUserRepository.save(any(VoiceSessionUser.class))).thenReturn(moved);
 
     // When

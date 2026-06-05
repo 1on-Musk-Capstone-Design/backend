@@ -1,3 +1,10 @@
-rootProject.name = 'capstone-project'
+rootProject.name = 'capstone-msa'
 
-
+include 'api-gateway'
+include 'services:auth-service'
+include 'services:workspace-service'
+include 'services:canvas-service'
+include 'services:chat-service'
+include 'services:voice-service'
+include 'services:prototype-service'
+include 'services:storage-service'

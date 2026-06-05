@@ -1,81 +1,110 @@
 # GitHub Actions CI/CD 설정 가이드
 
 ## 개요
-이 워크플로우는 Spring Boot 애플리케이션을 자동으로 빌드, 테스트, 배포합니다.
+이 워크플로우는 Capstone MSA 백엔드를 자동으로 빌드, 테스트, 패키징하고 EC2에 Docker Compose 스택으로 배포합니다.
 
 ## 워크플로우 트리거
 - `develop`, `main`, `feature/aws-sync` 브랜치에 push 시
-- `develop`, `main` 브랜치로의 Pull Request 생성 시
+- `develop`, `main` 브랜치로 Pull Request 생성 시
+- GitHub Actions 수동 실행(`workflow_dispatch`)
 
 ## 작업 단계
 
 ### 1. Build and Test
 - Java 21 설정
-- Gradle 빌드 실행
+- 모든 MSA 모듈 JAR 빌드
 - 테스트 실행
-- JAR 파일 아티팩트 저장
+- `Dockerfile`, `docker-compose.yml`, `scripts`, 서비스별 JAR을 배포 번들로 저장
 
 ### 2. Deploy to AWS
-- 빌드 성공 시에만 실행
-- SSH를 통해 AWS 서버에 JAR 파일 업로드
-- 기존 애플리케이션 중지
-- 새 버전 배포 및 재시작
-- 헬스체크로 배포 검증
+- SSH로 EC2 접속
+- `~/capstone-msa`에 배포 번들 업로드
+- `.env` 생성
+- 기존 Docker Compose 스택 종료
+- `docker compose up --build -d`로 MSA 전체 재기동
+- `http://<AWS_SERVER_HOST>:8080/api/v1/health` 헬스체크
 
-## GitHub Secrets 설정
+## GitHub Secrets
 
-다음 Secrets를 GitHub 저장소에 설정해야 합니다:
+필수:
+- `AWS_SSH_PRIVATE_KEY`: EC2 접속용 SSH 개인 키
+- `AWS_SERVER_HOST`: EC2 public host 또는 IP
 
-1. **AWS_SSH_PRIVATE_KEY**
-   - AWS 서버 접속용 SSH 개인 키
-   - `capstone.pem` 파일의 전체 내용을 복사하여 설정
-   - Settings → Secrets and variables → Actions → New repository secret
+권장:
+- `POSTGRES_DB`
+- `POSTGRES_USER`
+- `POSTGRES_PASSWORD`
+- `SPRING_JWT_SECRET`
+- `APP_ALLOWED_ORIGINS_0`
+- `APP_ALLOWED_ORIGINS_1`
+- `APP_ALLOWED_ORIGINS_3`
+- `GOOGLE_CLIENT_ID`
+- `GOOGLE_CLIENT_SECRET`
+- `GOOGLE_REDIRECT_URI`
+- `GOOGLE_LOGIN_URI`
+- `GOOGLE_IOS_CLIENT_ID`
+- `GOOGLE_IOS_CLIENT_SECRET`
+- `GOOGLE_IOS_REDIRECT_URI`
+- `WORKSPACE_INVITE_BASE_URL`
+- `WORKSPACE_INVITE_EXPIRE_HOURS`
+- `APP_FILE_BASE_URL`
+- `APP_FILE_UPLOAD_DIR`
+- `APP_FILE_THUMBNAIL_DIR`
+- `APP_PRD_PUBLIC_BASE_URL`
+- `APP_PROTOTYPE_ARTIFACT_DIR`
+- `APP_PROTOTYPE_SIMULATED_BASE_URL`
+- `OPENAI_API_KEY`
+- `OPENAI_PROTOTYPE_MODEL`
+- `OPENAI_PROTOTYPE_PRD_MAX_TOKENS`
+- `OPENAI_PROTOTYPE_PRD_MIN_CHARS`
+- `OPENAI_PROTOTYPE_PRD_BRIEF_ENABLED`
+- `OPENAI_PROTOTYPE_PRD_BRIEF_MIN_CONTENT`
+- `OPENAI_PROTOTYPE_PRD_EDITOR_PASS`
+- `APP_PROTOTYPE_VERCEL_TOKEN`
+- `APP_PROTOTYPE_VERCEL_TEAM_ID`
+- `APPLE_BUNDLE_ID`
+- `APPLE_PUBLIC_KEY_URL`
+- `SOCKETIO_HOST`
+- `SOCKETIO_PORT`
+- `SOCKETIO_ALLOW_ORIGIN`
+- `APP_WEBRTC_SFU_ENABLED`
+- `APP_WEBRTC_SIGNAL_AUTH_SOFT_VALIDATION_ENABLED`
+- `APP_WEBRTC_SIGNAL_TOPIC_PREFIX`
+- `APP_WEBRTC_VOICE_SESSION_SEGMENT`
+- `APP_WEBRTC_SIGNAL_SEGMENT`
+- `APP_WEBRTC_SFU_SERVER_BASE_URL`
+- `APP_WEBRTC_SFU_SERVER_HTTP_PORT`
+- `APP_WEBRTC_SFU_SERVER_HEALTH_PATH`
+- `APP_WEBRTC_SFU_SERVER_ROOMS_PATH`
+- `APP_WEBRTC_SFU_SERVER_WS_PATH`
+- `APP_WEBRTC_SFU_WORKER_MIN_PORT`
+- `APP_WEBRTC_SFU_WORKER_MAX_PORT`
+- `APP_WEBRTC_SFU_LOG_LEVEL`
+- `SFU_HTTP_HOST`
+- `SFU_HTTP_PORT`
+- `SFU_LISTEN_IP`
+- `SFU_ANNOUNCED_IP`
+- `SFU_WORKER_MIN_PORT`
+- `SFU_WORKER_MAX_PORT`
+- `SFU_LOG_LEVEL`
 
-2. **AWS_SERVER_HOST**
-   - AWS 서버의 호스트 주소
-   - 예: `51.20.106.74`
-   - Settings → Secrets and variables → Actions → New repository secret
-
-## Secrets 설정 방법
-
-1. GitHub 저장소로 이동
-2. Settings → Secrets and variables → Actions 클릭
-3. "New repository secret" 클릭
-4. 각 Secret 추가:
-   - Name: `AWS_SSH_PRIVATE_KEY`
-     Value: SSH 키 파일 전체 내용 (-----BEGIN RSA PRIVATE KEY----- 부터 -----END RSA PRIVATE KEY----- 까지)
-   - Name: `AWS_SERVER_HOST`
-     Value: `51.20.106.74`
+로컬 개발자 로그인:
+- `APP_DEV_BOOTSTRAP_AUTH`: 운영에서는 `false` 권장
 
 ## 서버 사전 요구사항
+- Docker 및 Docker Compose plugin 설치
+- 8080-8087, 5432, 6379 포트 정책 확인
+- `ec2-user` SSH 접속 가능
 
-AWS 서버에 다음이 설정되어 있어야 합니다:
-
-1. `~/capstone-app/` 디렉토리 존재
-2. Java 21 설치
-3. PostgreSQL 실행 중
-4. 포트 8080, 9092 열림
-5. SSH 키 기반 인증 설정
-
-## 배포 프로세스
-
-1. 코드를 `develop`, `main`, 또는 `feature/aws-sync` 브랜치에 push
-2. GitHub Actions가 자동으로 트리거됨
-3. 빌드 및 테스트 실행
-4. 성공 시 AWS 서버에 자동 배포
-5. 헬스체크로 배포 검증
-
-## 문제 해결
-
-### 배포 실패 시
-- GitHub Actions 로그 확인
-- 서버 SSH 접속 가능 여부 확인
-- 서버의 Java 프로세스 상태 확인: `ps aux | grep java`
-- 애플리케이션 로그 확인: `cat ~/capstone-app/app.log`
-
-### 헬스체크 실패 시
-- 서버 포트 8080이 열려있는지 확인
-- 애플리케이션이 정상적으로 시작되었는지 확인
-- 방화벽 설정 확인
-
-
+## 배포 결과
+EC2에서는 다음 스택으로 실행됩니다:
+- `api-gateway`: 8080
+- `auth-service`: 8081
+- `workspace-service`: 8082
+- `canvas-service`: 8083
+- `chat-service`: 8084
+- `voice-service`: 8085
+- `prototype-service`: 8086
+- `storage-service`: 8087
+- `postgres`: 5432
+- `redis`: 6379

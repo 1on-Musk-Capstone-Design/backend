@@ -6,6 +6,7 @@ on:
       - develop
       - main
       - feature/aws-sync
+      - feat/msa-backend-split
   pull_request:
     branches:
       - develop
@@ -17,7 +18,7 @@ jobs:
     name: Build and Test
     runs-on: ubuntu-latest
     continue-on-error: false
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -41,8 +42,8 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
 
-      - name: Build with Gradle
-        run: ./gradlew clean build -x test --stacktrace
+      - name: Build all MSA services
+        run: ./gradlew clean assemble -x test --stacktrace
         continue-on-error: false
 
       - name: Run tests
@@ -56,280 +57,220 @@ jobs:
         continue-on-error: true
         with:
           name: test-results
-          path: build/test-results/test/TEST-*.xml
+          path: '**/build/test-results/test/TEST-*.xml'
           retention-days: 7
           if-no-files-found: ignore
 
-      - name: Upload JAR artifact
+      - name: Create deployment bundle
+        run: |
+          tar -czf capstone-msa-deploy.tar.gz \
+            Dockerfile \
+            docker-compose.yml \
+            scripts \
+            sfu-server \
+            api-gateway/build/libs/*.jar \
+            services/auth-service/build/libs/*.jar \
+            services/workspace-service/build/libs/*.jar \
+            services/canvas-service/build/libs/*.jar \
+            services/chat-service/build/libs/*.jar \
+            services/voice-service/build/libs/*.jar \
+            services/prototype-service/build/libs/*.jar \
+            services/storage-service/build/libs/*.jar
+
+      - name: Upload deployment bundle
         uses: actions/upload-artifact@v4
         with:
-          name: application-jar
-          path: build/libs/*.jar
+          name: capstone-msa-deploy
+          path: capstone-msa-deploy.tar.gz
           retention-days: 1
-      
+
       - name: Check test results
         if: steps.test.outputs.test_failed == 'true'
         run: |
-          echo "⚠️ Some tests failed, but continuing deployment..."
+          echo "Some tests failed, but continuing deployment like the original workflow."
           exit 0
 
   deploy:
     name: Deploy to AWS
     needs: build-and-test
     runs-on: ubuntu-latest
-    if: always() && (needs.build-and-test.result == 'success' || needs.build-and-test.result == 'failure') && (github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/feature/aws-sync')))
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+    if: always() && (needs.build-and-test.result == 'success' || needs.build-and-test.result == 'failure') && (github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/feature/aws-sync' || github.ref == 'refs/heads/feat/msa-backend-split')))
 
-      - name: Download JAR artifact
+    steps:
+      - name: Download deployment bundle
         uses: actions/download-artifact@v4
         with:
-          name: application-jar
-          path: build/libs/
+          name: capstone-msa-deploy
+          path: .
 
       - name: Setup SSH key with correct permissions
         run: |
           echo "Setting up SSH key..."
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
-          
-          # Check if secret is set
+
           if [ -z "${{ secrets.AWS_SSH_PRIVATE_KEY }}" ]; then
-            echo "❌ AWS_SSH_PRIVATE_KEY secret is not set!"
+            echo "AWS_SSH_PRIVATE_KEY secret is not set!"
             exit 1
           fi
-          
+
           echo "${{ secrets.AWS_SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
           chmod 400 ~/.ssh/deploy_key
-          echo "✅ SSH key file created with 400 permissions"
-          ls -l ~/.ssh/deploy_key
-          
-          # Verify key format
+
           if ! grep -q "BEGIN.*PRIVATE KEY" ~/.ssh/deploy_key; then
-            echo "❌ SSH key format appears to be invalid"
+            echo "SSH key format appears to be invalid"
             exit 1
           fi
-          echo "✅ SSH key format verified"
 
       - name: Setup SSH agent
         uses: webfactory/ssh-agent@v0.9.0
         with:
           ssh-private-key: ${{ secrets.AWS_SSH_PRIVATE_KEY }}
-        continue-on-error: false
-
-      - name: Verify SSH key
-        run: |
-          echo "Checking SSH key setup..."
-          if [ -z "$SSH_AUTH_SOCK" ]; then
-            echo "❌ SSH_AUTH_SOCK is not set"
-            exit 1
-          fi
-          echo "✅ SSH_AUTH_SOCK: $SSH_AUTH_SOCK"
-          ssh-add -l || echo "Warning: No keys in agent"
-          echo "Key file permissions:"
-          ls -l ~/.ssh/deploy_key || echo "Key file not found"
 
       - name: Add server to known hosts
         run: |
+          if [ -z "${{ secrets.AWS_SERVER_HOST }}" ]; then
+            echo "AWS_SERVER_HOST secret is not set!"
+            exit 1
+          fi
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
           ssh-keyscan -H ${{ secrets.AWS_SERVER_HOST }} >> ~/.ssh/known_hosts
           chmod 600 ~/.ssh/known_hosts
-          echo "✅ Known hosts updated"
 
-      - name: Verify SSH connection
+      - name: Verify SSH and Docker
         run: |
-          echo "Testing SSH connection..."
-          echo "Server host: ${{ secrets.AWS_SERVER_HOST }}"
-          
-          if [ -z "${{ secrets.AWS_SERVER_HOST }}" ]; then
-            echo "❌ AWS_SERVER_HOST secret is not set!"
-            exit 1
-          fi
-          
-          echo "Using SSH_AUTH_SOCK: $SSH_AUTH_SOCK"
-          echo "Available keys in agent:"
-          ssh-add -l || echo "No keys in agent"
-          
-          echo "Attempting SSH connection..."
-          ssh -v -o StrictHostKeyChecking=no -o ConnectTimeout=10 -o IdentitiesOnly=yes -o UserKnownHostsFile=~/.ssh/known_hosts ec2-user@${{ secrets.AWS_SERVER_HOST }} "echo 'SSH connection successful'" || {
-            echo "❌ SSH connection failed"
-            echo "Trying with key file directly..."
-            ssh -v -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -o ConnectTimeout=10 ec2-user@${{ secrets.AWS_SERVER_HOST }} "echo 'SSH connection successful'" || {
-              echo "❌ SSH connection failed with key file too"
-              exit 1
-            }
-          }
-          echo "✅ SSH connection verified"
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -o ConnectTimeout=10 ec2-user@${{ secrets.AWS_SERVER_HOST }} \
+            "echo 'SSH connection successful' && docker --version && docker compose version"
 
-      - name: Prepare server directory
+      - name: Upload deployment bundle to server
         run: |
-          echo "Preparing server directory..."
-          ssh -o StrictHostKeyChecking=no ec2-user@${{ secrets.AWS_SERVER_HOST }} << 'EOF'
-            mkdir -p ~/capstone-app
-            chmod 755 ~/capstone-app
-            echo "Directory prepared: $(ls -ld ~/capstone-app)"
-          EOF
-
-      - name: Stop existing application
-        run: |
-          ssh -o StrictHostKeyChecking=no ec2-user@${{ secrets.AWS_SERVER_HOST }} \
-            "sudo lsof -ti:8080 | xargs -r kill -9 2>/dev/null || echo 'No process running on port 8080'"
-        continue-on-error: true
-
-      - name: Upload JAR to server
-        run: |
-          echo "=== Uploading JAR file ==="
-          echo "JAR file info:"
-          ls -lh build/libs/capstone-project-0.0.1-SNAPSHOT.jar || {
-            echo "❌ JAR file not found!"
-            exit 1
-          }
-          echo "File size: $(du -h build/libs/capstone-project-0.0.1-SNAPSHOT.jar | cut -f1)"
-          echo "Starting SCP transfer (with retry)..."
-          
-          MAX_RETRIES=3
-          RETRY_COUNT=0
-          while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
-            RETRY_COUNT=$((RETRY_COUNT + 1))
-            echo "Attempt $RETRY_COUNT/$MAX_RETRIES..."
-            
-            if scp -v -o StrictHostKeyChecking=no -o ConnectTimeout=30 -o ServerAliveInterval=60 \
-              build/libs/capstone-project-0.0.1-SNAPSHOT.jar \
-              ec2-user@${{ secrets.AWS_SERVER_HOST }}:~/capstone-app/capstone-app.jar; then
-              echo "✅ JAR upload completed successfully"
-              break
-            else
-              if [ $RETRY_COUNT -eq $MAX_RETRIES ]; then
-                echo "❌ SCP upload failed after $MAX_RETRIES attempts"
-                exit 1
-              fi
-              echo "Retrying in 5 seconds..."
-              sleep 5
-            fi
-          done
-          
-          echo "Verifying file on server..."
-          ssh -o StrictHostKeyChecking=no ec2-user@${{ secrets.AWS_SERVER_HOST }} \
-            "ls -lh ~/capstone-app/capstone-app.jar && echo 'File verified on server'" || {
-            echo "❌ File verification failed"
-            exit 1
-          }
+          scp -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -o ConnectTimeout=30 -o ServerAliveInterval=60 \
+            capstone-msa-deploy.tar.gz \
+            ec2-user@${{ secrets.AWS_SERVER_HOST }}:~/capstone-msa-deploy.tar.gz
 
       - name: Upload environment variables to server
-        env:
-          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
-          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
-          GOOGLE_REDIRECT_URI: ${{ secrets.GOOGLE_REDIRECT_URI }}
-          GOOGLE_LOGIN_URI: ${{ secrets.GOOGLE_LOGIN_URI }}
-          WORKSPACE_INVITE_BASE_URL: ${{ secrets.WORKSPACE_INVITE_BASE_URL }}
-          APP_FILE_BASE_URL: ${{ secrets.APP_FILE_BASE_URL }}
         run: |
-          ssh -o StrictHostKeyChecking=no ec2-user@${{ secrets.AWS_SERVER_HOST }} "cat > ~/capstone-app/.env << 'ENVEOF'
+          APP_DEV_BOOTSTRAP_AUTH_VALUE="${{ secrets.APP_DEV_BOOTSTRAP_AUTH }}"
+          if [ -z "$APP_DEV_BOOTSTRAP_AUTH_VALUE" ]; then
+            APP_DEV_BOOTSTRAP_AUTH_VALUE=false
+          fi
+
+          cat > capstone-msa.env << 'ENVEOF'
+          POSTGRES_DB=${{ secrets.POSTGRES_DB }}
+          POSTGRES_USER=${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+          SPRING_JWT_SECRET=${{ secrets.SPRING_JWT_SECRET }}
+          APP_DEV_BOOTSTRAP_AUTH=__APP_DEV_BOOTSTRAP_AUTH__
+          APP_ALLOWED_ORIGINS_0=${{ secrets.APP_ALLOWED_ORIGINS_0 }}
+          APP_ALLOWED_ORIGINS_1=${{ secrets.APP_ALLOWED_ORIGINS_1 }}
+          APP_ALLOWED_ORIGINS_2=${{ secrets.APP_ALLOWED_ORIGINS_2 }}
+          APP_ALLOWED_ORIGINS_3=${{ secrets.APP_ALLOWED_ORIGINS_3 }}
+          APP_DEFAULT_REDIRECT_URI=${{ secrets.APP_DEFAULT_REDIRECT_URI }}
+          APP_OAUTH_REDIRECT_LOCALHOST=${{ secrets.APP_OAUTH_REDIRECT_LOCALHOST }}
+          APP_OAUTH_REDIRECT_LOOPBACK=${{ secrets.APP_OAUTH_REDIRECT_LOOPBACK }}
+          APP_OAUTH_REDIRECT_ONIT=${{ secrets.APP_OAUTH_REDIRECT_ONIT }}
+          APP_PRD_PUBLIC_BASE_URL=${{ secrets.APP_PRD_PUBLIC_BASE_URL }}
+          APP_LOCAL_DEV_PERMIT_ALL_WORKSPACE_ACCESS=${{ secrets.APP_LOCAL_DEV_PERMIT_ALL_WORKSPACE_ACCESS }}
+          APP_FILE_BASE_URL=${{ secrets.APP_FILE_BASE_URL }}
+          APP_FILE_UPLOAD_DIR=${{ secrets.APP_FILE_UPLOAD_DIR }}
+          APP_FILE_THUMBNAIL_DIR=${{ secrets.APP_FILE_THUMBNAIL_DIR }}
+          APP_PROTOTYPE_ARTIFACT_DIR=${{ secrets.APP_PROTOTYPE_ARTIFACT_DIR }}
+          APP_PROTOTYPE_SIMULATED_BASE_URL=${{ secrets.APP_PROTOTYPE_SIMULATED_BASE_URL }}
+          APP_PROTOTYPE_VERCEL_TOKEN=${{ secrets.APP_PROTOTYPE_VERCEL_TOKEN }}
+          APP_PROTOTYPE_VERCEL_TEAM_ID=${{ secrets.APP_PROTOTYPE_VERCEL_TEAM_ID }}
           GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
           GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
           GOOGLE_REDIRECT_URI=${{ secrets.GOOGLE_REDIRECT_URI }}
           GOOGLE_LOGIN_URI=${{ secrets.GOOGLE_LOGIN_URI }}
+          GOOGLE_IOS_CLIENT_ID=${{ secrets.GOOGLE_IOS_CLIENT_ID }}
+          GOOGLE_IOS_CLIENT_SECRET=${{ secrets.GOOGLE_IOS_CLIENT_SECRET }}
+          GOOGLE_IOS_REDIRECT_URI=${{ secrets.GOOGLE_IOS_REDIRECT_URI }}
           WORKSPACE_INVITE_BASE_URL=${{ secrets.WORKSPACE_INVITE_BASE_URL }}
-          APP_FILE_BASE_URL=${{ secrets.APP_FILE_BASE_URL }}
+          WORKSPACE_INVITE_EXPIRE_HOURS=${{ secrets.WORKSPACE_INVITE_EXPIRE_HOURS }}
+          OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
+          OPENAI_PROTOTYPE_MODEL=${{ secrets.OPENAI_PROTOTYPE_MODEL }}
+          OPENAI_PROTOTYPE_PRD_MAX_TOKENS=${{ secrets.OPENAI_PROTOTYPE_PRD_MAX_TOKENS }}
+          OPENAI_PROTOTYPE_PRD_MIN_CHARS=${{ secrets.OPENAI_PROTOTYPE_PRD_MIN_CHARS }}
+          OPENAI_PROTOTYPE_PRD_BRIEF_ENABLED=${{ secrets.OPENAI_PROTOTYPE_PRD_BRIEF_ENABLED }}
+          OPENAI_PROTOTYPE_PRD_BRIEF_MIN_CONTENT=${{ secrets.OPENAI_PROTOTYPE_PRD_BRIEF_MIN_CONTENT }}
+          OPENAI_PROTOTYPE_PRD_EDITOR_PASS=${{ secrets.OPENAI_PROTOTYPE_PRD_EDITOR_PASS }}
+          SOCKETIO_HOST=${{ secrets.SOCKETIO_HOST }}
+          SOCKETIO_PORT=${{ secrets.SOCKETIO_PORT }}
+          SOCKETIO_ALLOW_ORIGIN=${{ secrets.SOCKETIO_ALLOW_ORIGIN }}
+          APP_WEBRTC_SFU_ENABLED=${{ secrets.APP_WEBRTC_SFU_ENABLED }}
+          APP_WEBRTC_SIGNAL_AUTH_SOFT_VALIDATION_ENABLED=${{ secrets.APP_WEBRTC_SIGNAL_AUTH_SOFT_VALIDATION_ENABLED }}
+          APP_WEBRTC_SIGNAL_TOPIC_PREFIX=${{ secrets.APP_WEBRTC_SIGNAL_TOPIC_PREFIX }}
+          APP_WEBRTC_VOICE_SESSION_SEGMENT=${{ secrets.APP_WEBRTC_VOICE_SESSION_SEGMENT }}
+          APP_WEBRTC_SIGNAL_SEGMENT=${{ secrets.APP_WEBRTC_SIGNAL_SEGMENT }}
+          APP_WEBRTC_SFU_SERVER_BASE_URL=${{ secrets.APP_WEBRTC_SFU_SERVER_BASE_URL }}
+          APP_WEBRTC_SFU_SERVER_HTTP_PORT=${{ secrets.APP_WEBRTC_SFU_SERVER_HTTP_PORT }}
+          APP_WEBRTC_SFU_SERVER_HEALTH_PATH=${{ secrets.APP_WEBRTC_SFU_SERVER_HEALTH_PATH }}
+          APP_WEBRTC_SFU_SERVER_ROOMS_PATH=${{ secrets.APP_WEBRTC_SFU_SERVER_ROOMS_PATH }}
+          APP_WEBRTC_SFU_SERVER_WS_PATH=${{ secrets.APP_WEBRTC_SFU_SERVER_WS_PATH }}
+          APP_WEBRTC_SFU_WORKER_MIN_PORT=${{ secrets.APP_WEBRTC_SFU_WORKER_MIN_PORT }}
+          APP_WEBRTC_SFU_WORKER_MAX_PORT=${{ secrets.APP_WEBRTC_SFU_WORKER_MAX_PORT }}
+          APP_WEBRTC_SFU_LOG_LEVEL=${{ secrets.APP_WEBRTC_SFU_LOG_LEVEL }}
+          SFU_HTTP_HOST=${{ secrets.SFU_HTTP_HOST }}
+          SFU_HTTP_PORT=${{ secrets.SFU_HTTP_PORT }}
+          SFU_LISTEN_IP=${{ secrets.SFU_LISTEN_IP }}
+          SFU_ANNOUNCED_IP=${{ secrets.SFU_ANNOUNCED_IP }}
+          SFU_WORKER_MIN_PORT=${{ secrets.SFU_WORKER_MIN_PORT }}
+          SFU_WORKER_MAX_PORT=${{ secrets.SFU_WORKER_MAX_PORT }}
+          SFU_LOG_LEVEL=${{ secrets.SFU_LOG_LEVEL }}
+          APPLE_BUNDLE_ID=${{ secrets.APPLE_BUNDLE_ID }}
+          APPLE_PUBLIC_KEY_URL=${{ secrets.APPLE_PUBLIC_KEY_URL }}
           ENVEOF
-          chmod 600 ~/capstone-app/.env && echo '✅ Environment variables file created'"
 
-      - name: Restart application
+          sed -i 's/^          //' capstone-msa.env
+          sed -i "s|__APP_DEV_BOOTSTRAP_AUTH__|${APP_DEV_BOOTSTRAP_AUTH_VALUE}|g" capstone-msa.env
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no ec2-user@${{ secrets.AWS_SERVER_HOST }} "mkdir -p ~/capstone-msa"
+          scp -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no capstone-msa.env ec2-user@${{ secrets.AWS_SERVER_HOST }}:~/capstone-msa/.env
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no ec2-user@${{ secrets.AWS_SERVER_HOST }} "chmod 600 ~/capstone-msa/.env"
+
+      - name: Deploy MSA stack
         run: |
-          ssh -v -o StrictHostKeyChecking=no ec2-user@${{ secrets.AWS_SERVER_HOST }} << 'EOF'
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no ec2-user@${{ secrets.AWS_SERVER_HOST }} << 'EOF'
             set -e
-            cd ~/capstone-app || {
-              echo "❌ Failed to change to ~/capstone-app directory"
-              exit 1
-            }
-            echo "Current directory: $(pwd)"
-            
-            if [ ! -f capstone-app.jar ]; then
-              echo "❌ JAR file not found: capstone-app.jar"
-              exit 1
+            mkdir -p ~/capstone-msa
+            cd ~/capstone-msa
+
+            if [ -f docker-compose.yml ]; then
+              docker compose down || true
             fi
-            echo "✅ JAR file exists"
-            
-            # Stop old process
-            if [ -f app.pid ]; then
-              OLD_PID=$(cat app.pid)
-              if ps -p $OLD_PID > /dev/null 2>&1; then
-                echo "Stopping old process: $OLD_PID"
-                kill -9 $OLD_PID 2>/dev/null || true
-                sleep 2
-              else
-                echo "Old process $OLD_PID not running"
-              fi
-            fi
-            
-            # Kill any process on port 8080
-            sudo lsof -ti:8080 | xargs -r kill -9 2>/dev/null || echo "No process on port 8080"
-            sleep 2
-            
-            # Load environment variables from .env file
-            if [ -f .env ]; then
-              echo "Loading environment variables from .env file..."
-              set -a
-              source .env
-              set +a
-              echo "✅ Environment variables loaded"
-            else
-              echo "⚠️ Warning: .env file not found, using default values"
-            fi
-            
-            echo "Starting application..."
-            nohup java -jar capstone-app.jar > app.log 2>&1 &
-            NEW_PID=$!
-            echo $NEW_PID > app.pid
-            echo "Application started with PID: $NEW_PID"
-            
-            sleep 3
-            if ps -p $NEW_PID > /dev/null 2>&1; then
-              echo "✅ Process is running"
-            else
-              echo "❌ Process failed to start"
-              echo "=== Last 20 lines of app.log ==="
-              tail -20 app.log || echo "Could not read log"
-              exit 1
-            fi
+
+            tar -xzf ~/capstone-msa-deploy.tar.gz -C ~/capstone-msa
+            chmod +x scripts/*.sh
+            docker compose up --build -d
+            docker compose ps
           EOF
 
-      - name: Wait for application to start
+      - name: Wait for MSA gateway to start
         run: |
-          echo "Waiting for application to start..."
-          sleep 15
-          for i in {1..30}; do
-            echo "Health check attempt $i/30..."
+          echo "Waiting for API gateway to start..."
+          sleep 20
+          for i in {1..40}; do
             HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://${{ secrets.AWS_SERVER_HOST }}:8080/api/v1/health || echo "000")
             if [ "$HTTP_CODE" = "200" ]; then
-              echo "Application is healthy! HTTP $HTTP_CODE"
+              echo "API gateway is healthy. HTTP $HTTP_CODE"
               exit 0
             fi
-            echo "Waiting for application to start... ($i/30) - HTTP $HTTP_CODE"
-            sleep 2
+            echo "Waiting for API gateway... ($i/40) - HTTP $HTTP_CODE"
+            sleep 3
           done
-          echo "Application failed to start within timeout"
-          echo "=== Application Logs ==="
-          ssh -o StrictHostKeyChecking=no ec2-user@${{ secrets.AWS_SERVER_HOST }} "tail -50 ~/capstone-app/app.log" || echo "Could not retrieve logs"
-          echo "=== Process Status ==="
-          ssh -o StrictHostKeyChecking=no ec2-user@${{ secrets.AWS_SERVER_HOST }} "ps aux | grep java | grep -v grep || echo 'No Java process found'" || true
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no ec2-user@${{ secrets.AWS_SERVER_HOST }} \
+            "cd ~/capstone-msa && docker compose ps && docker compose logs --tail=80 api-gateway auth-service" || true
           exit 1
 
       - name: Health check
         run: |
-          echo "Final health check..."
           HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://${{ secrets.AWS_SERVER_HOST }}:8080/api/v1/health || echo "000")
           if [ "$HTTP_CODE" = "200" ]; then
-            echo "✅ Health check passed! HTTP $HTTP_CODE"
+            echo "Health check passed. HTTP $HTTP_CODE"
             curl -s http://${{ secrets.AWS_SERVER_HOST }}:8080/api/v1/health | head -5
             exit 0
-          else
-            echo "❌ Health check failed! HTTP $HTTP_CODE"
-            echo "=== Application Logs ==="
-            ssh -o StrictHostKeyChecking=no ec2-user@${{ secrets.AWS_SERVER_HOST }} "tail -50 ~/capstone-app/app.log" || echo "Could not retrieve logs"
-            exit 1
           fi
-
+          echo "Health check failed. HTTP $HTTP_CODE"
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no ec2-user@${{ secrets.AWS_SERVER_HOST }} \
+            "cd ~/capstone-msa && docker compose logs --tail=120" || true
+          exit 1
