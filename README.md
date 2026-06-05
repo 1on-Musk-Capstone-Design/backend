@@ -1,8 +1,17 @@
-# Capstone Project - 실시간 협업 브레인스토밍 플랫폼 MSA Backend
+# Capstone Project - 실시간 협업 브레인스토밍 플랫폼
+<img width="616" height="482" alt="image" src="https://github.com/user-attachments/assets/784794dd-9e30-4fe7-b8c6-6004100fb1ac" />
+
+
+- Apple Store 앱 출시
+- Notion : https://www.notion.so/ONit-26d3bde5a26c80549c57e65470e8a1ce?source=copy_link
+- 캡스톤디자인 작품 발표회 우승상
+  
+<img width="350" height="500" alt="1론머스크(우수상)" src="https://github.com/user-attachments/assets/224e5ddf-1325-45bb-b32c-fad8b2e20527" />
+
 
 ## 프로젝트 개요
 
-실시간 협업 브레인스토밍을 위한 웹 애플리케이션의 백엔드 MSA 프로젝트입니다. 원본 모놀리식 Spring Boot 백엔드를 프론트엔드 수정 없이 사용할 수 있도록 API Gateway 중심의 마이크로서비스 구조로 분리했습니다.
+실시간 협업 브레인스토밍을 위한 웹 애플리케이션의 백엔드 MSA 프로젝트입니다. 원본 모놀리식 Spring Boot 백엔드를 프론트엔드 수정 없이 사용할 수 있도록 API Gateway 중심의 마이크로서비스 구조로 분리했습니다. (MSA)
 
 프론트엔드는 기존과 동일하게 `http://localhost:8080/api` 또는 운영 도메인의 `/api`만 호출하면 됩니다. 내부 서비스 분기는 `api-gateway`가 담당합니다.
 
@@ -40,6 +49,36 @@
 - 프로토타입 artifact 파일 관리
 
 ## 팀 소개
+
+### 프론트엔드 개발자
+
+<table>
+<tr>
+<td align="center">
+<img src="https://github.com/kimyeongseo-gg.png" width="100" height="100" alt="김명서">
+<br>
+<a href="https://github.com/kimyeongseo-gg"><strong>김명서</strong></a>
+<br>
+<small>프론트엔드 개발자</small>
+</td>
+
+<td align="center">
+<img src="https://github.com/Mingjaam.png" width="100" height="100" alt="김민재">
+<br>
+<a href="https://github.com/Mingjaam"><strong>김민재</strong></a>
+<br>
+<small>프론트엔드 개발자</small>
+</td>
+
+<td align="center">
+<img src="https://github.com/peunseo.png" width="100" height="100" alt="박은서">
+<br>
+<a href="https://github.com/peunseo"><strong>박은서</strong></a>
+<br>
+<small>프론트엔드 개발자</small>
+</td>
+</tr>
+</table>
 
 ### 백엔드 개발자
 
