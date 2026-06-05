@@ -1,64 +1,20 @@
-HELP.md
-target/
-!.mvn/wrapper/maven-wrapper.jar
-!**/src/main/**/target/
-!**/src/test/**/target/
-
-### STS ###
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
-
-### IntelliJ IDEA ###
-.idea
-*.iws
-*.iml
-*.ipr
-
-### NetBeans ###
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
-build/
-!**/src/main/**/build/
-!**/src/test/**/build/
-
-### VS Code ###
-.vscode/
-
-### OS ###
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
-
-### Environment Variables ###
-.env
-.env.local
-.env.development
-.env.production
-
-### 로컬 전용 Spring 설정 (OpenAI 키 등) — 템플릿은 local-application.yml.template 참고 ###
-local-application.yml
-src/main/resources/application-local.yml
-
-### 업로드/로컬 생성물 (저장소 미포함) ###
-uploads/
-frontend-thumbnail/
-
-### Gradle ###
 .gradle/
+build/
+out/
+target/
+*.log
+.DS_Store
 
-### Generated / vendored artifacts ###
-bin/
+uploads/
+data/
+local-application.yml
+application-local.yml
+*.local.yml
+
+.env
+.env.*
+!.env.example
+
+frontend-thumbnail/
 node_modules/
-sfu-server/node_modules/
+.idea/

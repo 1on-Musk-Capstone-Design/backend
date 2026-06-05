@@ -1,0 +1,115 @@
+package com.capstone.global.config;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.Arrays;
+
+@Configuration
+@EnableWebSecurity
+public class SecurityConfig {
+
+  private final AppProperties appProperties;
+
+  public SecurityConfig(AppProperties appProperties) {
+    this.appProperties = appProperties;
+  }
+
+  @Bean
+  public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    http
+        .csrf(csrf -> csrf.disable())
+        .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+        .authorizeHttpRequests(auth -> auth
+
+            // Health check & Actuator
+            .requestMatchers("/v1/health", "/actuator/**").permitAll()
+
+            // Swagger/OpenAPI 문서
+            .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+
+            // WebSocket
+            .requestMatchers("/ws/**", "/app/**", "/topic/**", "/queue/**").permitAll()
+
+            // Google OAuth (인증 필요 없음)
+            .requestMatchers("/api/v1/auth-google/**").permitAll()
+            .requestMatchers("/v1/auth-google/**").permitAll()
+
+            // Apple OAuth
+            .requestMatchers("/api/v1/auth-apple/**").permitAll()
+            .requestMatchers("/v1/auth-apple/**").permitAll()
+
+            // 로컬 개발 자동 로그인 (app.dev-bootstrap-auth.enabled=true 일 때만 컨트롤러가 응답)
+            .requestMatchers(HttpMethod.POST, "/v1/auth/dev/bootstrap").permitAll()
+
+            // User info
+            .requestMatchers("/v1/users/me").permitAll()
+
+            // Workspace - 읽기는 허용, 쓰기는 인증 필요 (개발용: 임시로 모두 허용)
+            .requestMatchers(HttpMethod.GET, "/v1/workspaces/**").permitAll()
+            .requestMatchers(HttpMethod.POST, "/v1/workspaces/**")
+            .permitAll()  // TODO: 프로덕션에서는 authenticated()로 변경
+            .requestMatchers(HttpMethod.PUT, "/v1/workspaces/**")
+            .permitAll()   // TODO: 프로덕션에서는 authenticated()로 변경
+            .requestMatchers(HttpMethod.DELETE, "/v1/workspaces/**")
+            .permitAll()  // TODO: 프로덕션에서는 authenticated()로 변경
+
+            // Canvas (개발용)
+            .requestMatchers(HttpMethod.GET, "/v1/*/canvas").permitAll()
+            .requestMatchers(HttpMethod.GET, "/v1/canvas/**").permitAll()
+            .requestMatchers(HttpMethod.POST, "/v1/*/canvas").permitAll()
+            .requestMatchers(HttpMethod.PUT, "/v1/canvas/**").permitAll()
+            .requestMatchers(HttpMethod.DELETE, "/v1/canvas/**").permitAll()
+
+            // Idea (개발용)
+            .requestMatchers(HttpMethod.GET, "/v1/ideas/**").permitAll()
+            .requestMatchers(HttpMethod.POST, "/v1/ideas/**").permitAll()
+            .requestMatchers(HttpMethod.PUT, "/v1/ideas/**").permitAll()
+            .requestMatchers(HttpMethod.DELETE, "/v1/ideas/**").permitAll()
+
+            // Chat - 모두 허용 (개발용)
+            .requestMatchers("/v1/chat/**").permitAll()  // TODO: 프로덕션에서는 authenticated()로 변경
+
+            // VoiceSession - 모두 허용 (개발용)
+            .requestMatchers("/v1/workspaces/*/voice/**")
+            .permitAll()  // TODO: 프로덕션에서는 authenticated()로 변경
+
+            // WebRTC SFU control API - voice-service가 SFU 서버를 프록시
+            .requestMatchers("/v1/webrtc/sfu/**")
+            .permitAll()  // TODO: 프로덕션에서는 authenticated()로 변경
+
+            // OpenAI (개발용)
+            .requestMatchers("/v1/openai/**").permitAll()  // TODO: 프로덕션에서는 authenticated()로 변경
+
+            // 정적 파일 (업로드된 이미지 등)
+            .requestMatchers("/uploads/**").permitAll()
+
+            // 나머지는 인증 필요
+            .anyRequest().authenticated()
+        );
+
+    return http.build();
+  }
+
+  @Bean
+  public CorsConfigurationSource corsConfigurationSource() {
+    CorsConfiguration configuration = new CorsConfiguration();
+    // 구성 파일 기반 허용 Origin 적용
+    configuration.setAllowedOriginPatterns(appProperties.getAllowedOrigins());
+    configuration.setAllowedMethods(
+        Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
+    configuration.setAllowCredentials(true);
+    configuration.setMaxAge(3600L);
+
+    UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+    source.registerCorsConfiguration("/**", configuration);
+    return source;
+  }
+}

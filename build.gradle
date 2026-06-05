@@ -1,61 +1,28 @@
 plugins {
-    id 'java'
-    id 'org.springframework.boot' version '3.2.0'
-    id 'io.spring.dependency-management' version '1.1.4'
+    id 'org.springframework.boot' version '3.2.0' apply false
+    id 'io.spring.dependency-management' version '1.1.4' apply false
 }
 
-group = 'com.capstone'
-version = '0.0.1-SNAPSHOT'
+allprojects {
+    group = 'com.capstone'
+    version = '0.0.1-SNAPSHOT'
 
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
+    repositories {
+        mavenCentral()
     }
 }
 
-repositories {
-    mavenCentral()
-}
+subprojects {
+    apply plugin: 'java'
+    apply plugin: 'io.spring.dependency-management'
 
-dependencies {
-    implementation 'org.springframework.boot:spring-boot-starter-web'
-    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-    implementation 'org.springframework.boot:spring-boot-starter-validation'
-    implementation 'org.springframework.boot:spring-boot-starter-security'
-    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(21)
+        }
+    }
 
-    // OpenAPI/Swagger (Schema 등 어노테이션 및 Swagger UI)
-    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0'
-
-   // Lombok
-    compileOnly 'org.projectlombok:lombok'
-    annotationProcessor 'org.projectlombok:lombok:1.18.38'
-
-    // CORS/WebFlux (프로젝트에 이미 사용 중)
-    implementation 'org.springframework.boot:spring-boot-starter-webflux'
-
-    // WebSocket + STOMP
-    implementation 'org.springframework.boot:spring-boot-starter-websocket'
-
-    // Socket.IO 서버 (SocketIOService)
-    implementation 'com.corundumstudio.socketio:netty-socketio:2.0.11'
-
-    // JSON 처리
-    implementation 'com.fasterxml.jackson.core:jackson-databind'
-
-    // JWT
-    implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
-    implementation 'io.jsonwebtoken:jjwt-impl:0.12.6'
-    implementation 'io.jsonwebtoken:jjwt-jackson:0.12.6'
-    runtimeOnly 'org.postgresql:postgresql'
-
-    // APPLE 로그인 공개키 검증용
-    implementation 'com.nimbusds:nimbus-jose-jwt:9.37.3'
-
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testImplementation 'org.springframework.security:spring-security-test'
-}
-
-tasks.withType(Test) {
-    useJUnitPlatform()
+    tasks.withType(Test).configureEach {
+        useJUnitPlatform()
+    }
 }
