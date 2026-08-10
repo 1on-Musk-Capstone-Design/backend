@@ -1,13 +1,15 @@
 # Capstone Project - 실시간 협업 브레인스토밍 플랫폼
 <img width="616" height="482" alt="image" src="https://github.com/user-attachments/assets/784794dd-9e30-4fe7-b8c6-6004100fb1ac" />
 
-
 - Apple Store 앱 출시
 - Notion : https://www.notion.so/ONit-26d3bde5a26c80549c57e65470e8a1ce?source=copy_link
-- 캡스톤디자인 작품 발표회 우수상
+- 2025년 캡스톤디자인 작품 발표회 우수상
+- 2026년 캡스톤디자인 작품 발표회 장려상
   
+<p align="center">
 <img width="350" height="500" alt="1론머스크(우수상)" src="https://github.com/user-attachments/assets/224e5ddf-1325-45bb-b32c-fad8b2e20527" />
-
+<img width="350" height="500" alt="캡스톤(2)" src="https://github.com/user-attachments/assets/59d4817d-4832-4a59-b04c-a82f7a6156dc" />
+</p>
 
 ## 프로젝트 개요
 
