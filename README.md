@@ -57,7 +57,7 @@
 <td align="center">
 <img src="https://github.com/kimyeongseo-gg.png" width="100" height="100" alt="김명서">
 <br>
-<a href="https://github.com/kimyeongseo-gg"><strong>김명서</strong></a>
+<a href="https://github.com/kimyeongseo-gg"><strong>김영서</strong></a>
 <br>
 <small>프론트엔드 개발자</small>
 </td>
